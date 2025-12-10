@@ -125,7 +125,12 @@ def generate_scene_prompt(
     scene_type: str,
     left_action: str,
     right_action: str,
-    background: str
+    background: str,
+    left_name: str = "",
+    right_name: str = "",
+    left_speech: str = "",
+    right_speech: str = "",
+    move_name: str = ""
 ) -> str:
     """
     シーンプロンプトを生成
@@ -135,6 +140,11 @@ def generate_scene_prompt(
         left_action: 左キャラのアクション（英語キー）
         right_action: 右キャラのアクション（英語キー）
         background: 背景名
+        left_name: 左キャラの名前（オプション）
+        right_name: 右キャラの名前（オプション）
+        left_speech: 左キャラのセリフ（オプション）
+        right_speech: 右キャラのセリフ（オプション）
+        move_name: 技名（オプション）
 
     Returns:
         生成されたシーンプロンプト
@@ -160,6 +170,31 @@ def generate_scene_prompt(
     else:
         char_instruction = DIFFERENT_CHARACTER_INSTRUCTION
 
+    # キャラ名の指示
+    name_instruction = ""
+    if left_name or right_name:
+        name_parts = []
+        if left_name:
+            name_parts.append(f"left character named \"{left_name}\"")
+        if right_name:
+            name_parts.append(f"right character named \"{right_name}\"")
+        name_instruction = f"\nCharacter name plates should show: {', '.join(name_parts)}."
+
+    # セリフの指示
+    speech_instruction = ""
+    if left_speech or right_speech:
+        speech_parts = []
+        if left_speech:
+            speech_parts.append(f"Left character's speech bubble: 「{left_speech}」")
+        if right_speech:
+            speech_parts.append(f"Right character's speech bubble: 「{right_speech}」")
+        speech_instruction = "\n" + "\n".join(speech_parts)
+
+    # 技名の指示
+    move_instruction = ""
+    if move_name:
+        move_instruction = f"\nDisplay special move name \"{move_name}\" prominently in the scene with dramatic text effects."
+
     # プロンプト組み立て
     prompt = f"""Fighting game style battle screen with dramatic composition.
 
@@ -168,7 +203,7 @@ Right side: {right_desc}
 
 {bg_desc}
 
-{char_instruction}
+{char_instruction}{name_instruction}{speech_instruction}{move_instruction}
 
 Add health bars, character name plates, and fighting game UI elements.
 Energy effects and dramatic lighting."""

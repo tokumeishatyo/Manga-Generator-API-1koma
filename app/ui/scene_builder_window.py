@@ -39,7 +39,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("650x750")
+        self.geometry("650x950")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
@@ -154,6 +154,103 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         )
         self.background_menu.pack(anchor="w")
 
+        # キャラ名入力
+        name_frame = ctk.CTkFrame(main_frame)
+        name_frame.pack(fill="x", pady=10)
+
+        ctk.CTkLabel(name_frame, text="キャラ名（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+
+        name_options_frame = ctk.CTkFrame(name_frame, fg_color="transparent")
+        name_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        # 左キャラ名
+        left_name_frame = ctk.CTkFrame(name_options_frame, fg_color="transparent")
+        left_name_frame.pack(fill="x", pady=2)
+
+        ctk.CTkLabel(left_name_frame, text="左キャラ:", width=80).pack(side="left")
+        self.left_name_var = tk.StringVar(value="")
+        self.left_name_entry = ctk.CTkEntry(
+            left_name_frame,
+            textvariable=self.left_name_var,
+            width=200,
+            placeholder_text="例: AYASE KOYOMI"
+        )
+        self.left_name_entry.pack(side="left", padx=(10, 0))
+        self.left_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
+
+        # 右キャラ名
+        right_name_frame = ctk.CTkFrame(name_options_frame, fg_color="transparent")
+        right_name_frame.pack(fill="x", pady=2)
+
+        ctk.CTkLabel(right_name_frame, text="右キャラ:", width=80).pack(side="left")
+        self.right_name_var = tk.StringVar(value="")
+        self.right_name_entry = ctk.CTkEntry(
+            right_name_frame,
+            textvariable=self.right_name_var,
+            width=200,
+            placeholder_text="例: SHINOMIYA RIN"
+        )
+        self.right_name_entry.pack(side="left", padx=(10, 0))
+        self.right_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
+
+        # セリフ入力
+        speech_frame = ctk.CTkFrame(main_frame)
+        speech_frame.pack(fill="x", pady=10)
+
+        ctk.CTkLabel(speech_frame, text="セリフ（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+
+        speech_options_frame = ctk.CTkFrame(speech_frame, fg_color="transparent")
+        speech_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        # 左キャラセリフ
+        left_speech_frame = ctk.CTkFrame(speech_options_frame, fg_color="transparent")
+        left_speech_frame.pack(fill="x", pady=2)
+
+        ctk.CTkLabel(left_speech_frame, text="左キャラ:", width=80).pack(side="left")
+        self.left_speech_var = tk.StringVar(value="")
+        self.left_speech_entry = ctk.CTkEntry(
+            left_speech_frame,
+            textvariable=self.left_speech_var,
+            width=200,
+            placeholder_text="例: くらえ〜"
+        )
+        self.left_speech_entry.pack(side="left", padx=(10, 0))
+        self.left_speech_entry.bind("<KeyRelease>", lambda _: self._update_preview())
+
+        # 右キャラセリフ
+        right_speech_frame = ctk.CTkFrame(speech_options_frame, fg_color="transparent")
+        right_speech_frame.pack(fill="x", pady=2)
+
+        ctk.CTkLabel(right_speech_frame, text="右キャラ:", width=80).pack(side="left")
+        self.right_speech_var = tk.StringVar(value="")
+        self.right_speech_entry = ctk.CTkEntry(
+            right_speech_frame,
+            textvariable=self.right_speech_var,
+            width=200,
+            placeholder_text="例: うおお"
+        )
+        self.right_speech_entry.pack(side="left", padx=(10, 0))
+        self.right_speech_entry.bind("<KeyRelease>", lambda _: self._update_preview())
+
+        # 技名入力
+        move_frame = ctk.CTkFrame(main_frame)
+        move_frame.pack(fill="x", pady=10)
+
+        ctk.CTkLabel(move_frame, text="技名（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+
+        move_options_frame = ctk.CTkFrame(move_frame, fg_color="transparent")
+        move_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        self.move_name_var = tk.StringVar(value="")
+        self.move_name_entry = ctk.CTkEntry(
+            move_options_frame,
+            textvariable=self.move_name_var,
+            width=250,
+            placeholder_text="例: 必殺ビーム"
+        )
+        self.move_name_entry.pack(anchor="w")
+        self.move_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
+
         # プレビュー
         preview_frame = ctk.CTkFrame(main_frame)
         preview_frame.pack(fill="both", expand=True, pady=10)
@@ -226,11 +323,23 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         background = self.background_var.get()
 
+        # 追加パラメータ
+        left_name = self.left_name_var.get().strip()
+        right_name = self.right_name_var.get().strip()
+        left_speech = self.left_speech_var.get().strip()
+        right_speech = self.right_speech_var.get().strip()
+        move_name = self.move_name_var.get().strip()
+
         prompt = generate_scene_prompt(
             scene_type=scene_type,
             left_action=left_action,
             right_action=right_action,
-            background=background
+            background=background,
+            left_name=left_name,
+            right_name=right_name,
+            left_speech=left_speech,
+            right_speech=right_speech,
+            move_name=move_name
         )
 
         self.preview_text.delete("1.0", tk.END)
