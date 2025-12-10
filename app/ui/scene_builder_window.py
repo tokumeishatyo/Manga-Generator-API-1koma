@@ -284,13 +284,28 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         """シーンタイプ変更時の処理"""
         type_info = get_scene_type_info(scene_type)
 
+        # 1キャラモードかどうか
+        single_character = type_info.get("single_character", False)
+
         # 構成を表示
         left_style = type_info.get("left_style", "")
-        right_style = type_info.get("right_style", "")
+        right_style = type_info.get("right_style")
         left_name = STYLE_NAMES.get(left_style, left_style)
-        right_name = STYLE_NAMES.get(right_style, right_style)
 
-        composition = f"[{left_name}] vs [{right_name}]"
+        if single_character:
+            composition = f"[{left_name}]"
+            # 右側の入力を無効化
+            self.right_action_menu.configure(state="disabled")
+            self.right_name_entry.configure(state="disabled")
+            self.right_speech_entry.configure(state="disabled")
+        else:
+            right_name = STYLE_NAMES.get(right_style, right_style) if right_style else ""
+            composition = f"[{left_name}] vs [{right_name}]"
+            # 右側の入力を有効化
+            self.right_action_menu.configure(state="normal")
+            self.right_name_entry.configure(state="normal")
+            self.right_speech_entry.configure(state="normal")
+
         self.composition_label.configure(text=composition)
 
         self._update_preview()

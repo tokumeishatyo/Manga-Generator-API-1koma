@@ -6,32 +6,43 @@
 
 # シーンタイプ定義（プリセット）
 SCENE_TYPES = {
+    "1キャラ: カットイン": {
+        "description": "1キャラのみの大きなカットイン（必殺技演出など）",
+        "single_character": True,
+        "left_style": "cutin_large",
+        "right_style": None,
+    },
     "同一キャラ: カットイン/ドット絵": {
         "description": "同じキャラが左にリアル(カットイン)、右にドット絵で表示",
+        "single_character": False,
         "same_character": True,
         "left_style": "cutin",      # カットイン
         "right_style": "pixel",     # ドット絵
     },
     "同一キャラ: ドット絵/カットイン": {
         "description": "同じキャラが左にドット絵、右にリアル(カットイン)で表示",
+        "single_character": False,
         "same_character": True,
         "left_style": "pixel",
         "right_style": "cutin",
     },
     "別キャラ: 両方カットイン": {
         "description": "異なるキャラが両方リアル(カットイン)で対戦",
+        "single_character": False,
         "same_character": False,
         "left_style": "cutin",
         "right_style": "cutin",
     },
     "別キャラ: 両方通常配置": {
         "description": "異なるキャラが両方リアル(通常配置)で対戦",
+        "single_character": False,
         "same_character": False,
         "left_style": "normal",
         "right_style": "normal",
     },
     "別キャラ: 両方ドット絵": {
         "description": "異なるキャラが両方ドット絵で対戦",
+        "single_character": False,
         "same_character": False,
         "left_style": "pixel",
         "right_style": "pixel",
@@ -40,6 +51,7 @@ SCENE_TYPES = {
 
 # スタイル表示名
 STYLE_NAMES = {
+    "cutin_large": "大カットイン",
     "cutin": "リアル(カットイン)",
     "normal": "リアル(通常配置)",
     "pixel": "ドット絵(16bit)",
@@ -112,7 +124,9 @@ def _build_character_description(style: str, action: str, position: str) -> str:
     """キャラクターの説明文を生成"""
     action_desc = ACTIONS.get(action, action)
 
-    if style == "cutin":
+    if style == "cutin_large":
+        return f"dramatic full-screen anime-style character cut-in, intense close-up filling most of the frame, {action_desc}"
+    elif style == "cutin":
         return f"large anime-style character cut-in, dramatic close-up, {action_desc}"
     elif style == "normal":
         return f"anime-style character in full body view, {action_desc}"
@@ -159,16 +173,65 @@ def generate_scene_prompt(
     if not type_info:
         return ""
 
-    same_character = type_info["same_character"]
+    single_character = type_info.get("single_character", False)
     left_style = type_info["left_style"]
-    right_style = type_info["right_style"]
+    right_style = type_info.get("right_style")
+
+    # 背景説明
+    bg_desc = BACKGROUNDS.get(background, "")
+
+    # 1キャラモードの場合
+    if single_character:
+        char_desc = _build_character_description(left_style, left_action, "center")
+
+        # キャラ名の指示
+        name_instruction = ""
+        if left_name:
+            name_instruction = f"\nCharacter name: \"{left_name}\"."
+
+        # セリフの指示
+        speech_instruction = ""
+        if left_speech:
+            if show_dialogue_box:
+                speech_instruction = f"\nAdd a dialogue box at the bottom with character portrait, displaying: 「{left_speech}」"
+            else:
+                speech_instruction = f"\nCharacter's speech bubble: 「{left_speech}」"
+
+        # 技名の指示
+        move_instruction = ""
+        if move_name:
+            move_instruction = f"\nDisplay special move name \"{move_name}\" prominently with dramatic text effects."
+
+        # UI要素の指示を構築
+        ui_elements = []
+        if show_health_bars:
+            ui_elements.append("health bar")
+        if show_super_meter:
+            ui_elements.append("super meter/gauge")
+
+        if ui_elements:
+            ui_instruction = f"Add {', '.join(ui_elements)}."
+        else:
+            ui_instruction = "Minimal or no game UI elements."
+
+        # プロンプト組み立て（1キャラ版）
+        prompt = f"""Game-style special move cut-in scene with dramatic composition.
+
+{char_desc}
+
+{bg_desc}{name_instruction}{speech_instruction}{move_instruction}
+
+{ui_instruction}
+Dramatic lighting, energy effects, and dynamic camera angle."""
+
+        return prompt.strip()
+
+    # 2キャラモードの場合
+    same_character = type_info.get("same_character", False)
 
     # キャラクター説明を生成
     left_desc = _build_character_description(left_style, left_action, "left")
     right_desc = _build_character_description(right_style, right_action, "right")
-
-    # 背景説明
-    bg_desc = BACKGROUNDS.get(background, "")
 
     # キャラ関係の指示
     if same_character:
