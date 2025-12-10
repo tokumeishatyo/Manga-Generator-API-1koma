@@ -76,6 +76,45 @@ ACTION_NAMES = {
     "special": "必殺技チャージ",
 }
 
+# 光線の色
+BEAM_COLORS = {
+    "おまかせ": "",
+    "青": "blue",
+    "赤": "red",
+    "黄": "yellow",
+    "緑": "green",
+    "紫": "purple",
+    "白": "white",
+    "虹色": "rainbow-colored",
+    "金色": "golden",
+    "黒": "black/dark",
+}
+
+# 光線のタイプ
+BEAM_TYPES = {
+    "おまかせ": "",
+    "ビーム": "energy beam",
+    "波動": "energy wave",
+    "炎": "fire/flames",
+    "雷": "lightning/electricity",
+    "氷": "ice/frost",
+    "闇": "dark energy",
+    "光": "light/holy energy",
+    "オーラ": "powerful aura",
+}
+
+# 発射方法
+BEAM_EMISSIONS = {
+    "おまかせ": "",
+    "手から": "from hand",
+    "両手から": "from both hands",
+    "人差し指から": "from index finger",
+    "剣から": "from sword",
+    "杖から": "from staff/wand",
+    "目から": "from eyes",
+    "全身から": "emanating from entire body",
+}
+
 # 背景定義
 BACKGROUNDS = {
     "教室": "Classroom background with desks and chalkboard.",
@@ -120,21 +159,66 @@ def get_background_names() -> list:
     return list(BACKGROUNDS.keys())
 
 
-def _build_character_description(style: str, action: str, position: str, zoom: str = "normal") -> str:
+def get_beam_colors() -> list:
+    """光線の色リストを取得"""
+    return list(BEAM_COLORS.keys())
+
+
+def get_beam_types() -> list:
+    """光線のタイプリストを取得"""
+    return list(BEAM_TYPES.keys())
+
+
+def get_beam_emissions() -> list:
+    """発射方法リストを取得"""
+    return list(BEAM_EMISSIONS.keys())
+
+
+def _build_character_description(
+    style: str,
+    action: str,
+    position: str,
+    zoom: str = "normal",
+    facing: str = "",
+    beam_color: str = "",
+    beam_type: str = "",
+    beam_emission: str = ""
+) -> str:
     """キャラクターの説明文を生成"""
-    action_desc = ACTIONS.get(action, action)
+    # 攻撃アクションの場合、光線オプションを適用
+    if action == "attacking" and (beam_color or beam_type or beam_emission):
+        # 光線の説明を構築
+        beam_parts = []
+        if beam_color:
+            beam_parts.append(beam_color)
+        if beam_type:
+            beam_parts.append(beam_type)
+
+        beam_desc = " ".join(beam_parts) if beam_parts else "energy beam"
+        emission_desc = f" {beam_emission}" if beam_emission else ""
+
+        action_desc = f"attacking, firing {beam_desc}{emission_desc}, offensive pose"
+    else:
+        action_desc = ACTIONS.get(action, action)
+
+    # 向きの指定
+    facing_desc = ""
+    if facing == "right":
+        facing_desc = "facing right, "
+    elif facing == "left":
+        facing_desc = "facing left, "
 
     if style == "cutin_large":
         if zoom == "extreme":
-            return f"extreme close-up anime-style character cut-in, face and upper body filling the entire frame, very dramatic angle, {action_desc}"
+            return f"extreme close-up anime-style character cut-in, {facing_desc}face and upper body filling the entire frame, very dramatic angle, {action_desc}"
         else:
-            return f"dramatic full-screen anime-style character cut-in, intense close-up filling most of the frame, {action_desc}"
+            return f"dramatic full-screen anime-style character cut-in, {facing_desc}intense close-up filling most of the frame, {action_desc}"
     elif style == "cutin":
-        return f"large anime-style character cut-in, dramatic close-up, {action_desc}"
+        return f"large anime-style character cut-in, {facing_desc}dramatic close-up, {action_desc}"
     elif style == "normal":
-        return f"anime-style character in full body view, {action_desc}"
+        return f"anime-style character in full body view, {facing_desc}{action_desc}"
     elif style == "pixel":
-        return f"pixel art 16-bit chibi character sprite, {action_desc}"
+        return f"pixel art 16-bit chibi character sprite, {facing_desc}{action_desc}"
     return ""
 
 
@@ -151,7 +235,14 @@ def generate_scene_prompt(
     show_health_bars: bool = True,
     show_super_meter: bool = True,
     show_dialogue_box: bool = False,
-    zoom: str = "normal"
+    zoom: str = "normal",
+    facing: str = "",
+    left_beam_color: str = "",
+    left_beam_type: str = "",
+    left_beam_emission: str = "",
+    right_beam_color: str = "",
+    right_beam_type: str = "",
+    right_beam_emission: str = ""
 ) -> str:
     """
     シーンプロンプトを生成
@@ -170,6 +261,13 @@ def generate_scene_prompt(
         show_super_meter: SUPERゲージを表示するか
         show_dialogue_box: ダイアログボックスを表示するか
         zoom: ズームレベル（"normal" or "extreme"）- 1キャラモードのみ有効
+        facing: 向き（"right" or "left" or ""）- 1キャラモードのみ有効
+        left_beam_color: 左キャラの光線の色（英語）- 攻撃アクション時のみ有効
+        left_beam_type: 左キャラの光線のタイプ（英語）- 攻撃アクション時のみ有効
+        left_beam_emission: 左キャラの発射方法（英語）- 攻撃アクション時のみ有効
+        right_beam_color: 右キャラの光線の色（英語）- 攻撃アクション時のみ有効
+        right_beam_type: 右キャラの光線のタイプ（英語）- 攻撃アクション時のみ有効
+        right_beam_emission: 右キャラの発射方法（英語）- 攻撃アクション時のみ有効
 
     Returns:
         生成されたシーンプロンプト
@@ -187,7 +285,10 @@ def generate_scene_prompt(
 
     # 1キャラモードの場合
     if single_character:
-        char_desc = _build_character_description(left_style, left_action, "center", zoom)
+        char_desc = _build_character_description(
+            left_style, left_action, "center", zoom, facing,
+            left_beam_color, left_beam_type, left_beam_emission
+        )
 
         # キャラ名の指示
         name_instruction = ""
@@ -234,9 +335,19 @@ Dramatic lighting, energy effects, and dynamic camera angle."""
     # 2キャラモードの場合
     same_character = type_info.get("same_character", False)
 
-    # キャラクター説明を生成
-    left_desc = _build_character_description(left_style, left_action, "left")
-    right_desc = _build_character_description(right_style, right_action, "right")
+    # キャラクター説明を生成（攻撃中のキャラに光線オプション適用）
+    left_desc = _build_character_description(
+        left_style, left_action, "left", "normal", "",
+        left_beam_color if left_action == "attacking" else "",
+        left_beam_type if left_action == "attacking" else "",
+        left_beam_emission if left_action == "attacking" else ""
+    )
+    right_desc = _build_character_description(
+        right_style, right_action, "right", "normal", "",
+        right_beam_color if right_action == "attacking" else "",
+        right_beam_type if right_action == "attacking" else "",
+        right_beam_emission if right_action == "attacking" else ""
+    )
 
     # キャラ関係の指示
     if same_character:

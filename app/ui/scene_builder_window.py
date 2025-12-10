@@ -17,8 +17,14 @@ from logic.scene_builder import (
     get_action_names,
     get_action_display_names,
     get_background_names,
+    get_beam_colors,
+    get_beam_types,
+    get_beam_emissions,
     generate_scene_prompt,
-    STYLE_NAMES
+    STYLE_NAMES,
+    BEAM_COLORS,
+    BEAM_TYPES,
+    BEAM_EMISSIONS
 )
 
 
@@ -39,7 +45,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("750x700")
+        self.geometry("750x800")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
@@ -97,7 +103,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             action_row,
             variable=self.left_action_var,
             values=action_display_names,
-            command=lambda _: self._update_preview(),
+            command=self._on_action_change,
             width=120
         )
         self.left_action_menu.pack(side="left", padx=(0, 15))
@@ -108,7 +114,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             action_row,
             variable=self.right_action_var,
             values=action_display_names,
-            command=lambda _: self._update_preview(),
+            command=self._on_action_change,
             width=120
         )
         self.right_action_menu.pack(side="left")
@@ -121,10 +127,101 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             variable=self.zoom_var,
             values=["通常", "ドアップ"],
             command=lambda _: self._update_preview(),
-            width=100
+            width=90
         )
         self.zoom_menu.pack(side="left")
         self.zoom_menu.configure(state="disabled")  # 初期状態は無効
+
+        # 向き（1キャラモード用）
+        ctk.CTkLabel(action_row, text="向き:").pack(side="left", padx=(10, 2))
+        self.facing_var = tk.StringVar(value="指定なし")
+        self.facing_menu = ctk.CTkOptionMenu(
+            action_row,
+            variable=self.facing_var,
+            values=["指定なし", "右向き→", "←左向き"],
+            command=lambda _: self._update_preview(),
+            width=90
+        )
+        self.facing_menu.pack(side="left")
+        self.facing_menu.configure(state="disabled")  # 初期状態は無効
+
+        # 光線オプション - 左キャラ（攻撃時のみ有効）
+        beam_row1 = ctk.CTkFrame(main_frame, fg_color="transparent")
+        beam_row1.pack(fill="x", pady=5)
+
+        ctk.CTkLabel(beam_row1, text="光線(左):", width=100).pack(side="left")
+
+        ctk.CTkLabel(beam_row1, text="色:").pack(side="left", padx=(5, 2))
+        self.left_beam_color_var = tk.StringVar(value="おまかせ")
+        self.left_beam_color_menu = ctk.CTkOptionMenu(
+            beam_row1,
+            variable=self.left_beam_color_var,
+            values=get_beam_colors(),
+            command=lambda _: self._update_preview(),
+            width=80
+        )
+        self.left_beam_color_menu.pack(side="left", padx=(0, 10))
+
+        ctk.CTkLabel(beam_row1, text="タイプ:").pack(side="left", padx=(0, 2))
+        self.left_beam_type_var = tk.StringVar(value="おまかせ")
+        self.left_beam_type_menu = ctk.CTkOptionMenu(
+            beam_row1,
+            variable=self.left_beam_type_var,
+            values=get_beam_types(),
+            command=lambda _: self._update_preview(),
+            width=90
+        )
+        self.left_beam_type_menu.pack(side="left", padx=(0, 10))
+
+        ctk.CTkLabel(beam_row1, text="発射:").pack(side="left", padx=(0, 2))
+        self.left_beam_emission_var = tk.StringVar(value="おまかせ")
+        self.left_beam_emission_menu = ctk.CTkOptionMenu(
+            beam_row1,
+            variable=self.left_beam_emission_var,
+            values=get_beam_emissions(),
+            command=lambda _: self._update_preview(),
+            width=100
+        )
+        self.left_beam_emission_menu.pack(side="left")
+
+        # 光線オプション - 右キャラ（攻撃時のみ有効）
+        beam_row2 = ctk.CTkFrame(main_frame, fg_color="transparent")
+        beam_row2.pack(fill="x", pady=5)
+
+        ctk.CTkLabel(beam_row2, text="光線(右):", width=100).pack(side="left")
+
+        ctk.CTkLabel(beam_row2, text="色:").pack(side="left", padx=(5, 2))
+        self.right_beam_color_var = tk.StringVar(value="おまかせ")
+        self.right_beam_color_menu = ctk.CTkOptionMenu(
+            beam_row2,
+            variable=self.right_beam_color_var,
+            values=get_beam_colors(),
+            command=lambda _: self._update_preview(),
+            width=80
+        )
+        self.right_beam_color_menu.pack(side="left", padx=(0, 10))
+
+        ctk.CTkLabel(beam_row2, text="タイプ:").pack(side="left", padx=(0, 2))
+        self.right_beam_type_var = tk.StringVar(value="おまかせ")
+        self.right_beam_type_menu = ctk.CTkOptionMenu(
+            beam_row2,
+            variable=self.right_beam_type_var,
+            values=get_beam_types(),
+            command=lambda _: self._update_preview(),
+            width=90
+        )
+        self.right_beam_type_menu.pack(side="left", padx=(0, 10))
+
+        ctk.CTkLabel(beam_row2, text="発射:").pack(side="left", padx=(0, 2))
+        self.right_beam_emission_var = tk.StringVar(value="おまかせ")
+        self.right_beam_emission_menu = ctk.CTkOptionMenu(
+            beam_row2,
+            variable=self.right_beam_emission_var,
+            values=get_beam_emissions(),
+            command=lambda _: self._update_preview(),
+            width=100
+        )
+        self.right_beam_emission_menu.pack(side="left")
 
         # 背景選択（3行目）
         bg_row = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -307,23 +404,55 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         if single_character:
             composition = f"[{left_name}]"
-            # 右側の入力を無効化、ズームを有効化
+            # 右側の入力を無効化、ズーム・向きを有効化
             self.right_action_menu.configure(state="disabled")
             self.right_name_entry.configure(state="disabled")
             self.right_speech_entry.configure(state="disabled")
             self.zoom_menu.configure(state="normal")
+            self.facing_menu.configure(state="normal")
         else:
             right_name = STYLE_NAMES.get(right_style, right_style) if right_style else ""
             composition = f"[{left_name}] vs [{right_name}]"
-            # 右側の入力を有効化、ズームを無効化
+            # 右側の入力を有効化、ズーム・向きを無効化
             self.right_action_menu.configure(state="normal")
             self.right_name_entry.configure(state="normal")
             self.right_speech_entry.configure(state="normal")
             self.zoom_menu.configure(state="disabled")
+            self.facing_menu.configure(state="disabled")
 
         self.composition_label.configure(text=composition)
 
+        self._update_beam_options_state()
         self._update_preview()
+
+    def _on_action_change(self, _):
+        """アクション変更時の処理"""
+        self._update_beam_options_state()
+        self._update_preview()
+
+    def _update_beam_options_state(self):
+        """光線オプションの有効/無効を更新"""
+        # 左キャラの光線オプション
+        left_action = self.left_action_var.get()
+        left_beam_state = "normal" if left_action == "攻撃" else "disabled"
+        self.left_beam_color_menu.configure(state=left_beam_state)
+        self.left_beam_type_menu.configure(state=left_beam_state)
+        self.left_beam_emission_menu.configure(state=left_beam_state)
+
+        # 右キャラの光線オプション（2キャラモードかつ攻撃時のみ）
+        right_action = self.right_action_var.get()
+        scene_type = self.scene_type_var.get()
+        type_info = get_scene_type_info(scene_type)
+        single_character = type_info.get("single_character", False)
+
+        if single_character:
+            right_beam_state = "disabled"
+        else:
+            right_beam_state = "normal" if right_action == "攻撃" else "disabled"
+
+        self.right_beam_color_menu.configure(state=right_beam_state)
+        self.right_beam_type_menu.configure(state=right_beam_state)
+        self.right_beam_emission_menu.configure(state=right_beam_state)
 
     def _update_preview(self):
         """プレビューを更新"""
@@ -353,6 +482,25 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         zoom_jp = self.zoom_var.get()
         zoom = "extreme" if zoom_jp == "ドアップ" else "normal"
 
+        # 向き（1キャラモード用）
+        facing_jp = self.facing_var.get()
+        if facing_jp == "右向き→":
+            facing = "right"
+        elif facing_jp == "←左向き":
+            facing = "left"
+        else:
+            facing = ""
+
+        # 光線オプション - 左キャラ（日本語 → 英語変換）
+        left_beam_color = BEAM_COLORS.get(self.left_beam_color_var.get(), "")
+        left_beam_type = BEAM_TYPES.get(self.left_beam_type_var.get(), "")
+        left_beam_emission = BEAM_EMISSIONS.get(self.left_beam_emission_var.get(), "")
+
+        # 光線オプション - 右キャラ（日本語 → 英語変換）
+        right_beam_color = BEAM_COLORS.get(self.right_beam_color_var.get(), "")
+        right_beam_type = BEAM_TYPES.get(self.right_beam_type_var.get(), "")
+        right_beam_emission = BEAM_EMISSIONS.get(self.right_beam_emission_var.get(), "")
+
         prompt = generate_scene_prompt(
             scene_type=scene_type,
             left_action=left_action,
@@ -366,7 +514,14 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             show_health_bars=show_health_bars,
             show_super_meter=show_super_meter,
             show_dialogue_box=show_dialogue_box,
-            zoom=zoom
+            zoom=zoom,
+            facing=facing,
+            left_beam_color=left_beam_color,
+            left_beam_type=left_beam_type,
+            left_beam_emission=left_beam_emission,
+            right_beam_color=right_beam_color,
+            right_beam_type=right_beam_type,
+            right_beam_emission=right_beam_emission
         )
 
         self.preview_text.delete("1.0", tk.END)

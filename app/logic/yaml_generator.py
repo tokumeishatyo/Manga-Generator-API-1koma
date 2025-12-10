@@ -260,6 +260,24 @@ def generate_illustration_yaml(
         color_mode_prompt, output_style_prompt, output_type
     )
 
+    # Extract outfit information from characters and add to scene prompt
+    enhanced_scene_prompt = scene_prompt
+    if not is_character_sheet and not is_background and characters:
+        outfit_descriptions = []
+        positions = ["Left", "Right", "Third", "Fourth", "Fifth"]
+        for i, char in enumerate(characters):
+            desc = char.get("description", "")
+            # Extract outfit part from description
+            if "outfit:" in desc:
+                outfit_part = desc.split("outfit:")[-1].strip()
+                char_name = char.get("name", f"Character {i+1}")
+                pos = positions[i] if i < len(positions) else f"Character {i+1}"
+                outfit_descriptions.append(f"{pos} character ({char_name}) wears: {outfit_part}")
+
+        if outfit_descriptions:
+            outfit_instruction = "\n\nIMPORTANT - Character outfits:\n" + "\n".join(outfit_descriptions)
+            enhanced_scene_prompt = scene_prompt + outfit_instruction
+
     # Build YAML structure
     yaml_data = {
         "color_mode": color_mode_value,
@@ -267,7 +285,7 @@ def generate_illustration_yaml(
         "output_type": output_type,
         "output_style": output_style_prompt if output_style_prompt else "auto",
         "scene": {
-            "prompt": scene_prompt
+            "prompt": enhanced_scene_prompt
         },
         "layout_instruction": layout_instruction
     }
