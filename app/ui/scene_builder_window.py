@@ -113,6 +113,19 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         )
         self.right_action_menu.pack(side="left")
 
+        # ズーム（1キャラモード用）
+        ctk.CTkLabel(action_row, text="ズーム:").pack(side="left", padx=(20, 2))
+        self.zoom_var = tk.StringVar(value="通常")
+        self.zoom_menu = ctk.CTkOptionMenu(
+            action_row,
+            variable=self.zoom_var,
+            values=["通常", "ドアップ"],
+            command=lambda _: self._update_preview(),
+            width=100
+        )
+        self.zoom_menu.pack(side="left")
+        self.zoom_menu.configure(state="disabled")  # 初期状態は無効
+
         # 背景選択（3行目）
         bg_row = ctk.CTkFrame(main_frame, fg_color="transparent")
         bg_row.pack(fill="x", pady=5)
@@ -294,17 +307,19 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         if single_character:
             composition = f"[{left_name}]"
-            # 右側の入力を無効化
+            # 右側の入力を無効化、ズームを有効化
             self.right_action_menu.configure(state="disabled")
             self.right_name_entry.configure(state="disabled")
             self.right_speech_entry.configure(state="disabled")
+            self.zoom_menu.configure(state="normal")
         else:
             right_name = STYLE_NAMES.get(right_style, right_style) if right_style else ""
             composition = f"[{left_name}] vs [{right_name}]"
-            # 右側の入力を有効化
+            # 右側の入力を有効化、ズームを無効化
             self.right_action_menu.configure(state="normal")
             self.right_name_entry.configure(state="normal")
             self.right_speech_entry.configure(state="normal")
+            self.zoom_menu.configure(state="disabled")
 
         self.composition_label.configure(text=composition)
 
@@ -334,6 +349,10 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         show_super_meter = self.super_meter_var.get()
         show_dialogue_box = self.dialogue_box_var.get()
 
+        # ズーム（1キャラモード用）
+        zoom_jp = self.zoom_var.get()
+        zoom = "extreme" if zoom_jp == "ドアップ" else "normal"
+
         prompt = generate_scene_prompt(
             scene_type=scene_type,
             left_action=left_action,
@@ -346,7 +365,8 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             move_name=move_name,
             show_health_bars=show_health_bars,
             show_super_meter=show_super_meter,
-            show_dialogue_box=show_dialogue_box
+            show_dialogue_box=show_dialogue_box,
+            zoom=zoom
         )
 
         self.preview_text.delete("1.0", tk.END)

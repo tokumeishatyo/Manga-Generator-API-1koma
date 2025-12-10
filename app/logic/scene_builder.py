@@ -120,12 +120,15 @@ def get_background_names() -> list:
     return list(BACKGROUNDS.keys())
 
 
-def _build_character_description(style: str, action: str, position: str) -> str:
+def _build_character_description(style: str, action: str, position: str, zoom: str = "normal") -> str:
     """キャラクターの説明文を生成"""
     action_desc = ACTIONS.get(action, action)
 
     if style == "cutin_large":
-        return f"dramatic full-screen anime-style character cut-in, intense close-up filling most of the frame, {action_desc}"
+        if zoom == "extreme":
+            return f"extreme close-up anime-style character cut-in, face and upper body filling the entire frame, very dramatic angle, {action_desc}"
+        else:
+            return f"dramatic full-screen anime-style character cut-in, intense close-up filling most of the frame, {action_desc}"
     elif style == "cutin":
         return f"large anime-style character cut-in, dramatic close-up, {action_desc}"
     elif style == "normal":
@@ -147,7 +150,8 @@ def generate_scene_prompt(
     move_name: str = "",
     show_health_bars: bool = True,
     show_super_meter: bool = True,
-    show_dialogue_box: bool = False
+    show_dialogue_box: bool = False,
+    zoom: str = "normal"
 ) -> str:
     """
     シーンプロンプトを生成
@@ -165,6 +169,7 @@ def generate_scene_prompt(
         show_health_bars: ヘルスバーを表示するか
         show_super_meter: SUPERゲージを表示するか
         show_dialogue_box: ダイアログボックスを表示するか
+        zoom: ズームレベル（"normal" or "extreme"）- 1キャラモードのみ有効
 
     Returns:
         生成されたシーンプロンプト
@@ -182,7 +187,7 @@ def generate_scene_prompt(
 
     # 1キャラモードの場合
     if single_character:
-        char_desc = _build_character_description(left_style, left_action, "center")
+        char_desc = _build_character_description(left_style, left_action, "center", zoom)
 
         # キャラ名の指示
         name_instruction = ""
