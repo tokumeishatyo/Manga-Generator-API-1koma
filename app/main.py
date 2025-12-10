@@ -35,6 +35,7 @@ from logic.file_manager import (
     add_to_recent_files, save_yaml_file, load_yaml_file,
     parse_yaml_to_ui_data
 )
+from ui.scene_builder_window import SceneBuilderWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -247,7 +248,19 @@ class SinglePanelApp(ctk.CTk):
         self.scene_frame.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
         self.scene_frame.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self.scene_frame, text="シーン説明", font=("Arial", 14, "bold")).grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
+        scene_header_frame = ctk.CTkFrame(self.scene_frame, fg_color="transparent")
+        scene_header_frame.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="ew")
+
+        ctk.CTkLabel(scene_header_frame, text="シーン説明", font=("Arial", 14, "bold")).pack(side="left")
+
+        self.scene_builder_button = ctk.CTkButton(
+            scene_header_frame,
+            text="シーンビルダー",
+            width=120,
+            height=25,
+            command=self.open_scene_builder
+        )
+        self.scene_builder_button.pack(side="right")
 
         self.scene_textbox = ctk.CTkTextbox(self.scene_frame, height=100)
         self.scene_textbox.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
@@ -822,6 +835,15 @@ class SinglePanelApp(ctk.CTk):
                     save_recent_files(self.recent_files_path, self.recent_files)
                     self.update_recent_files_menu()
                 break
+
+    def open_scene_builder(self):
+        """シーンビルダーウィンドウを開く"""
+        SceneBuilderWindow(self, callback=self.set_scene_from_builder)
+
+    def set_scene_from_builder(self, scene_prompt: str):
+        """シーンビルダーからのプロンプトをシーン説明に設定"""
+        self.scene_textbox.delete("1.0", tk.END)
+        self.scene_textbox.insert("1.0", scene_prompt)
 
     def clear_all(self):
         """Clear all input fields"""
