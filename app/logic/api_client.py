@@ -44,6 +44,7 @@ def generate_image_with_api(
 - Use the composition and poses from the reference illustration as a guide
 - For character faces, use the attached character reference images to faithfully reproduce their appearance
 - Improve overall quality, details, and consistency while maintaining the original composition
+- IMPORTANT: Do NOT include any watermarks, logos, or symbols (such as ✦ or star marks) that may appear in the reference image. Generate a clean image without any watermarks.
 
 """ + yaml_prompt
             contents = [redraw_prompt]
