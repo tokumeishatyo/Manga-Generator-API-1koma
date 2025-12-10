@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Local files
+*.jpg
+*.jpeg
+*.png
+*.webp
+.mcp.json
+
+# Recent files (user-specific)
+app/recent_files.json
