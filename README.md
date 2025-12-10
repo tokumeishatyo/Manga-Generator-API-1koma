@@ -3,6 +3,8 @@
 Google Gemini API (`gemini-3-pro-image-preview`) を利用した、高品質1コマイラスト生成デスクトップアプリケーションです。
 キャラクター参照画像を使用して、一貫性のあるキャラクターでイラストを生成できます。
 
+詳しい使い方や開発背景については、[Qiita記事](https://qiita.com/KLaboratory/items/77b81226d1db8089c7fc)をご覧ください。
+
 ## 特徴
 
 - **最新AIモデル**: `gemini-3-pro-image-preview` (Gemini 3 Pro) を使用
