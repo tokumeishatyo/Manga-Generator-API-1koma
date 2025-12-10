@@ -36,7 +36,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("600x550")
+        self.geometry("600x700")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
