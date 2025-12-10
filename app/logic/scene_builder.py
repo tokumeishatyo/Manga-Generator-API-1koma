@@ -130,7 +130,10 @@ def generate_scene_prompt(
     right_name: str = "",
     left_speech: str = "",
     right_speech: str = "",
-    move_name: str = ""
+    move_name: str = "",
+    show_health_bars: bool = True,
+    show_super_meter: bool = True,
+    show_dialogue_box: bool = False
 ) -> str:
     """
     シーンプロンプトを生成
@@ -145,6 +148,9 @@ def generate_scene_prompt(
         left_speech: 左キャラのセリフ（オプション）
         right_speech: 右キャラのセリフ（オプション）
         move_name: 技名（オプション）
+        show_health_bars: ヘルスバーを表示するか
+        show_super_meter: SUPERゲージを表示するか
+        show_dialogue_box: ダイアログボックスを表示するか
 
     Returns:
         生成されたシーンプロンプト
@@ -180,23 +186,43 @@ def generate_scene_prompt(
             name_parts.append(f"right character named \"{right_name}\"")
         name_instruction = f"\nCharacter name plates should show: {', '.join(name_parts)}."
 
-    # セリフの指示
+    # セリフの指示（ダイアログボックスか吹き出しか）
     speech_instruction = ""
     if left_speech or right_speech:
-        speech_parts = []
-        if left_speech:
-            speech_parts.append(f"Left character's speech bubble: 「{left_speech}」")
-        if right_speech:
-            speech_parts.append(f"Right character's speech bubble: 「{right_speech}」")
-        speech_instruction = "\n" + "\n".join(speech_parts)
+        if show_dialogue_box:
+            # ダイアログボックス形式（RPG風）
+            dialogue_text = left_speech or right_speech
+            speech_instruction = f"\nAdd a dialogue box at the bottom of the screen with character portrait, displaying: 「{dialogue_text}」"
+        else:
+            # 吹き出し形式（格闘ゲーム風）
+            speech_parts = []
+            if left_speech:
+                speech_parts.append(f"Left character's speech bubble: 「{left_speech}」")
+            if right_speech:
+                speech_parts.append(f"Right character's speech bubble: 「{right_speech}」")
+            speech_instruction = "\n" + "\n".join(speech_parts)
 
     # 技名の指示
     move_instruction = ""
     if move_name:
         move_instruction = f"\nDisplay special move name \"{move_name}\" prominently in the scene with dramatic text effects."
 
+    # UI要素の指示を構築
+    ui_elements = []
+    if show_health_bars:
+        ui_elements.append("health bars at top")
+    if left_name or right_name:
+        ui_elements.append("character name plates")
+    if show_super_meter:
+        ui_elements.append("super meter/gauge at bottom")
+
+    if ui_elements:
+        ui_instruction = f"Add {', '.join(ui_elements)}."
+    else:
+        ui_instruction = "No game UI elements (no health bars, no meters)."
+
     # プロンプト組み立て
-    prompt = f"""Fighting game style battle screen with dramatic composition.
+    prompt = f"""Game-style battle screen with dramatic composition.
 
 Left side: {left_desc}
 Right side: {right_desc}
@@ -205,7 +231,7 @@ Right side: {right_desc}
 
 {char_instruction}{name_instruction}{speech_instruction}{move_instruction}
 
-Add health bars, character name plates, and fighting game UI elements.
+{ui_instruction}
 Energy effects and dramatic lighting."""
 
     return prompt.strip()

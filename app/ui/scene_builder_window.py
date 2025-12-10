@@ -39,7 +39,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("750x650")
+        self.geometry("750x700")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
@@ -203,6 +203,42 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.move_name_entry.pack(side="left", padx=(5, 0))
         self.move_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
+        # UI要素トグル（7行目）
+        ui_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        ui_row.pack(fill="x", pady=5)
+
+        ctk.CTkLabel(ui_row, text="UI要素:", width=100).pack(side="left")
+
+        self.health_bars_var = tk.BooleanVar(value=True)
+        self.health_bars_cb = ctk.CTkCheckBox(
+            ui_row,
+            text="ヘルスバー",
+            variable=self.health_bars_var,
+            command=self._update_preview,
+            width=100
+        )
+        self.health_bars_cb.pack(side="left", padx=(5, 15))
+
+        self.super_meter_var = tk.BooleanVar(value=True)
+        self.super_meter_cb = ctk.CTkCheckBox(
+            ui_row,
+            text="SUPERゲージ",
+            variable=self.super_meter_var,
+            command=self._update_preview,
+            width=120
+        )
+        self.super_meter_cb.pack(side="left", padx=(0, 15))
+
+        self.dialogue_box_var = tk.BooleanVar(value=False)
+        self.dialogue_box_cb = ctk.CTkCheckBox(
+            ui_row,
+            text="ダイアログボックス",
+            variable=self.dialogue_box_var,
+            command=self._update_preview,
+            width=140
+        )
+        self.dialogue_box_cb.pack(side="left")
+
         # プレビュー
         preview_frame = ctk.CTkFrame(main_frame)
         preview_frame.pack(fill="both", expand=True, pady=(10, 5))
@@ -278,6 +314,11 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         right_speech = self.right_speech_var.get().strip()
         move_name = self.move_name_var.get().strip()
 
+        # UIトグル
+        show_health_bars = self.health_bars_var.get()
+        show_super_meter = self.super_meter_var.get()
+        show_dialogue_box = self.dialogue_box_var.get()
+
         prompt = generate_scene_prompt(
             scene_type=scene_type,
             left_action=left_action,
@@ -287,7 +328,10 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             right_name=right_name,
             left_speech=left_speech,
             right_speech=right_speech,
-            move_name=move_name
+            move_name=move_name,
+            show_health_bars=show_health_bars,
+            show_super_meter=show_super_meter,
+            show_dialogue_box=show_dialogue_box
         )
 
         self.preview_text.delete("1.0", tk.END)
