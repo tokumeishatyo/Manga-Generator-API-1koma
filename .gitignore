@@ -20,3 +20,6 @@ Thumbs.db
 
 # Recent files (user-specific)
 app/recent_files.json
+
+# Local articles (not for repository)
+qiita.md
