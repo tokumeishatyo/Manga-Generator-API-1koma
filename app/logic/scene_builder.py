@@ -4,154 +4,196 @@
 シーンテンプレートの定義と生成
 """
 
-# シーンテンプレート定義
-SCENE_TEMPLATES = {
-    "格闘ゲーム風": {
-        "name": "格闘ゲーム風",
-        "description": "格闘ゲームのバトル画面風。片側にリアルなカットイン、反対側にドット絵キャラ",
-        "recommended_style": "格闘ゲーム風",
-        "base_prompt": {
-            "left_real": """Fighting game style battle screen.
-Left side: large anime-style character cut-in, dramatic pose, {left_action} expression.
-Right side: pixel art 16-bit chibi version of the character in battle stance, {right_action} pose.
-{background}
-{same_character_instruction}
-Energy effects and dramatic lighting.""",
-            "left_deformed": """Fighting game style battle screen.
-Left side: pixel art 16-bit chibi version of the character in battle stance, {left_action} pose.
-Right side: large anime-style character cut-in, dramatic pose, {right_action} expression.
-{background}
-{same_character_instruction}
-Energy effects and dramatic lighting."""
-        },
-        "actions": {
-            "attacking": "attacking, firing energy beam",
-            "defending": "defending, blocking",
-            "damaged": "taking damage, hurt",
-            "victory": "victorious, triumphant",
-            "ready": "battle ready, determined"
-        },
-        "backgrounds": {
-            "教室": "Classroom background with desks and chalkboard.",
-            "体育館": "Gymnasium background with wooden floor.",
-            "屋上": "School rooftop background with fence and sky.",
-            "街中": "Urban street background with buildings.",
-            "異世界": "Fantasy world background with magical atmosphere.",
-            "闘技場": "Battle arena background with audience."
-        }
-    }
+# シーンタイプ定義（プリセット）
+SCENE_TYPES = {
+    "同一キャラ: カットイン/ドット絵": {
+        "description": "同じキャラが左にリアル(カットイン)、右にドット絵で表示",
+        "same_character": True,
+        "left_style": "cutin",      # カットイン
+        "right_style": "pixel",     # ドット絵
+    },
+    "同一キャラ: ドット絵/カットイン": {
+        "description": "同じキャラが左にドット絵、右にリアル(カットイン)で表示",
+        "same_character": True,
+        "left_style": "pixel",
+        "right_style": "cutin",
+    },
+    "別キャラ: 両方カットイン": {
+        "description": "異なるキャラが両方リアル(カットイン)で対戦",
+        "same_character": False,
+        "left_style": "cutin",
+        "right_style": "cutin",
+    },
+    "別キャラ: 両方通常配置": {
+        "description": "異なるキャラが両方リアル(通常配置)で対戦",
+        "same_character": False,
+        "left_style": "normal",
+        "right_style": "normal",
+    },
+    "別キャラ: 両方ドット絵": {
+        "description": "異なるキャラが両方ドット絵で対戦",
+        "same_character": False,
+        "left_style": "pixel",
+        "right_style": "pixel",
+    },
+}
+
+# スタイル表示名
+STYLE_NAMES = {
+    "cutin": "リアル(カットイン)",
+    "normal": "リアル(通常配置)",
+    "pixel": "ドット絵(16bit)",
+}
+
+# アクション定義
+ACTIONS = {
+    "attacking": "attacking, firing energy beam, offensive pose",
+    "defending": "defending, blocking, guarding pose",
+    "damaged": "taking damage, hurt, recoiling",
+    "victory": "victorious, triumphant, winning pose",
+    "ready": "battle ready, fighting stance, determined expression",
+    "special": "charging special attack, power gathering, glowing aura",
+}
+
+ACTION_NAMES = {
+    "attacking": "攻撃",
+    "defending": "防御",
+    "damaged": "ダメージ",
+    "victory": "勝利",
+    "ready": "構え",
+    "special": "必殺技チャージ",
+}
+
+# 背景定義
+BACKGROUNDS = {
+    "教室": "Classroom background with desks and chalkboard.",
+    "体育館": "Gymnasium background with wooden floor.",
+    "屋上": "School rooftop background with fence and blue sky.",
+    "街中": "Urban street background at night with neon lights and buildings.",
+    "異世界": "Fantasy world background with magical atmosphere and floating crystals.",
+    "闘技場": "Battle arena background with audience and spotlights.",
+    "公園": "Park background with trees and benches.",
+    "ビーチ": "Beach background with sand and ocean waves.",
 }
 
 # 同一キャラ指示文
-SAME_CHARACTER_INSTRUCTION = """IMPORTANT: Both the anime-style character and the pixel art chibi are THE SAME CHARACTER. They must wear IDENTICAL clothing and have the same hair color/style. The only difference is the art style (realistic vs pixel art)."""
+SAME_CHARACTER_INSTRUCTION = """IMPORTANT: Both characters shown are THE SAME PERSON displayed in different art styles. They must have IDENTICAL clothing, hair color, and hair style. The only difference is the rendering style."""
+
+# 別キャラ指示文
+DIFFERENT_CHARACTER_INSTRUCTION = """IMPORTANT: The left and right characters are DIFFERENT PEOPLE. They should have distinct appearances, but the art style should be consistent between them."""
 
 
-def get_template_names() -> list:
-    """
-    利用可能なテンプレート名のリストを取得
-
-    Returns:
-        テンプレート名のリスト
-    """
-    return list(SCENE_TEMPLATES.keys())
+def get_scene_types() -> list:
+    """シーンタイプ名のリストを取得"""
+    return list(SCENE_TYPES.keys())
 
 
-def get_template(name: str) -> dict:
-    """
-    指定されたテンプレートを取得
-
-    Args:
-        name: テンプレート名
-
-    Returns:
-        テンプレート辞書、見つからない場合はNone
-    """
-    return SCENE_TEMPLATES.get(name)
+def get_scene_type_info(scene_type: str) -> dict:
+    """シーンタイプの情報を取得"""
+    return SCENE_TYPES.get(scene_type, {})
 
 
-def get_actions(template_name: str) -> dict:
-    """
-    テンプレートのアクション選択肢を取得
-
-    Args:
-        template_name: テンプレート名
-
-    Returns:
-        アクション辞書 {日本語名: 英語プロンプト}
-    """
-    template = SCENE_TEMPLATES.get(template_name)
-    if template:
-        return template.get("actions", {})
-    return {}
+def get_action_names() -> dict:
+    """アクション名の辞書を取得（日本語: 英語キー）"""
+    return {v: k for k, v in ACTION_NAMES.items()}
 
 
-def get_backgrounds(template_name: str) -> dict:
-    """
-    テンプレートの背景選択肢を取得
+def get_action_display_names() -> list:
+    """アクションの表示名リストを取得"""
+    return list(ACTION_NAMES.values())
 
-    Args:
-        template_name: テンプレート名
 
-    Returns:
-        背景辞書 {日本語名: 英語プロンプト}
-    """
-    template = SCENE_TEMPLATES.get(template_name)
-    if template:
-        return template.get("backgrounds", {})
-    return {}
+def get_background_names() -> list:
+    """背景名のリストを取得"""
+    return list(BACKGROUNDS.keys())
+
+
+def _build_character_description(style: str, action: str, position: str) -> str:
+    """キャラクターの説明文を生成"""
+    action_desc = ACTIONS.get(action, action)
+
+    if style == "cutin":
+        return f"large anime-style character cut-in, dramatic close-up, {action_desc}"
+    elif style == "normal":
+        return f"anime-style character in full body view, {action_desc}"
+    elif style == "pixel":
+        return f"pixel art 16-bit chibi character sprite, {action_desc}"
+    return ""
 
 
 def generate_scene_prompt(
-    template_name: str,
-    left_is_real: bool = True,
-    same_character: bool = True,
-    left_action: str = "attacking",
-    right_action: str = "defending",
-    background: str = "教室"
+    scene_type: str,
+    left_action: str,
+    right_action: str,
+    background: str
 ) -> str:
     """
     シーンプロンプトを生成
 
     Args:
-        template_name: テンプレート名
-        left_is_real: True=左がリアル/右がドット絵、False=左がドット絵/右がリアル
-        same_character: 同一キャラかどうか
-        left_action: 左キャラのアクション
-        right_action: 右キャラのアクション
+        scene_type: シーンタイプ名
+        left_action: 左キャラのアクション（英語キー）
+        right_action: 右キャラのアクション（英語キー）
         background: 背景名
 
     Returns:
         生成されたシーンプロンプト
     """
-    template = SCENE_TEMPLATES.get(template_name)
-    if not template:
+    type_info = SCENE_TYPES.get(scene_type)
+    if not type_info:
         return ""
 
-    # ベースプロンプトを選択
-    base_prompts = template.get("base_prompt", {})
-    if left_is_real:
-        base_prompt = base_prompts.get("left_real", "")
+    same_character = type_info["same_character"]
+    left_style = type_info["left_style"]
+    right_style = type_info["right_style"]
+
+    # キャラクター説明を生成
+    left_desc = _build_character_description(left_style, left_action, "left")
+    right_desc = _build_character_description(right_style, right_action, "right")
+
+    # 背景説明
+    bg_desc = BACKGROUNDS.get(background, "")
+
+    # キャラ関係の指示
+    if same_character:
+        char_instruction = SAME_CHARACTER_INSTRUCTION
     else:
-        base_prompt = base_prompts.get("left_deformed", "")
+        char_instruction = DIFFERENT_CHARACTER_INSTRUCTION
 
-    # アクションを取得
-    actions = template.get("actions", {})
-    left_action_prompt = actions.get(left_action, left_action)
-    right_action_prompt = actions.get(right_action, right_action)
+    # プロンプト組み立て
+    prompt = f"""Fighting game style battle screen with dramatic composition.
 
-    # 背景を取得
-    backgrounds = template.get("backgrounds", {})
-    background_prompt = backgrounds.get(background, "")
+Left side: {left_desc}
+Right side: {right_desc}
 
-    # 同一キャラ指示
-    same_char_instruction = SAME_CHARACTER_INSTRUCTION if same_character else ""
+{bg_desc}
 
-    # プロンプトを組み立て
-    prompt = base_prompt.format(
-        left_action=left_action_prompt,
-        right_action=right_action_prompt,
-        background=background_prompt,
-        same_character_instruction=same_char_instruction
-    )
+{char_instruction}
+
+Add health bars, character name plates, and fighting game UI elements.
+Energy effects and dramatic lighting."""
 
     return prompt.strip()
+
+
+# 後方互換性のための関数（旧バージョン用）
+def get_template_names() -> list:
+    """利用可能なテンプレート名のリストを取得（後方互換）"""
+    return ["格闘ゲーム風"]
+
+
+def get_template(name: str) -> dict:
+    """テンプレートを取得（後方互換）"""
+    if name == "格闘ゲーム風":
+        return {"name": "格闘ゲーム風"}
+    return None
+
+
+def get_actions(template_name: str) -> dict:
+    """アクション選択肢を取得（後方互換）"""
+    return ACTION_NAMES
+
+
+def get_backgrounds(template_name: str) -> dict:
+    """背景選択肢を取得（後方互換）"""
+    return BACKGROUNDS

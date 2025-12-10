@@ -12,11 +12,13 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from logic.scene_builder import (
-    get_template_names,
-    get_template,
-    get_actions,
-    get_backgrounds,
-    generate_scene_prompt
+    get_scene_types,
+    get_scene_type_info,
+    get_action_names,
+    get_action_display_names,
+    get_background_names,
+    generate_scene_prompt,
+    STYLE_NAMES
 )
 
 
@@ -33,14 +35,14 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         super().__init__(parent)
 
         self.callback = callback
+        self.action_name_map = get_action_names()  # 日本語 -> 英語キー
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("600x700")
+        self.geometry("650x750")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
-        # 前面に表示するがモーダルにはしない
         self.transient(parent)
 
         # UI構築
@@ -55,130 +57,110 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         main_frame = ctk.CTkFrame(self)
         main_frame.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # テンプレート選択
-        template_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        template_frame.pack(fill="x", pady=(0, 10))
+        # シーンタイプ選択
+        type_frame = ctk.CTkFrame(main_frame)
+        type_frame.pack(fill="x", pady=(0, 10))
 
-        ctk.CTkLabel(template_frame, text="テンプレート:", font=("", 14, "bold")).pack(side="left")
+        ctk.CTkLabel(type_frame, text="シーンタイプ", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
 
-        self.template_var = tk.StringVar(value="格闘ゲーム風")
-        template_names = get_template_names()
-        self.template_menu = ctk.CTkOptionMenu(
-            template_frame,
-            variable=self.template_var,
-            values=template_names if template_names else ["(なし)"],
-            command=self._on_template_change,
-            width=200
+        self.scene_type_var = tk.StringVar(value="同一キャラ: カットイン/ドット絵")
+        scene_types = get_scene_types()
+
+        self.scene_type_menu = ctk.CTkOptionMenu(
+            type_frame,
+            variable=self.scene_type_var,
+            values=scene_types,
+            command=self._on_scene_type_change,
+            width=300
         )
-        self.template_menu.pack(side="left", padx=(10, 0))
+        self.scene_type_menu.pack(anchor="w", padx=20, pady=(0, 5))
 
-        # 配置選択（左右入れ替え）
-        layout_frame = ctk.CTkFrame(main_frame)
-        layout_frame.pack(fill="x", pady=10)
-
-        ctk.CTkLabel(layout_frame, text="配置:", font=("", 13, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
-
-        self.layout_var = tk.StringVar(value="left_real")
-
-        layout_options_frame = ctk.CTkFrame(layout_frame, fg_color="transparent")
-        layout_options_frame.pack(fill="x", padx=20)
-
-        self.layout_radio1 = ctk.CTkRadioButton(
-            layout_options_frame,
-            text="左: リアル（カットイン） / 右: ドット絵（2頭身）",
-            variable=self.layout_var,
-            value="left_real",
-            command=self._update_preview
+        # シーンタイプ説明
+        self.type_description_label = ctk.CTkLabel(
+            type_frame,
+            text="",
+            font=("", 11),
+            text_color="gray"
         )
-        self.layout_radio1.pack(anchor="w", pady=2)
+        self.type_description_label.pack(anchor="w", padx=20, pady=(0, 10))
 
-        self.layout_radio2 = ctk.CTkRadioButton(
-            layout_options_frame,
-            text="左: ドット絵（2頭身） / 右: リアル（カットイン）",
-            variable=self.layout_var,
-            value="left_deformed",
-            command=self._update_preview
+        # 構成表示
+        self.composition_label = ctk.CTkLabel(
+            type_frame,
+            text="",
+            font=("", 12)
         )
-        self.layout_radio2.pack(anchor="w", pady=2)
+        self.composition_label.pack(anchor="w", padx=20, pady=(0, 10))
 
-        # アクション選択
+        # アクション選択フレーム
         action_frame = ctk.CTkFrame(main_frame)
         action_frame.pack(fill="x", pady=10)
 
-        ctk.CTkLabel(action_frame, text="アクション:", font=("", 13, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        ctk.CTkLabel(action_frame, text="アクション", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
 
         action_options_frame = ctk.CTkFrame(action_frame, fg_color="transparent")
-        action_options_frame.pack(fill="x", padx=20)
+        action_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+
+        action_display_names = get_action_display_names()
 
         # 左キャラアクション
-        left_action_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
-        left_action_frame.pack(fill="x", pady=2)
-        ctk.CTkLabel(left_action_frame, text="左キャラ:", width=80).pack(side="left")
+        left_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
+        left_frame.pack(fill="x", pady=5)
 
-        self.left_action_var = tk.StringVar(value="attacking")
-        actions = get_actions("格闘ゲーム風")
-        action_keys = list(actions.keys()) if actions else ["attacking"]
+        ctk.CTkLabel(left_frame, text="左キャラ:", width=80).pack(side="left")
+        self.left_action_var = tk.StringVar(value="攻撃")
         self.left_action_menu = ctk.CTkOptionMenu(
-            left_action_frame,
+            left_frame,
             variable=self.left_action_var,
-            values=action_keys,
+            values=action_display_names,
             command=lambda _: self._update_preview(),
-            width=150
+            width=180
         )
         self.left_action_menu.pack(side="left", padx=(10, 0))
 
         # 右キャラアクション
-        right_action_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
-        right_action_frame.pack(fill="x", pady=2)
-        ctk.CTkLabel(right_action_frame, text="右キャラ:", width=80).pack(side="left")
+        right_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
+        right_frame.pack(fill="x", pady=5)
 
-        self.right_action_var = tk.StringVar(value="defending")
+        ctk.CTkLabel(right_frame, text="右キャラ:", width=80).pack(side="left")
+        self.right_action_var = tk.StringVar(value="防御")
         self.right_action_menu = ctk.CTkOptionMenu(
-            right_action_frame,
+            right_frame,
             variable=self.right_action_var,
-            values=action_keys,
+            values=action_display_names,
             command=lambda _: self._update_preview(),
-            width=150
+            width=180
         )
         self.right_action_menu.pack(side="left", padx=(10, 0))
 
         # 背景選択
-        bg_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
-        bg_frame.pack(fill="x", pady=2)
-        ctk.CTkLabel(bg_frame, text="背景:", width=80).pack(side="left")
+        bg_frame = ctk.CTkFrame(main_frame)
+        bg_frame.pack(fill="x", pady=10)
+
+        ctk.CTkLabel(bg_frame, text="背景", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+
+        bg_options_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        bg_options_frame.pack(fill="x", padx=20, pady=(0, 10))
 
         self.background_var = tk.StringVar(value="教室")
-        backgrounds = get_backgrounds("格闘ゲーム風")
-        bg_keys = list(backgrounds.keys()) if backgrounds else ["教室"]
+        background_names = get_background_names()
+
         self.background_menu = ctk.CTkOptionMenu(
-            bg_frame,
+            bg_options_frame,
             variable=self.background_var,
-            values=bg_keys,
+            values=background_names,
             command=lambda _: self._update_preview(),
-            width=150
+            width=180
         )
-        self.background_menu.pack(side="left", padx=(10, 0))
-
-        # 同一キャラオプション
-        option_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        option_frame.pack(fill="x", pady=10)
-
-        self.same_char_var = tk.BooleanVar(value=True)
-        self.same_char_check = ctk.CTkCheckBox(
-            option_frame,
-            text="左右は同一キャラ（服装・髪型を統一）",
-            variable=self.same_char_var,
-            command=self._update_preview
-        )
-        self.same_char_check.pack(anchor="w")
+        self.background_menu.pack(anchor="w")
 
         # プレビュー
         preview_frame = ctk.CTkFrame(main_frame)
         preview_frame.pack(fill="both", expand=True, pady=10)
 
-        ctk.CTkLabel(preview_frame, text="プレビュー:", font=("", 13, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        ctk.CTkLabel(preview_frame, text="プレビュー", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
 
-        self.preview_text = ctk.CTkTextbox(preview_frame, height=150, wrap="word")
+        self.preview_text = ctk.CTkTextbox(preview_frame, height=180, wrap="word")
         self.preview_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
         # ボタン
@@ -210,41 +192,42 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         )
         self.close_button.pack(side="left")
 
-    def _on_template_change(self, template_name: str):
-        """テンプレート変更時の処理"""
-        # アクションと背景の選択肢を更新
-        actions = get_actions(template_name)
-        action_keys = list(actions.keys()) if actions else ["attacking"]
+        # 初期表示更新
+        self._on_scene_type_change(self.scene_type_var.get())
 
-        self.left_action_menu.configure(values=action_keys)
-        self.right_action_menu.configure(values=action_keys)
+    def _on_scene_type_change(self, scene_type: str):
+        """シーンタイプ変更時の処理"""
+        type_info = get_scene_type_info(scene_type)
 
-        if action_keys:
-            self.left_action_var.set(action_keys[0])
-            self.right_action_var.set(action_keys[1] if len(action_keys) > 1 else action_keys[0])
+        # 説明を更新
+        description = type_info.get("description", "")
+        self.type_description_label.configure(text=description)
 
-        backgrounds = get_backgrounds(template_name)
-        bg_keys = list(backgrounds.keys()) if backgrounds else ["教室"]
+        # 構成を表示
+        left_style = type_info.get("left_style", "")
+        right_style = type_info.get("right_style", "")
+        left_name = STYLE_NAMES.get(left_style, left_style)
+        right_name = STYLE_NAMES.get(right_style, right_style)
 
-        self.background_menu.configure(values=bg_keys)
-        if bg_keys:
-            self.background_var.set(bg_keys[0])
+        composition = f"構成: 左[{left_name}] vs 右[{right_name}]"
+        self.composition_label.configure(text=composition)
 
         self._update_preview()
 
     def _update_preview(self):
         """プレビューを更新"""
-        template_name = self.template_var.get()
-        left_is_real = self.layout_var.get() == "left_real"
-        same_character = self.same_char_var.get()
-        left_action = self.left_action_var.get()
-        right_action = self.right_action_var.get()
+        scene_type = self.scene_type_var.get()
+
+        # 日本語アクション名を英語キーに変換
+        left_action_jp = self.left_action_var.get()
+        right_action_jp = self.right_action_var.get()
+        left_action = self.action_name_map.get(left_action_jp, "attacking")
+        right_action = self.action_name_map.get(right_action_jp, "defending")
+
         background = self.background_var.get()
 
         prompt = generate_scene_prompt(
-            template_name=template_name,
-            left_is_real=left_is_real,
-            same_character=same_character,
+            scene_type=scene_type,
             left_action=left_action,
             right_action=right_action,
             background=background
