@@ -39,9 +39,9 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.geometry("600x550")
         self.resizable(True, True)
 
-        # モーダル風に設定（親ウィンドウの前面に表示）
+        # 非モーダル（親ウィンドウも操作可能）
+        # 前面に表示するがモーダルにはしない
         self.transient(parent)
-        self.grab_set()
 
         # UI構築
         self._build_ui()
@@ -185,19 +185,27 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         button_frame.pack(fill="x", pady=(10, 0))
 
-        self.copy_button = ctk.CTkButton(
+        self.clipboard_button = ctk.CTkButton(
             button_frame,
-            text="シーン説明にコピー",
-            command=self._copy_to_scene,
-            width=150
+            text="クリップボードにコピー",
+            command=self._copy_to_clipboard,
+            width=160
         )
-        self.copy_button.pack(side="left", padx=(0, 10))
+        self.clipboard_button.pack(side="left", padx=(0, 10))
+
+        self.apply_button = ctk.CTkButton(
+            button_frame,
+            text="シーン説明に書き込み",
+            command=self._apply_to_scene,
+            width=160
+        )
+        self.apply_button.pack(side="left", padx=(0, 10))
 
         self.close_button = ctk.CTkButton(
             button_frame,
             text="閉じる",
             command=self.destroy,
-            width=100,
+            width=80,
             fg_color="gray"
         )
         self.close_button.pack(side="left")
@@ -245,11 +253,22 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.preview_text.delete("1.0", tk.END)
         self.preview_text.insert("1.0", prompt)
 
-    def _copy_to_scene(self):
-        """シーン説明にコピー"""
+    def _copy_to_clipboard(self):
+        """クリップボードにコピー"""
+        import pyperclip
+        prompt = self.preview_text.get("1.0", tk.END).strip()
+        pyperclip.copy(prompt)
+        # ボタンテキストを一時的に変更してフィードバック
+        self.clipboard_button.configure(text="コピーしました！")
+        self.after(1500, lambda: self.clipboard_button.configure(text="クリップボードにコピー"))
+
+    def _apply_to_scene(self):
+        """シーン説明に書き込み（ウィンドウは閉じない）"""
         prompt = self.preview_text.get("1.0", tk.END).strip()
 
         if self.callback:
             self.callback(prompt)
 
-        self.destroy()
+        # ボタンテキストを一時的に変更してフィードバック
+        self.apply_button.configure(text="書き込みました！")
+        self.after(1500, lambda: self.apply_button.configure(text="シーン説明に書き込み"))
