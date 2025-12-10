@@ -39,7 +39,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("シーンビルダー")
-        self.geometry("650x950")
+        self.geometry("750x650")
         self.resizable(True, True)
 
         # 非モーダル（親ウィンドウも操作可能）
@@ -57,212 +57,164 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         main_frame = ctk.CTkFrame(self)
         main_frame.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # シーンタイプ選択
-        type_frame = ctk.CTkFrame(main_frame)
-        type_frame.pack(fill="x", pady=(0, 10))
+        # シーンタイプ選択（1行目）
+        type_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        type_row.pack(fill="x", pady=(0, 5))
 
-        ctk.CTkLabel(type_frame, text="シーンタイプ", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
-
+        ctk.CTkLabel(type_row, text="シーンタイプ:", width=100).pack(side="left")
         self.scene_type_var = tk.StringVar(value="同一キャラ: カットイン/ドット絵")
         scene_types = get_scene_types()
 
         self.scene_type_menu = ctk.CTkOptionMenu(
-            type_frame,
+            type_row,
             variable=self.scene_type_var,
             values=scene_types,
             command=self._on_scene_type_change,
-            width=300
+            width=280
         )
-        self.scene_type_menu.pack(anchor="w", padx=20, pady=(0, 5))
+        self.scene_type_menu.pack(side="left", padx=(5, 10))
 
-        # シーンタイプ説明
-        self.type_description_label = ctk.CTkLabel(
-            type_frame,
+        # 構成表示（シーンタイプの横）
+        self.composition_label = ctk.CTkLabel(
+            type_row,
             text="",
             font=("", 11),
             text_color="gray"
         )
-        self.type_description_label.pack(anchor="w", padx=20, pady=(0, 10))
+        self.composition_label.pack(side="left")
 
-        # 構成表示
-        self.composition_label = ctk.CTkLabel(
-            type_frame,
-            text="",
-            font=("", 12)
-        )
-        self.composition_label.pack(anchor="w", padx=20, pady=(0, 10))
+        # アクション選択（2行目）- 左右を1行に
+        action_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        action_row.pack(fill="x", pady=5)
 
-        # アクション選択フレーム
-        action_frame = ctk.CTkFrame(main_frame)
-        action_frame.pack(fill="x", pady=10)
-
-        ctk.CTkLabel(action_frame, text="アクション", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
-
-        action_options_frame = ctk.CTkFrame(action_frame, fg_color="transparent")
-        action_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+        ctk.CTkLabel(action_row, text="アクション:", width=100).pack(side="left")
 
         action_display_names = get_action_display_names()
 
-        # 左キャラアクション
-        left_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
-        left_frame.pack(fill="x", pady=5)
-
-        ctk.CTkLabel(left_frame, text="左キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(action_row, text="左:").pack(side="left", padx=(5, 2))
         self.left_action_var = tk.StringVar(value="攻撃")
         self.left_action_menu = ctk.CTkOptionMenu(
-            left_frame,
+            action_row,
             variable=self.left_action_var,
             values=action_display_names,
             command=lambda _: self._update_preview(),
-            width=180
+            width=120
         )
-        self.left_action_menu.pack(side="left", padx=(10, 0))
+        self.left_action_menu.pack(side="left", padx=(0, 15))
 
-        # 右キャラアクション
-        right_frame = ctk.CTkFrame(action_options_frame, fg_color="transparent")
-        right_frame.pack(fill="x", pady=5)
-
-        ctk.CTkLabel(right_frame, text="右キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(action_row, text="右:").pack(side="left", padx=(0, 2))
         self.right_action_var = tk.StringVar(value="防御")
         self.right_action_menu = ctk.CTkOptionMenu(
-            right_frame,
+            action_row,
             variable=self.right_action_var,
             values=action_display_names,
             command=lambda _: self._update_preview(),
-            width=180
+            width=120
         )
-        self.right_action_menu.pack(side="left", padx=(10, 0))
+        self.right_action_menu.pack(side="left")
 
-        # 背景選択
-        bg_frame = ctk.CTkFrame(main_frame)
-        bg_frame.pack(fill="x", pady=10)
+        # 背景選択（3行目）
+        bg_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        bg_row.pack(fill="x", pady=5)
 
-        ctk.CTkLabel(bg_frame, text="背景", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
-
-        bg_options_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
-        bg_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+        ctk.CTkLabel(bg_row, text="背景:", width=100).pack(side="left")
 
         self.background_var = tk.StringVar(value="教室")
         background_names = get_background_names()
 
         self.background_menu = ctk.CTkOptionMenu(
-            bg_options_frame,
+            bg_row,
             variable=self.background_var,
             values=background_names,
             command=lambda _: self._update_preview(),
-            width=180
+            width=150
         )
-        self.background_menu.pack(anchor="w")
+        self.background_menu.pack(side="left", padx=(5, 0))
 
-        # キャラ名入力
-        name_frame = ctk.CTkFrame(main_frame)
-        name_frame.pack(fill="x", pady=10)
+        # キャラ名入力（4行目）- 左右を1行に
+        name_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        name_row.pack(fill="x", pady=5)
 
-        ctk.CTkLabel(name_frame, text="キャラ名（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        ctk.CTkLabel(name_row, text="キャラ名:", width=100).pack(side="left")
 
-        name_options_frame = ctk.CTkFrame(name_frame, fg_color="transparent")
-        name_options_frame.pack(fill="x", padx=20, pady=(0, 10))
-
-        # 左キャラ名
-        left_name_frame = ctk.CTkFrame(name_options_frame, fg_color="transparent")
-        left_name_frame.pack(fill="x", pady=2)
-
-        ctk.CTkLabel(left_name_frame, text="左キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(name_row, text="左:").pack(side="left", padx=(5, 2))
         self.left_name_var = tk.StringVar(value="")
         self.left_name_entry = ctk.CTkEntry(
-            left_name_frame,
+            name_row,
             textvariable=self.left_name_var,
-            width=200,
-            placeholder_text="例: AYASE KOYOMI"
+            width=150,
+            placeholder_text="AYASE KOYOMI"
         )
-        self.left_name_entry.pack(side="left", padx=(10, 0))
+        self.left_name_entry.pack(side="left", padx=(0, 15))
         self.left_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
-        # 右キャラ名
-        right_name_frame = ctk.CTkFrame(name_options_frame, fg_color="transparent")
-        right_name_frame.pack(fill="x", pady=2)
-
-        ctk.CTkLabel(right_name_frame, text="右キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(name_row, text="右:").pack(side="left", padx=(0, 2))
         self.right_name_var = tk.StringVar(value="")
         self.right_name_entry = ctk.CTkEntry(
-            right_name_frame,
+            name_row,
             textvariable=self.right_name_var,
-            width=200,
-            placeholder_text="例: SHINOMIYA RIN"
+            width=150,
+            placeholder_text="SHINOMIYA RIN"
         )
-        self.right_name_entry.pack(side="left", padx=(10, 0))
+        self.right_name_entry.pack(side="left")
         self.right_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
-        # セリフ入力
-        speech_frame = ctk.CTkFrame(main_frame)
-        speech_frame.pack(fill="x", pady=10)
+        # セリフ入力（5行目）- 左右を1行に
+        speech_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        speech_row.pack(fill="x", pady=5)
 
-        ctk.CTkLabel(speech_frame, text="セリフ（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        ctk.CTkLabel(speech_row, text="セリフ:", width=100).pack(side="left")
 
-        speech_options_frame = ctk.CTkFrame(speech_frame, fg_color="transparent")
-        speech_options_frame.pack(fill="x", padx=20, pady=(0, 10))
-
-        # 左キャラセリフ
-        left_speech_frame = ctk.CTkFrame(speech_options_frame, fg_color="transparent")
-        left_speech_frame.pack(fill="x", pady=2)
-
-        ctk.CTkLabel(left_speech_frame, text="左キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(speech_row, text="左:").pack(side="left", padx=(5, 2))
         self.left_speech_var = tk.StringVar(value="")
         self.left_speech_entry = ctk.CTkEntry(
-            left_speech_frame,
+            speech_row,
             textvariable=self.left_speech_var,
-            width=200,
-            placeholder_text="例: くらえ〜"
+            width=150,
+            placeholder_text="くらえ〜"
         )
-        self.left_speech_entry.pack(side="left", padx=(10, 0))
+        self.left_speech_entry.pack(side="left", padx=(0, 15))
         self.left_speech_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
-        # 右キャラセリフ
-        right_speech_frame = ctk.CTkFrame(speech_options_frame, fg_color="transparent")
-        right_speech_frame.pack(fill="x", pady=2)
-
-        ctk.CTkLabel(right_speech_frame, text="右キャラ:", width=80).pack(side="left")
+        ctk.CTkLabel(speech_row, text="右:").pack(side="left", padx=(0, 2))
         self.right_speech_var = tk.StringVar(value="")
         self.right_speech_entry = ctk.CTkEntry(
-            right_speech_frame,
+            speech_row,
             textvariable=self.right_speech_var,
-            width=200,
-            placeholder_text="例: うおお"
+            width=150,
+            placeholder_text="うおお"
         )
-        self.right_speech_entry.pack(side="left", padx=(10, 0))
+        self.right_speech_entry.pack(side="left")
         self.right_speech_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
-        # 技名入力
-        move_frame = ctk.CTkFrame(main_frame)
-        move_frame.pack(fill="x", pady=10)
+        # 技名入力（6行目）
+        move_row = ctk.CTkFrame(main_frame, fg_color="transparent")
+        move_row.pack(fill="x", pady=5)
 
-        ctk.CTkLabel(move_frame, text="技名（任意）", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
-
-        move_options_frame = ctk.CTkFrame(move_frame, fg_color="transparent")
-        move_options_frame.pack(fill="x", padx=20, pady=(0, 10))
+        ctk.CTkLabel(move_row, text="技名:", width=100).pack(side="left")
 
         self.move_name_var = tk.StringVar(value="")
         self.move_name_entry = ctk.CTkEntry(
-            move_options_frame,
+            move_row,
             textvariable=self.move_name_var,
             width=250,
-            placeholder_text="例: 必殺ビーム"
+            placeholder_text="必殺ビーム"
         )
-        self.move_name_entry.pack(anchor="w")
+        self.move_name_entry.pack(side="left", padx=(5, 0))
         self.move_name_entry.bind("<KeyRelease>", lambda _: self._update_preview())
 
         # プレビュー
         preview_frame = ctk.CTkFrame(main_frame)
-        preview_frame.pack(fill="both", expand=True, pady=10)
+        preview_frame.pack(fill="both", expand=True, pady=(10, 5))
 
-        ctk.CTkLabel(preview_frame, text="プレビュー", font=("", 14, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        ctk.CTkLabel(preview_frame, text="プレビュー", font=("", 12, "bold")).pack(anchor="w", padx=10, pady=(5, 0))
 
-        self.preview_text = ctk.CTkTextbox(preview_frame, height=180, wrap="word")
-        self.preview_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        self.preview_text = ctk.CTkTextbox(preview_frame, height=200, wrap="word")
+        self.preview_text.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
         # ボタン
         button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        button_frame.pack(fill="x", pady=(10, 0))
+        button_frame.pack(fill="x", pady=(5, 0))
 
         self.clipboard_button = ctk.CTkButton(
             button_frame,
@@ -296,17 +248,13 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         """シーンタイプ変更時の処理"""
         type_info = get_scene_type_info(scene_type)
 
-        # 説明を更新
-        description = type_info.get("description", "")
-        self.type_description_label.configure(text=description)
-
         # 構成を表示
         left_style = type_info.get("left_style", "")
         right_style = type_info.get("right_style", "")
         left_name = STYLE_NAMES.get(left_style, left_style)
         right_name = STYLE_NAMES.get(right_style, right_style)
 
-        composition = f"構成: 左[{left_name}] vs 右[{right_name}]"
+        composition = f"[{left_name}] vs [{right_name}]"
         self.composition_label.configure(text=composition)
 
         self._update_preview()
