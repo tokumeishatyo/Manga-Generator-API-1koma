@@ -772,7 +772,8 @@ style:
         from ui.decorative_text_window import (
             TEXT_TYPES, TITLE_FONTS, TITLE_SIZES, GRADIENT_COLORS,
             OUTLINE_COLORS, GLOW_EFFECTS, CALLOUT_TYPES, CALLOUT_COLORS,
-            ROTATIONS, DISTORTIONS, NAMETAG_TYPES
+            ROTATIONS, DISTORTIONS, NAMETAG_TYPES,
+            MSGWIN_STYLES, MSGWIN_FRAME_TYPES, FACE_ICON_POSITIONS
         )
 
         settings = self.current_settings
@@ -862,6 +863,114 @@ name_tag:
   style:
     type: "{NAMETAG_TYPES.get(style.get('type', 'ギザギザステッカー'), 'Jagged Sticker')}"
     rotation: "{ROTATIONS.get(style.get('rotation', '少し左傾き'), '-5 degrees')}"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+"""
+
+        elif text_type == "メッセージウィンドウ":
+            from ui.decorative_text_window import MSGWIN_MODES
+            mode = settings.get('mode', 'フルスペック（名前+顔+セリフ）')
+            mode_key = MSGWIN_MODES.get(mode, 'full')
+            speaker_name = settings.get('speaker_name', '')
+            face_position = style.get('face_icon_position', '左内側')
+
+            if mode_key == "full":
+                # フルスペック: 名前+顔+セリフ
+                yaml_content = f"""# Message Window - Full (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Message Window'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+message_window:
+  enabled: true
+  mode: "full"
+  speaker_name: "{speaker_name}"
+  text: "{text_content}"
+  style_preset: "{MSGWIN_STYLES.get(style.get('preset', 'SF・ロボット風'), 'Sci-Fi Tech')}"
+
+  design:
+    position: "Bottom Center"
+    width: "90%"
+    frame_type: "{MSGWIN_FRAME_TYPES.get(style.get('frame_type', 'サイバネティック青'), 'Cybernetic Blue')}"
+    background_opacity: {style.get('opacity', 0.8)}
+
+    face_icon:
+      enabled: true
+      source_image: "Auto(Left Character)"
+      position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+"""
+            elif mode_key == "face_only":
+                # 顔アイコンのみ
+                yaml_content = f"""# Message Window - Face Only (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Face Icon'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+message_window:
+  enabled: true
+  mode: "face_only"
+
+  design:
+    face_icon:
+      enabled: true
+      source_image: "Auto(Left Character)"
+      position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
+      style: "Standalone"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+"""
+            else:  # text_only
+                # セリフのみ
+                yaml_content = f"""# Message Window - Text Only (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Message Text'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+message_window:
+  enabled: true
+  mode: "text_only"
+  text: "{text_content}"
+
+  design:
+    position: "Bottom Center"
+    width: "90%"
+    frame_type: "{MSGWIN_FRAME_TYPES.get(style.get('frame_type', 'サイバネティック青'), 'Cybernetic Blue')}"
+    background_opacity: {style.get('opacity', 0.8)}
+
+    face_icon:
+      enabled: false
 
 output:
   background: "Transparent"

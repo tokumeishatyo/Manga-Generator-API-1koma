@@ -20,7 +20,8 @@ from ui.base_settings_window import BaseSettingsWindow
 TEXT_TYPES = {
     "技名テロップ": "special_move_title",
     "決め台詞": "impact_callout",
-    "キャラ名プレート": "name_tag"
+    "キャラ名プレート": "name_tag",
+    "メッセージウィンドウ": "message_window"
 }
 
 # 技名テロップ用フォント
@@ -104,6 +105,36 @@ NAMETAG_TYPES = {
     "リボン": "Ribbon Banner"
 }
 
+# メッセージウィンドウ用モード
+MSGWIN_MODES = {
+    "フルスペック（名前+顔+セリフ）": "full",
+    "顔アイコンのみ": "face_only",
+    "セリフのみ": "text_only"
+}
+
+# メッセージウィンドウ用スタイルプリセット
+MSGWIN_STYLES = {
+    "SF・ロボット風": "Sci-Fi Tech",
+    "レトロRPG風": "Retro RPG",
+    "ビジュアルノベル風": "Visual Novel"
+}
+
+# メッセージウィンドウ用フレームタイプ
+MSGWIN_FRAME_TYPES = {
+    "サイバネティック青": "Cybernetic Blue",
+    "クラシック黒": "Classic Black",
+    "半透明白": "Translucent White",
+    "ゴールド装飾": "Gold Ornate"
+}
+
+# 顔アイコン位置
+FACE_ICON_POSITIONS = {
+    "左内側": "Left Inside",
+    "右内側": "Right Inside",
+    "左外側": "Left Outside",
+    "なし": "None"
+}
+
 
 class DecorativeTextWindow(BaseSettingsWindow):
     """装飾テキスト設定ウィンドウ（ui_text_overlay.yaml準拠）"""
@@ -180,6 +211,7 @@ class DecorativeTextWindow(BaseSettingsWindow):
         self._build_title_style_frame()
         self._build_callout_style_frame()
         self._build_nametag_style_frame()
+        self._build_msgwin_style_frame()
 
         # 初期表示
         self._on_type_change("技名テロップ")
@@ -296,12 +328,105 @@ class DecorativeTextWindow(BaseSettingsWindow):
         self.nametag_rotation_menu.set("少し左傾き")
         self.nametag_rotation_menu.pack(side="left")
 
+    def _build_msgwin_style_frame(self):
+        """メッセージウィンドウ用スタイルフレーム"""
+        self.msgwin_frame = ctk.CTkFrame(self.style_container)
+
+        ctk.CTkLabel(
+            self.msgwin_frame,
+            text="メッセージウィンドウスタイル",
+            font=("Arial", 16, "bold")
+        ).pack(anchor="w", padx=10, pady=(10, 5))
+
+        # モード選択
+        mode_row = ctk.CTkFrame(self.msgwin_frame, fg_color="transparent")
+        mode_row.pack(fill="x", padx=10, pady=5)
+
+        ctk.CTkLabel(mode_row, text="モード:").pack(side="left", padx=(0, 5))
+        self.msgwin_mode_menu = ctk.CTkOptionMenu(
+            mode_row,
+            values=list(MSGWIN_MODES.keys()),
+            width=220,
+            command=self._on_msgwin_mode_change
+        )
+        self.msgwin_mode_menu.set("フルスペック（名前+顔+セリフ）")
+        self.msgwin_mode_menu.pack(side="left")
+
+        # 話者名入力（フルスペック時のみ）
+        self.msgwin_name_row = ctk.CTkFrame(self.msgwin_frame, fg_color="transparent")
+        self.msgwin_name_row.pack(fill="x", padx=10, pady=5)
+
+        ctk.CTkLabel(self.msgwin_name_row, text="話者名:").pack(side="left", padx=(0, 5))
+        self.msgwin_speaker_entry = ctk.CTkEntry(self.msgwin_name_row, placeholder_text="彩瀬こよみ", width=150)
+        self.msgwin_speaker_entry.pack(side="left", padx=(0, 15))
+
+        # スタイルプリセット
+        ctk.CTkLabel(self.msgwin_name_row, text="スタイル:").pack(side="left", padx=(0, 5))
+        self.msgwin_style_menu = ctk.CTkOptionMenu(
+            self.msgwin_name_row,
+            values=list(MSGWIN_STYLES.keys()),
+            width=150
+        )
+        self.msgwin_style_menu.set("SF・ロボット風")
+        self.msgwin_style_menu.pack(side="left")
+
+        # フレームデザイン（フルスペック・セリフのみ時）
+        self.msgwin_design_row = ctk.CTkFrame(self.msgwin_frame, fg_color="transparent")
+        self.msgwin_design_row.pack(fill="x", padx=10, pady=5)
+
+        ctk.CTkLabel(self.msgwin_design_row, text="枠デザイン:").pack(side="left", padx=(0, 5))
+        self.msgwin_frame_menu = ctk.CTkOptionMenu(
+            self.msgwin_design_row,
+            values=list(MSGWIN_FRAME_TYPES.keys()),
+            width=150
+        )
+        self.msgwin_frame_menu.set("サイバネティック青")
+        self.msgwin_frame_menu.pack(side="left", padx=(0, 15))
+
+        ctk.CTkLabel(self.msgwin_design_row, text="透明度:").pack(side="left", padx=(0, 5))
+        self.msgwin_opacity_slider = ctk.CTkSlider(self.msgwin_design_row, from_=0.3, to=1.0, width=100)
+        self.msgwin_opacity_slider.set(0.8)
+        self.msgwin_opacity_slider.pack(side="left")
+
+        # 顔アイコン設定（フルスペック・顔のみ時）
+        self.msgwin_face_row = ctk.CTkFrame(self.msgwin_frame, fg_color="transparent")
+        self.msgwin_face_row.pack(fill="x", padx=10, pady=5)
+
+        ctk.CTkLabel(self.msgwin_face_row, text="顔アイコン位置:").pack(side="left", padx=(0, 5))
+        self.msgwin_face_pos_menu = ctk.CTkOptionMenu(
+            self.msgwin_face_row,
+            values=list(FACE_ICON_POSITIONS.keys()),
+            width=100
+        )
+        self.msgwin_face_pos_menu.set("左内側")
+        self.msgwin_face_pos_menu.pack(side="left")
+
+    def _on_msgwin_mode_change(self, value):
+        """メッセージウィンドウモード変更時"""
+        # 全行を一旦非表示
+        self.msgwin_name_row.pack_forget()
+        self.msgwin_design_row.pack_forget()
+        self.msgwin_face_row.pack_forget()
+
+        if value == "フルスペック（名前+顔+セリフ）":
+            # 全て表示
+            self.msgwin_name_row.pack(fill="x", padx=10, pady=5)
+            self.msgwin_design_row.pack(fill="x", padx=10, pady=5)
+            self.msgwin_face_row.pack(fill="x", padx=10, pady=5)
+        elif value == "顔アイコンのみ":
+            # 顔設定のみ
+            self.msgwin_face_row.pack(fill="x", padx=10, pady=5)
+        elif value == "セリフのみ":
+            # デザイン設定のみ
+            self.msgwin_design_row.pack(fill="x", padx=10, pady=5)
+
     def _on_type_change(self, value):
         """テキストタイプ変更時"""
         # 全フレームを非表示
         self.title_frame.pack_forget()
         self.callout_frame.pack_forget()
         self.nametag_frame.pack_forget()
+        self.msgwin_frame.pack_forget()
 
         # 選択されたタイプのフレームを表示
         if value == "技名テロップ":
@@ -316,6 +441,10 @@ class DecorativeTextWindow(BaseSettingsWindow):
             self.nametag_frame.pack(fill="both", expand=True)
             self.type_description.configure(text="キャラクターの名前表示プレート")
             self.text_entry.configure(placeholder_text="篠宮りん")
+        elif value == "メッセージウィンドウ":
+            self.msgwin_frame.pack(fill="both", expand=True)
+            self.type_description.configure(text="画面下部のセリフウィンドウ（RPG/ADV風）")
+            self.text_entry.configure(placeholder_text="「もらったー」")
 
     def collect_data(self) -> dict:
         """UIから設定データを収集"""
@@ -347,6 +476,16 @@ class DecorativeTextWindow(BaseSettingsWindow):
             data['style'] = {
                 'type': self.nametag_type_menu.get(),
                 'rotation': self.nametag_rotation_menu.get()
+            }
+        elif text_type == "メッセージウィンドウ":
+            mode = self.msgwin_mode_menu.get()
+            data['mode'] = mode
+            data['speaker_name'] = self.msgwin_speaker_entry.get().strip()
+            data['style'] = {
+                'preset': self.msgwin_style_menu.get(),
+                'frame_type': self.msgwin_frame_menu.get(),
+                'opacity': round(self.msgwin_opacity_slider.get(), 2),
+                'face_icon_position': self.msgwin_face_pos_menu.get()
             }
 
         return data

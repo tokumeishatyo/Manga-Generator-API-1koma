@@ -63,7 +63,7 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
 
         # ウィンドウ設定
         self.title("装飾テキスト配置設定")
-        self.geometry("550x450")
+        self.geometry("550x680")
         self.resizable(True, True)
         self.transient(parent)
 
@@ -118,7 +118,7 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         self.count_label.pack(side="right", padx=10)
 
         # エントリリスト用スクロールフレーム
-        self.list_frame = ctk.CTkScrollableFrame(main_frame, height=250)
+        self.list_frame = ctk.CTkScrollableFrame(main_frame, height=450)
         self.list_frame.pack(fill="both", expand=True, pady=10)
 
         # OK/キャンセルボタン
