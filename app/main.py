@@ -18,10 +18,6 @@ from constants import (
 )
 
 # Import logic modules
-from logic.yaml_generator import (
-    generate_decorative_yaml,
-    generate_composite_yaml
-)
 from logic.api_client import generate_image_with_api
 from logic.file_manager import (
     load_template, load_recent_files, save_recent_files,
@@ -772,20 +768,113 @@ style:
         return yaml_content
 
     def _generate_decorative_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
-        """装飾テキスト用YAML生成"""
-        settings = self.current_settings
-        texts = settings.get('texts', [])
-
-        return generate_decorative_yaml(
-            template_data=self.template_data,
-            title=title,
-            author=author,
-            texts=texts,
-            color_mode_name=color_mode,
-            duotone_color_name=duotone_color,
-            output_style_name=output_style,
-            aspect_ratio_name=aspect_ratio
+        """装飾テキスト用YAML生成（ui_text_overlay.yaml準拠）"""
+        from ui.decorative_text_window import (
+            TEXT_TYPES, TITLE_FONTS, TITLE_SIZES, GRADIENT_COLORS,
+            OUTLINE_COLORS, GLOW_EFFECTS, CALLOUT_TYPES, CALLOUT_COLORS,
+            ROTATIONS, DISTORTIONS, NAMETAG_TYPES
         )
+
+        settings = self.current_settings
+        text_type = settings.get('text_type', '技名テロップ')
+        text_content = settings.get('text', '')
+        style = settings.get('style', {})
+
+        type_key = TEXT_TYPES.get(text_type, 'special_move_title')
+
+        if text_type == "技名テロップ":
+            yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Decorative Text'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+special_move_title:
+  enabled: true
+  text: "{text_content}"
+
+  style:
+    font_type: "{TITLE_FONTS.get(style.get('font', '極太明朝'), 'Heavy Mincho')}"
+    size: "{TITLE_SIZES.get(style.get('size', '特大'), 'Very Large')}"
+    fill_color: "{GRADIENT_COLORS.get(style.get('color', '白→青'), 'White to Blue Gradient')}"
+    outline:
+      enabled: {str(style.get('outline', '金') != 'なし').lower()}
+      color: "{OUTLINE_COLORS.get(style.get('outline', '金'), 'Gold')}"
+      thickness: "Thick"
+    glow_effect: "{GLOW_EFFECTS.get(style.get('glow', '青い稲妻'), 'Blue Lightning')}"
+    drop_shadow: "{'Hard Drop' if style.get('shadow', True) else 'None'}"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+"""
+
+        elif text_type == "決め台詞":
+            yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Decorative Text'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+impact_callout:
+  enabled: true
+  text: "{text_content}"
+
+  style:
+    type: "{CALLOUT_TYPES.get(style.get('type', '書き文字風'), 'Comic Sound Effect')}"
+    color: "{CALLOUT_COLORS.get(style.get('color', '赤＋黄縁'), 'Red with Yellow Border')}"
+    rotation: "{ROTATIONS.get(style.get('rotation', '左傾き'), '-15 degrees')}"
+    distortion: "{DISTORTIONS.get(style.get('distortion', '飛び出し'), 'Zoom In')}"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+"""
+
+        elif text_type == "キャラ名プレート":
+            yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
+type: text_ui_layer_definition
+title: "{title or 'Decorative Text'}"
+author: "{author}"
+
+ui_global_style:
+  preset: "Anime Battle"
+  font_language: "Japanese"
+
+name_tag:
+  enabled: true
+  text: "{text_content}"
+
+  style:
+    type: "{NAMETAG_TYPES.get(style.get('type', 'ギザギザステッカー'), 'Jagged Sticker')}"
+    rotation: "{ROTATIONS.get(style.get('rotation', '少し左傾き'), '-5 degrees')}"
+
+output:
+  background: "Transparent"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+"""
+        else:
+            yaml_content = "# Unknown text type"
+
+        return yaml_content
 
     # === API Image Generation ===
 

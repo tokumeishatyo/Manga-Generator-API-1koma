@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from constants import (
     COMPOSITE_POSITIONS, COMPOSITE_SIZES, COMPOSITE_LAYOUTS, COMPOSITE_BATTLE_MODES
 )
+from ui.text_overlay_placement_window import TextOverlayPlacementWindow, TEXT_POSITIONS
 
 
 # シーン合成タイプ
@@ -93,6 +94,7 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         super().__init__(parent)
 
         self.callback = callback
+        self.text_overlay_data = []  # 装飾テキスト配置データ
 
         # ウィンドウ設定
         self.title("シーンビルダー")
@@ -147,6 +149,9 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         # 初期表示
         self._on_composition_type_change("バトルシーン")
+
+        # 装飾テキストオーバーレイセクション（共通）
+        self._build_text_overlay_section(main_frame)
 
         # プレビューとボタン
         self._build_preview_section(main_frame)
@@ -520,6 +525,55 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.boss_beam_color_entry = ctk.CTkEntry(attack_row, placeholder_text="Blue & Pink Lasers", width=150)
         self.boss_beam_color_entry.pack(side="left", padx=5)
 
+    # ========== 装飾テキストオーバーレイ ==========
+
+    def _build_text_overlay_section(self, parent):
+        """装飾テキストオーバーレイセクションを構築"""
+        overlay_frame = ctk.CTkFrame(parent)
+        overlay_frame.pack(fill="x", pady=5)
+
+        row = ctk.CTkFrame(overlay_frame, fg_color="transparent")
+        row.pack(fill="x", padx=10, pady=8)
+
+        ctk.CTkLabel(
+            row,
+            text="装飾テキスト:",
+            font=("Arial", 12)
+        ).pack(side="left")
+
+        ctk.CTkButton(
+            row,
+            text="配置設定...",
+            width=100,
+            command=self._open_text_overlay_window
+        ).pack(side="left", padx=10)
+
+        # 配置数表示ラベル
+        self.text_overlay_count_label = ctk.CTkLabel(
+            row,
+            text="0個配置",
+            font=("Arial", 11),
+            text_color="gray"
+        )
+        self.text_overlay_count_label.pack(side="left")
+
+    def _open_text_overlay_window(self):
+        """装飾テキスト配置ウィンドウを開く"""
+        TextOverlayPlacementWindow(
+            self,
+            callback=self._on_text_overlay_data,
+            initial_data=self.text_overlay_data
+        )
+
+    def _on_text_overlay_data(self, data):
+        """装飾テキスト配置データを受け取る"""
+        self.text_overlay_data = data
+        count = len(data)
+        self.text_overlay_count_label.configure(
+            text=f"{count}個配置" if count > 0 else "0個配置",
+            text_color="white" if count > 0 else "gray"
+        )
+
     # ========== プレビューとボタン ==========
 
     def _build_preview_section(self, parent):
@@ -558,6 +612,35 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         if not path:
             return ""
         return os.path.basename(path)
+
+    def _generate_text_overlay_yaml(self) -> str:
+        """装飾テキストオーバーレイのYAMLセクションを生成（複数対応）"""
+        if not self.text_overlay_data:
+            return ""
+
+        items_yaml = ""
+        for i, item in enumerate(self.text_overlay_data):
+            image_path = self._get_filename(item.get('image', ''))
+            position_en = item.get('position_en', 'Top Center')
+
+            # キャラ相対位置の場合はplacement_hintを追加
+            if "Near" in position_en and "Character" in position_en:
+                items_yaml += f"""
+    - source_image: "{image_path}"
+      position: "{position_en}"
+      placement_hint: "Auto-adjust to avoid overlaps"
+      blend_mode: "Normal\""""
+            else:
+                items_yaml += f"""
+    - source_image: "{image_path}"
+      position: "{position_en}"
+      blend_mode: "Normal\""""
+
+        return f"""
+decorative_text_overlays:
+  enabled: true
+  items:{items_yaml}
+"""
 
     def _generate_yaml(self):
         """YAML生成してメインウィンドウに送信"""
@@ -623,7 +706,7 @@ scene_settings:
   interaction_focus: "Maximum Impact"
   screen_shake: "{SCREEN_SHAKE.get(self.battle_shake_menu.get(), 'Heavy')}"
   color_grading: "Dramatic Clash"
-"""
+{self._generate_text_overlay_yaml()}"""
 
     def _generate_story_yaml(self):
         """ストーリーシーンYAML生成"""
@@ -666,7 +749,7 @@ comic_overlay:
 post_processing:
   filter: "Soft Anime Look"
   bloom_effect: "Low"
-"""
+{self._generate_text_overlay_yaml()}"""
 
     def _generate_boss_yaml(self):
         """ボスレイドYAML生成"""
@@ -708,4 +791,4 @@ attack_convergence:
 
 camera:
   angle: "Low Angle / Dynamic"
-"""
+{self._generate_text_overlay_yaml()}"""
