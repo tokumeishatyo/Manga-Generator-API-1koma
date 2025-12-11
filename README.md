@@ -139,8 +139,17 @@ Dockに置けるアプリとして起動したい場合、Automatorで.appを作
 4. **以下のスクリプトを入力:**
    ```bash
    cd "/path/to/Manga-Generator-API-1koma"  # ← 実際のパスに書き換え
-   source venv/bin/activate
-   python app/main.py
+
+   # venvがなければ作成
+   if [ ! -d ".venv" ]; then
+       python3 -m venv .venv
+       source .venv/bin/activate
+       pip install -r app/requirements.txt --quiet
+   else
+       source .venv/bin/activate
+   fi
+
+   python3 app/main.py
    ```
    ※ `/path/to/` の部分を実際のフォルダパスに変更してください
 
