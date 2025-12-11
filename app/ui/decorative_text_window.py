@@ -36,7 +36,7 @@ class DecorativeTextWindow(BaseSettingsWindow):
             parent,
             title="装飾テキスト設定",
             width=650,
-            height=400,
+            height=500,
             callback=callback
         )
 

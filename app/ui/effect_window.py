@@ -89,7 +89,7 @@ class EffectWindow(BaseSettingsWindow):
             parent,
             title="エフェクト追加設定",
             width=750,
-            height=650,
+            height=850,
             callback=callback
         )
 

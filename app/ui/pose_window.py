@@ -68,7 +68,7 @@ class PoseWindow(BaseSettingsWindow):
             parent,
             title="ポーズ付きキャラ設定",
             width=700,
-            height=600,
+            height=800,
             callback=callback
         )
 

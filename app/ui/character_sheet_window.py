@@ -42,7 +42,7 @@ class CharacterSheetWindow(BaseSettingsWindow):
             parent,
             title=title,
             width=850,
-            height=380,
+            height=580,
             callback=callback
         )
 

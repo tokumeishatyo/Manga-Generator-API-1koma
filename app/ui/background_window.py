@@ -35,7 +35,7 @@ class BackgroundWindow(BaseSettingsWindow):
             parent,
             title="背景生成設定",
             width=600,
-            height=400,
+            height=600,
             callback=callback
         )
 

@@ -79,7 +79,7 @@ class MangaGeneratorApp(ctk.CTk):
         self.left_column = ctk.CTkFrame(self)
         self.left_column.grid(row=0, column=0, padx=(10, 5), pady=10, sticky="nsew")
         self.left_column.grid_columnconfigure(0, weight=1)
-        self.left_column.grid_rowconfigure(6, weight=1)  # Spacer row
+        self.left_column.grid_rowconfigure(0, weight=1)  # Scrollable frame expands
 
         # Create scrollable frame
         self.left_scroll = ctk.CTkScrollableFrame(self.left_column)
@@ -91,33 +91,32 @@ class MangaGeneratorApp(ctk.CTk):
         # === 出力タイプ選択 ===
         type_frame = ctk.CTkFrame(self.left_scroll)
         type_frame.grid(row=row, column=0, padx=5, pady=5, sticky="ew")
-        type_frame.grid_columnconfigure(1, weight=1)
         row += 1
 
         ctk.CTkLabel(
             type_frame,
             text="出力タイプ",
             font=("Arial", 16, "bold")
-        ).grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
+        ).grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
 
-        ctk.CTkLabel(type_frame, text="タイプ:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        # タイプ選択と詳細設定を1行に
+        ctk.CTkLabel(type_frame, text="タイプ:").grid(row=1, column=0, padx=(10, 2), pady=5, sticky="w")
         self.output_type_menu = ctk.CTkOptionMenu(
             type_frame,
             values=list(OUTPUT_TYPES.keys()),
-            width=200,
+            width=180,
             command=self._on_output_type_change
         )
         self.output_type_menu.set("キャラデザイン（全身）")
-        self.output_type_menu.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        self.output_type_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
-        # 詳細設定ボタン
         self.settings_button = ctk.CTkButton(
             type_frame,
             text="詳細設定...",
-            width=150,
+            width=100,
             command=self._open_settings_window
         )
-        self.settings_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="w")
+        self.settings_button.grid(row=1, column=2, padx=(5, 10), pady=5, sticky="w")
 
         # 設定状態表示
         self.settings_status_label = ctk.CTkLabel(
@@ -126,7 +125,7 @@ class MangaGeneratorApp(ctk.CTk):
             font=("Arial", 11),
             text_color="gray"
         )
-        self.settings_status_label.grid(row=3, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w")
+        self.settings_status_label.grid(row=2, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="w")
 
         # === スタイル設定 ===
         style_frame = ctk.CTkFrame(self.left_scroll)
@@ -610,7 +609,7 @@ style:
 """
 
         if image_path:
-            yaml_content += f'\nreference_image: "{image_path}"'
+            yaml_content += f'\nreference_image: "{os.path.basename(image_path)}"'
 
         return yaml_content
 
@@ -662,7 +661,7 @@ title: "{title or 'Character Pose'}"
 author: "{author}"
 
 input:
-  character_image: "{image_path}"
+  character_image: "{os.path.basename(image_path) if image_path else ''}"
   identity_preservation: {identity}
 
 settings:
@@ -738,7 +737,7 @@ title: "{title or 'Character VFX'}"
 author: "{author}"
 
 input:
-  posed_character_image: "{image_path}"
+  posed_character_image: "{os.path.basename(image_path) if image_path else ''}"
   character_preservation: "{preservation}"
 
 settings:
@@ -895,7 +894,12 @@ style:
 
     def _open_scene_builder(self):
         """シーンビルダーを開く"""
-        SceneBuilderWindow(self)
+        SceneBuilderWindow(self, callback=self._on_scene_builder_yaml)
+
+    def _on_scene_builder_yaml(self, yaml_content: str):
+        """シーンビルダーからYAMLを受け取る"""
+        self.yaml_textbox.delete("1.0", tk.END)
+        self.yaml_textbox.insert("1.0", yaml_content)
 
 
 def main():
