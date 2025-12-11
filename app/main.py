@@ -313,7 +313,7 @@ class MangaGeneratorApp(ctk.CTk):
         yaml_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         yaml_frame.grid_columnconfigure(0, weight=1)
         yaml_frame.grid_rowconfigure(1, weight=1)
-        self.right_column.grid_rowconfigure(0, weight=1)
+        self.right_column.grid_rowconfigure(0, weight=1)  # YAMLプレビュー（小さめ）
 
         # ヘッダー
         header_frame = ctk.CTkFrame(yaml_frame, fg_color="transparent")
@@ -360,7 +360,7 @@ class MangaGeneratorApp(ctk.CTk):
         preview_frame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
         preview_frame.grid_columnconfigure(0, weight=1)
         preview_frame.grid_rowconfigure(1, weight=1)
-        self.right_column.grid_rowconfigure(1, weight=1)
+        self.right_column.grid_rowconfigure(1, weight=3)  # 画像プレビュー（大きめ）
 
         ctk.CTkLabel(
             preview_frame,
