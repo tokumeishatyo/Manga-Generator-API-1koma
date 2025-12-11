@@ -26,12 +26,14 @@ DUOTONE_COLORS = {
     "オレンジ×黒": ("orange and black duotone, two-color print", "orange_black"),
 }
 
-# 出力タイプ定義
+# 出力タイプ定義（ステップバイステップワークフロー）
+# 1. キャラデザイン → 2. ポーズ付け → 3. エフェクト追加 → 4. シーン合成（SceneBuilder）
 OUTPUT_TYPES = {
-    "イラスト生成": "illustration",
-    "全身三面図": "fullbody_sheet",
-    "顔三面図": "face_sheet",
-    "背景生成": "background",
+    "キャラデザイン（全身）": "fullbody_sheet",
+    "キャラデザイン（顔）": "face_sheet",
+    "ポーズ付きキャラ": "character_pose",
+    "エフェクト追加": "character_effect",
+    "背景のみ生成": "background",
     "装飾テキスト": "decorative_text"
 }
 
@@ -56,8 +58,140 @@ CHARACTER_SHEET_DEFAULT_SCENES = {
     "face_sheet": "neutral expression, emotionless"
 }
 
+# キャラクタースタイル（character_basic.yaml準拠）
+CHARACTER_STYLES = {
+    "標準アニメ": {
+        "style": "日本のアニメスタイル, 2Dセルシェーディング",
+        "proportions": "Normal head-to-body ratio (6-7 heads)",
+        "description": "High quality anime illustration"
+    },
+    "ドット絵": {
+        "style": "Pixel Art, Retro 8-bit game style, low resolution",
+        "proportions": "Pixel sprite proportions",
+        "description": "Visible pixels, simplified details, retro game sprite, no anti-aliasing"
+    },
+    "ちびキャラ": {
+        "style": "Chibi style, Super Deformed (SD) anime",
+        "proportions": "2 heads tall (2頭身), large head, small body, cute",
+        "description": "Cute mascot character, simplified features"
+    }
+}
+
 # 背景生成用プロンプト
 BACKGROUND_PROMPT = "background only, no characters, no people, detailed environment, scenic"
+
+# エフェクト付きキャラ生成用定数
+CHARACTER_FACING = {
+    "→右向き": "right",
+    "←左向き": "left"
+}
+
+CHARACTER_POSES = {
+    "攻撃": "attacking, offensive pose",
+    "防御": "defending, blocking, guarding pose",
+    "ダメージ": "taking damage, hurt, recoiling",
+    "勝利": "victorious, triumphant, winning pose",
+    "構え": "battle ready, fighting stance",
+    "必殺技チャージ": "charging special attack, power gathering, glowing aura"
+}
+
+EFFECT_TYPES = {
+    "なし": "",
+    "ビーム": "energy beam",
+    "波動": "energy wave",
+    "炎": "fire, flames",
+    "雷": "lightning, electricity",
+    "氷": "ice, frost",
+    "闇": "dark energy",
+    "光": "light, holy energy",
+    "オーラ": "powerful aura"
+}
+
+EFFECT_COLORS = {
+    "おまかせ": "",
+    "青": "blue",
+    "赤": "red",
+    "黄": "yellow",
+    "緑": "green",
+    "紫": "purple",
+    "白": "white",
+    "虹色": "rainbow-colored",
+    "金色": "golden",
+    "黒": "black, dark"
+}
+
+EFFECT_EMISSIONS = {
+    "おまかせ": "",
+    "手から": "from hand",
+    "両手から": "from both hands",
+    "人差し指から": "from index finger",
+    "剣から": "from sword",
+    "杖から": "from staff, wand",
+    "目から": "from eyes",
+    "全身から": "emanating from entire body"
+}
+
+CHARACTER_COMPOSITIONS = {
+    "カットイン（大）": "dramatic full-screen anime-style character cut-in, intense close-up filling most of the frame",
+    "カットイン（中）": "large anime-style character cut-in, dramatic close-up",
+    "全身": "full body view, standing pose",
+    "上半身": "upper body, bust shot",
+    "バストアップ": "close-up bust shot, face and shoulders"
+}
+
+# カットイン構図かどうか（攻撃方向の解釈が変わる）
+CUTIN_COMPOSITIONS = ["カットイン（大）", "カットイン（中）"]
+
+# 対戦モード（合成時に向かい合い指示を追加）
+COMPOSITE_BATTLE_MODES = {
+    "なし": "",
+    "対戦（向かい合い）": "versus_facing",
+    "協力（同じ方向）": "coop_same_direction"
+}
+
+SIMPLE_BACKGROUNDS = {
+    "透明風（白）": "plain white background, clean, no distractions",
+    "透明風（グレー）": "plain light gray background, neutral",
+    "グラデーション": "gradient background, subtle color transition",
+    "集中線": "speed lines background, action lines, dramatic",
+    "爆発": "explosion background, dramatic impact"
+}
+
+# ドット絵キャラ生成用定数
+PIXEL_STYLES = {
+    "16bit風": "pixel art style, 16-bit, retro game graphics, pixelated sprite",
+    "8bit風": "pixel art style, 8-bit, classic retro game, very pixelated",
+    "32bit風": "pixel art style, 32-bit, detailed sprite, semi-retro"
+}
+
+PIXEL_SIZES = {
+    "小（アイコン）": "small sprite, icon size, chibi proportions",
+    "中（通常）": "medium sprite, standard game character size",
+    "大（詳細）": "large detailed sprite, high detail pixel art"
+}
+
+# 画像合成用定数
+COMPOSITE_POSITIONS = {
+    "左": "left",
+    "中央左": "center-left",
+    "中央": "center",
+    "中央右": "center-right",
+    "右": "right"
+}
+
+COMPOSITE_SIZES = {
+    "特大": "very large, filling most of that area",
+    "大": "large",
+    "中": "medium",
+    "小": "small"
+}
+
+COMPOSITE_LAYOUTS = {
+    "格闘ゲーム風": "fighting game style battle screen",
+    "対戦画面風": "versus screen style, face-off composition",
+    "RPGバトル風": "JRPG battle scene style",
+    "カットイン演出": "dramatic cut-in composition, special move announcement"
+}
 
 # 出力スタイル定義
 OUTPUT_STYLES = {
