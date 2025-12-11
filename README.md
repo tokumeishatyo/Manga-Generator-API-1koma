@@ -124,6 +124,47 @@ Google Gemini API (`gemini-3-pro-image-preview`) を利用した、高品質1コ
 
 初回起動時は自動的にセットアップ（仮想環境作成・依存ライブラリインストール）が行われます。
 
+### macOS アプリ化（Automator）
+
+Dockに置けるアプリとして起動したい場合、Automatorで.appを作成できます。
+
+#### 作成手順
+
+1. **Automator.app を開く**（Launchpadまたは `/Applications/Automator.app`）
+
+2. **「新規書類」→「アプリケーション」を選択**
+
+3. **左側のライブラリから「シェルスクリプトを実行」をダブルクリック**
+
+4. **以下のスクリプトを入力:**
+   ```bash
+   cd "/path/to/Manga-Generator-API-1koma"  # ← 実際のパスに書き換え
+   source venv/bin/activate
+   python app/main.py
+   ```
+   ※ `/path/to/` の部分を実際のフォルダパスに変更してください
+
+5. **Command + S で保存**
+   - 名前: `MangaGenerator`（任意）
+   - 場所: アプリケーション（または任意の場所）
+   - フォーマット: アプリケーション
+
+6. **作成した.appをDockにドラッグ**で登録完了
+
+#### メリット
+
+- ターミナルが開かない
+- Dockからワンクリック起動
+- Pythonコードを更新しても再作成不要（即反映）
+
+#### アイコンの変更（任意）
+
+1. 好きな画像を用意（.png, .jpg など）
+2. プレビュー.appで開き、Command + C でコピー
+3. 作成した.appを右クリック →「情報を見る」
+4. 左上のアイコンをクリックして選択状態に
+5. Command + V でペースト
+
 ## ディレクトリ構成
 
 ```

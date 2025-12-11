@@ -638,6 +638,7 @@ style:
         )
         from constants import CHARACTER_FACING, CHARACTER_POSES
 
+        preset = settings.get('preset', '（プリセットなし）')
         image_path = settings.get('image_path', '')
         identity = settings.get('identity_preservation', 0.85)
         facing = CHARACTER_FACING.get(settings.get('facing', '→右向き'), 'Facing Right')
@@ -650,9 +651,21 @@ style:
         wind = WIND_EFFECTS.get(settings.get('wind_effect', '前からの風'), 'Strong Wind from Front')
         camera = CAMERA_ANGLES.get(settings.get('camera_angle', '真横（格ゲー風）'), 'Side View (Fighting Game)')
         zoom = ZOOM_LEVELS.get(settings.get('zoom', '全身'), 'Full Body')
+        additional_prompt = settings.get('additional_prompt', '')
+
+        # プリセットコメント
+        preset_comment = f"# Preset: {preset}\n" if preset != "（プリセットなし）" else ""
+
+        # 追加プロンプトセクション
+        additional_section = ""
+        if additional_prompt:
+            additional_section = f"""
+additional_details:
+  - {additional_prompt}
+"""
 
         yaml_content = f"""# Character Pose Generation (character_pose.yaml準拠)
-type: character_pose
+{preset_comment}type: character_pose
 title: "{title or 'Character Pose'}"
 author: "{author}"
 
@@ -675,7 +688,7 @@ settings:
   camera:
     angle: "{camera}"
     zoom: "{zoom}"
-
+{additional_section}
 constraints:
   - Preserve character design and colors from input image
   - No background (transparent or simple backdrop)

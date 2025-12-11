@@ -17,6 +17,62 @@ from ui.base_settings_window import BaseSettingsWindow
 from constants import CHARACTER_FACING, CHARACTER_POSES
 
 
+# ポーズプリセット（選択時に各設定を自動入力）
+# ※description はGoogle Gemini謹製のプロンプト（character_pose.yaml準拠）
+POSE_PRESETS = {
+    "（プリセットなし）": None,
+    "波動拳（かめはめ波）": {
+        "category": "攻撃（魔法）",
+        "pose": "攻撃",
+        "description": "Thrusting both palms forward at waist level, knees slightly bent, focusing energy between hands",
+        "dynamism": "誇張",
+        "include_effects": False,  # 合成用にキャラだけ欲しい場合はFalse推奨
+        "wind_effect": "前からの風",
+        "camera_angle": "真横（格ゲー風）",
+        "additional_prompt": "energy blast stance, power stance"
+    },
+    "スペシウム光線": {
+        "category": "攻撃（魔法）",
+        "pose": "攻撃",
+        "description": "Crossing arms in a plus sign shape (+) in front of chest, right hand vertical, left hand horizontal",
+        "dynamism": "標準",
+        "include_effects": False,
+        "wind_effect": "前からの風",
+        "camera_angle": "ダイナミック（煽り）",
+        "additional_prompt": "cross beam pose, heroic stance"
+    },
+    "ライダーキック": {
+        "category": "攻撃（打撃）",
+        "pose": "ジャンプ",
+        "description": "Mid-air dynamic flying kick, one leg extended forward, body angled downward, floating in the air",
+        "dynamism": "誇張",
+        "include_effects": False,
+        "wind_effect": "前からの風",
+        "camera_angle": "ダイナミック（煽り）",
+        "additional_prompt": "aerial attack, no shadow on ground to emphasize floating"
+    },
+    "指先ビーム": {
+        "category": "攻撃（魔法）",
+        "pose": "攻撃",
+        "description": "Pointing index finger forward, arm fully extended, other fingers closed, cool and composed expression",
+        "dynamism": "標準",
+        "include_effects": False,
+        "wind_effect": "なし",
+        "camera_angle": "斜め前",
+        "additional_prompt": "precision attack, finger gun pose"
+    },
+    "坐禅（瞑想）": {
+        "category": "待機",
+        "pose": "立ち",
+        "description": "Sitting cross-legged in lotus position, hands resting on knees, eyes closed, meditative posture",
+        "dynamism": "控えめ",
+        "include_effects": False,
+        "wind_effect": "なし",
+        "camera_angle": "正面",
+        "additional_prompt": "meditation, zazen, static still pose"
+    }
+}
+
 # ポーズ用追加定数
 ACTION_CATEGORIES = {
     "攻撃（打撃）": "Melee Attack",
@@ -74,9 +130,38 @@ class PoseWindow(BaseSettingsWindow):
 
     def build_content(self):
         """コンテンツを構築"""
+        # === プリセット選択 ===
+        preset_frame = ctk.CTkFrame(self.content_frame)
+        preset_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+
+        ctk.CTkLabel(
+            preset_frame,
+            text="ポーズプリセット",
+            font=("Arial", 16, "bold")
+        ).grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
+
+        ctk.CTkLabel(
+            preset_frame,
+            text="よく使うポーズを選択すると設定が自動入力されます",
+            font=("Arial", 11),
+            text_color="gray"
+        ).grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+
+        self.preset_menu = ctk.CTkOptionMenu(
+            preset_frame,
+            values=list(POSE_PRESETS.keys()),
+            width=200,
+            command=self._on_preset_change
+        )
+        self.preset_menu.set("（プリセットなし）")
+        self.preset_menu.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="w")
+
+        # プリセットの追加プロンプト保持用
+        self.current_additional_prompt = ""
+
         # === 入力画像設定 ===
         input_frame = ctk.CTkFrame(self.content_frame)
-        input_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        input_frame.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
         input_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
@@ -115,7 +200,7 @@ class PoseWindow(BaseSettingsWindow):
 
         # === 向き・配置設定 ===
         orient_frame = ctk.CTkFrame(self.content_frame)
-        orient_frame.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
+        orient_frame.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
 
         ctk.CTkLabel(
             orient_frame,
@@ -145,7 +230,7 @@ class PoseWindow(BaseSettingsWindow):
 
         # === アクション設定 ===
         action_frame = ctk.CTkFrame(self.content_frame)
-        action_frame.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
+        action_frame.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
         action_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
@@ -194,7 +279,7 @@ class PoseWindow(BaseSettingsWindow):
 
         # === ビジュアル効果 ===
         visual_frame = ctk.CTkFrame(self.content_frame)
-        visual_frame.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
+        visual_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
 
         ctk.CTkLabel(
             visual_frame,
@@ -222,7 +307,7 @@ class PoseWindow(BaseSettingsWindow):
 
         # === カメラワーク ===
         camera_frame = ctk.CTkFrame(self.content_frame)
-        camera_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
+        camera_frame.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
 
         ctk.CTkLabel(
             camera_frame,
@@ -259,9 +344,37 @@ class PoseWindow(BaseSettingsWindow):
             self.image_entry.delete(0, tk.END)
             self.image_entry.insert(0, filename)
 
+    def _on_preset_change(self, value):
+        """プリセット選択時の処理"""
+        preset = POSE_PRESETS.get(value)
+        if preset is None:
+            self.current_additional_prompt = ""
+            return
+
+        # 各設定を自動入力
+        if "category" in preset:
+            self.category_menu.set(preset["category"])
+        if "pose" in preset:
+            self.pose_menu.set(preset["pose"])
+        if "description" in preset:
+            self.action_desc_entry.delete(0, tk.END)
+            self.action_desc_entry.insert(0, preset["description"])
+        if "dynamism" in preset:
+            self.dynamism_menu.set(preset["dynamism"])
+        if "include_effects" in preset:
+            self.include_effects_var.set(preset["include_effects"])
+        if "wind_effect" in preset:
+            self.wind_menu.set(preset["wind_effect"])
+        if "camera_angle" in preset:
+            self.camera_angle_menu.set(preset["camera_angle"])
+
+        # 追加プロンプトを保持
+        self.current_additional_prompt = preset.get("additional_prompt", "")
+
     def collect_data(self) -> dict:
         """UIから設定データを収集"""
         return {
+            'preset': self.preset_menu.get(),
             'image_path': self.image_entry.get().strip(),
             'identity_preservation': self.preservation_slider.get(),
             'facing': self.facing_menu.get(),
@@ -273,7 +386,8 @@ class PoseWindow(BaseSettingsWindow):
             'include_effects': self.include_effects_var.get(),
             'wind_effect': self.wind_menu.get(),
             'camera_angle': self.camera_angle_menu.get(),
-            'zoom': self.zoom_menu.get()
+            'zoom': self.zoom_menu.get(),
+            'additional_prompt': self.current_additional_prompt
         }
 
     def validate(self) -> tuple[bool, str]:

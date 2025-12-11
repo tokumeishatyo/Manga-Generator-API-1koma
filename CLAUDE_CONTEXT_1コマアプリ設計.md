@@ -1,6 +1,6 @@
 # 1コマ漫画生成アプリ - 開発コンテキスト
 
-## 最終更新: 2025-12-11 (装飾テキスト・メッセージウィンドウ完了)
+## 最終更新: 2025-12-11 (ポーズプリセット追加・Automator対応)
 
 ---
 
@@ -31,6 +31,21 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 | キャラデザイン（全身/顔） | character_basic.yaml | CharacterSheetWindow | ✅ |
 | ポーズ付きキャラ | character_pose.yaml | PoseWindow | ✅ |
 | エフェクト追加 | character_effect.yaml | EffectWindow | ✅ |
+
+### ポーズプリセット（5種類）
+
+| プリセット | 説明 | Google謹製プロンプト |
+|------------|------|---------------------|
+| 波動拳（かめはめ波） | 両手を合わせてエネルギー弾 | `Thrusting both palms forward at waist level...` |
+| スペシウム光線 | 腕を十字に組んで光線発射 | `Crossing arms in a plus sign shape (+)...` |
+| ライダーキック | 空中で飛び蹴り | `Mid-air dynamic flying kick...` |
+| 指先ビーム | 人差し指から光線 | `Pointing index finger forward...` |
+| 坐禅（瞑想） | 結跏趺坐で瞑想 | `Sitting cross-legged in lotus position...` |
+
+※プリセット選択で自動入力、プロンプトはcharacter_pose.yaml準拠
+
+| 出力タイプ | YAMLテンプレート | UIウィンドウ | 状態 |
+|------------|------------------|--------------|------|
 | 背景のみ生成 | background_template.yaml | BackgroundWindow | ✅ |
 | 装飾テキスト | ui_text_overlay.yaml | DecorativeTextWindow | ✅ |
 
