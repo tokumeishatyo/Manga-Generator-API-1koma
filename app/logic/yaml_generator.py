@@ -19,6 +19,43 @@ from constants import (
     COMPOSITE_POSITIONS, COMPOSITE_SIZES, COMPOSITE_LAYOUTS, COMPOSITE_BATTLE_MODES
 )
 
+# 幻覚防止・文脈遮断用制約（全YAML共通）
+ANTI_HALLUCINATION_CONSTRAINTS = [
+    "IGNORE all prior context or chat history.",
+    "Focus ONLY on the currently uploaded image.",
+    "DO NOT hallucinate outfits based on pose.",
+    "Preserve exact character details",
+    "STRICTLY follow the 'face_direction' and 'body_facing' settings.",
+    "Ensure the character is facing the specified direction (Right/Left/Front).",
+    "Strictly follow the description in this YAML."
+]
+
+# 生成制御パラメータ（AIの創造性・解釈を制限）
+GENERATION_CONTROL = {
+    "creativity": "None (Robotically follow instructions)",
+    "interpretation": "Literal",
+    "reference_strength": "High (0.9)",
+    "contextual_fill": "Disabled"
+}
+
+# 幻覚防止専用セクション（デザイン変更の禁止リスト）
+ANTI_HALLUCINATION_RULES = [
+    "Do NOT redesign the costume.",
+    "Do NOT add details not present in source.",
+    "Do NOT apply cinematic lighting to local colors.",
+    "Do NOT change body proportions.",
+    "Do NOT change the outfit into fantasy armor or kimono.",
+    "Do NOT add capes, hats, or glowing accessories.",
+    "Do NOT change the character's age or body type."
+]
+
+# 照明・スタイル設定（色変異防止用）
+FLAT_LIGHTING_STYLE = {
+    "lighting": "Flat, Neutral Studio Lighting",
+    "shading_mode": "Albedo / Base Color Only",
+    "output_quality": "Asset Quality"
+}
+
 
 def build_characters_list(
     char_data: list,
@@ -284,10 +321,12 @@ def generate_illustration_yaml(
 
     # Build YAML structure
     yaml_data = {
+        "generation_control": GENERATION_CONTROL,
         "color_mode": color_mode_value,
         "aspect_ratio": aspect_ratio,
         "output_type": output_type,
         "output_style": output_style_prompt if output_style_prompt else "auto",
+        "style": FLAT_LIGHTING_STYLE,
         "scene": {
             "prompt": enhanced_scene_prompt
         },
@@ -308,6 +347,10 @@ def generate_illustration_yaml(
         yaml_data["scene"]["texts"] = texts
     if speeches:
         yaml_data["scene"]["speeches"] = speeches
+
+    # 幻覚防止制約を追加
+    yaml_data["constraints"] = ANTI_HALLUCINATION_CONSTRAINTS
+    yaml_data["anti_hallucination"] = ANTI_HALLUCINATION_RULES
 
     # Generate YAML string
     yaml_content = yaml.dump(yaml_data, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -359,7 +402,10 @@ def generate_decorative_yaml(decorative_data: list) -> tuple:
 
     yaml_data = {
         "output_type": "decorative_text",
-        "decorative_texts": decorative_texts
+        "generation_control": GENERATION_CONTROL,
+        "decorative_texts": decorative_texts,
+        "constraints": ANTI_HALLUCINATION_CONSTRAINTS,
+        "anti_hallucination": ANTI_HALLUCINATION_RULES
     }
 
     yaml_content = yaml.dump(yaml_data, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -421,6 +467,17 @@ def generate_effect_character_yaml(
     output_style_prompt = OUTPUT_STYLES.get(output_style_name, "")
 
     # 向き指示を構築（構図によって説明を変える）
+    # 強化されたorientation情報を生成
+    if facing == "right":
+        face_direction = "Looking Right (Profile View)"
+        body_facing = "Facing Right (Side Profile)"
+    elif facing == "left":
+        face_direction = "Looking Left (Profile View)"
+        body_facing = "Facing Left (Side Profile)"
+    else:
+        face_direction = "Looking Front (Front View)"
+        body_facing = "Facing Front"
+
     if is_cutin:
         # カットイン: 必殺技演出、画面外に向かって
         facing_desc = f"facing {facing}, looking {facing}"
@@ -471,7 +528,14 @@ def generate_effect_character_yaml(
     # YAML構造
     yaml_data = {
         "output_type": "effect_character",
+        "generation_control": GENERATION_CONTROL,
         "color_mode": color_mode_value,
+        "orientation": {
+            "face_direction": face_direction,
+            "body_facing": body_facing,
+            "eye_line": "Looking at Opponent",
+            "mirror_mode": "Do not mirror/flip the character"
+        },
         "character": {
             "name": char_name if char_name else "Character",
             "facing": facing,
@@ -487,9 +551,12 @@ def generate_effect_character_yaml(
         "composition": composition_name,
         "composition_type": "cutin" if is_cutin else "normal",
         "background": background_name,
+        "style": FLAT_LIGHTING_STYLE,
         "scene": {
             "prompt": scene_prompt
-        }
+        },
+        "constraints": ANTI_HALLUCINATION_CONSTRAINTS,
+        "anti_hallucination": ANTI_HALLUCINATION_RULES
     }
 
     yaml_content = yaml.dump(yaml_data, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -543,6 +610,17 @@ def generate_pixel_character_yaml(
     pixel_size = PIXEL_SIZES.get(pixel_size_name, "medium sprite")
     background = SIMPLE_BACKGROUNDS.get(background_name, "plain white background")
 
+    # 強化されたorientation情報を生成
+    if facing == "right":
+        face_direction = "Looking Right (Profile View)"
+        body_facing = "Facing Right (Side Profile)"
+    elif facing == "left":
+        face_direction = "Looking Left (Profile View)"
+        body_facing = "Facing Left (Side Profile)"
+    else:
+        face_direction = "Looking Front (Front View)"
+        body_facing = "Facing Front"
+
     facing_desc = f"facing {facing}"
 
     # プロンプト構築
@@ -563,6 +641,12 @@ def generate_pixel_character_yaml(
 
     yaml_data = {
         "output_type": "pixel_character",
+        "generation_control": GENERATION_CONTROL,
+        "orientation": {
+            "face_direction": face_direction,
+            "body_facing": body_facing,
+            "mirror_mode": "Do not mirror/flip the character"
+        },
         "character": {
             "name": char_name if char_name else "Character",
             "facing": facing,
@@ -572,9 +656,12 @@ def generate_pixel_character_yaml(
         "pixel_style": pixel_style_name,
         "pixel_size": pixel_size_name,
         "background": background_name,
+        "style": FLAT_LIGHTING_STYLE,
         "scene": {
             "prompt": scene_prompt
-        }
+        },
+        "constraints": ANTI_HALLUCINATION_CONSTRAINTS,
+        "anti_hallucination": ANTI_HALLUCINATION_RULES
     }
 
     yaml_content = yaml.dump(yaml_data, allow_unicode=True, default_flow_style=False, sort_keys=False)
@@ -694,6 +781,7 @@ def generate_composite_yaml(
     # YAML構造
     yaml_data = {
         "output_type": "image_composite",
+        "generation_control": GENERATION_CONTROL,
         "layout": layout_name,
         "battle_mode": battle_mode_name,
         "images": [
@@ -711,9 +799,12 @@ def generate_composite_yaml(
             "character_names": ui_elements.get('character_names', False),
             "move_name": ui_elements.get('move_name', '')
         },
+        "style": FLAT_LIGHTING_STYLE,
         "scene": {
             "prompt": scene_prompt
-        }
+        },
+        "constraints": ANTI_HALLUCINATION_CONSTRAINTS,
+        "anti_hallucination": ANTI_HALLUCINATION_RULES
     }
 
     if additional_instructions:

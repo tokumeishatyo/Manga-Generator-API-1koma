@@ -1,6 +1,6 @@
 # 1コマ漫画生成アプリ - 開発コンテキスト
 
-## 最終更新: 2025-12-11 (ポーズプリセット追加・Automator対応)
+## 最終更新: 2025-12-12 (清書モード・API機能強化)
 
 ---
 
@@ -23,6 +23,20 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 ---
 
 ## 現在の実装状況（mainブランチ）
+
+### 出力モード
+
+| モード | 説明 | 状態 |
+|--------|------|------|
+| YAML出力 | ブラウザ版Geminiにコピペして使用 | ✅ |
+| API画像出力（通常） | アプリ内で直接画像生成 | ✅ |
+| API画像出力（清書） | 参考画像を高画質化（詳細設定不要） | ✅ |
+
+### 清書モードの特徴
+
+- **詳細設定・YAML不要**: 参考画像を選ぶだけ
+- **専用プロンプト**: 構図・キャラ・色彩を100%保持、解像度のみ向上
+- **簡略フロー**: API出力 → 清書モード → 参考画像選択 → タイトル入力 → 生成
 
 ### 出力タイプ
 
@@ -78,6 +92,18 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 - キャラ相対位置: 2箇所（左キャラ付近/右キャラ付近）
 - 同一位置への重複配置防止
 
+### その他の機能
+
+| 機能 | 説明 | 状態 |
+|------|------|------|
+| タイトル必須 | ファイル名生成に使用 | ✅ |
+| 画像へのタイトル合成 | チェックボックスで有効化（PIL使用） | ✅ |
+| API生成画像の命名 | 「タイトル_API.png」形式 | ✅ |
+| 経過時間表示 | API生成中に秒数表示 | ✅ |
+| APIキー保持 | リセット/モード切替で消えない、×ボタンで明示的クリア | ✅ |
+| リセットボタン | 全入力をクリア（APIキー除く） | ✅ |
+| PyInstallerビルド | スタンドアロンmacOSアプリ生成 | ✅ |
+
 ### 未実装（残課題）
 
 | 機能 | YAMLテンプレート | 優先度 |
@@ -122,6 +148,8 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 │   └── multi_character_fomation.yaml    # 多人数フォーメーション用（未実装）
 ├── run_app.command                      # macOS/Linux起動スクリプト
 ├── run_app_windows.bat                  # Windows起動スクリプト
+├── build_app.sh                         # PyInstallerビルドスクリプト
+├── manga_generator.spec                 # PyInstaller設定ファイル
 ├── README.md                            # ユーザー向けドキュメント
 ├── CLAUDE_CONTEXT_1コマアプリ設計.md    # このファイル
 └── CLAUDE_CONTEXT_API版.md              # API版についての補足
@@ -163,9 +191,10 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 - **Python**: 3.10+
 - **GUI**: CustomTkinter
 - **API**: google-genai (gemini-3-pro-image-preview)
-- **画像処理**: Pillow
+- **画像処理**: Pillow（タイトル合成、日本語フォント対応）
 - **データ**: PyYAML
-- **クリップボード**: pyperclip
+- **クリップボード**: tkinter組み込み機能（macOSスタンドアロン対応）
+- **ビルド**: PyInstaller（オプション）
 
 ---
 
@@ -179,6 +208,7 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 ### 2. YAML生成
 - 各出力タイプごとに `_generate_xxx_yaml()` メソッドを持つ
 - ファイルパスはファイル名のみ出力（ブラウザ版との互換性）
+- `title_overlay`セクションはチェックボックスがオンの場合のみ出力
 
 ### 3. 定数管理
 - 日本語→英語の変換辞書は各UIファイル内に定義
@@ -187,6 +217,16 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 ### 4. シーンビルダー
 - 3つの合成タイプを1つのウィンドウで切り替え
 - 装飾テキスト配置は別ウィンドウ（TextOverlayPlacementWindow）
+
+### 5. API関連
+- 清書モード時は詳細設定ボタンを無効化
+- APIキーはリセット/モード切替で消えない（×ボタンで明示的クリア）
+- 生成中は経過時間を表示（`_update_progress_display`）
+- API生成画像は「タイトル_API」形式でファイル名提案
+
+### 6. スタンドアロンアプリ
+- クリップボードはtkinter組み込み機能を使用（pyperclipはmacOSアプリで動作しない）
+- PyInstallerビルドは`build_app.sh`で実行
 
 ---
 
@@ -208,6 +248,12 @@ git push origin main
 ### 構文チェック
 ```bash
 python -m py_compile app/main.py app/ui/*.py
+```
+
+### スタンドアロンアプリのビルド（macOS）
+```bash
+./build_app.sh
+# 出力: dist/1コマ漫画生成.app
 ```
 
 ---

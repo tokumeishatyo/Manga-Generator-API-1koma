@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 ファイル操作ロジック
-YAML読み書き、履歴管理、テンプレート読み込み
+YAML読み書き、履歴管理、テンプレート読み込み、画像処理
 """
 
 import os
 import json
 import yaml
+from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -93,23 +95,150 @@ def add_to_recent_files(recent_files: list, filepath: str) -> list:
     return recent_files[:MAX_RECENT_FILES]
 
 
-def save_yaml_file(filepath: str, content: str) -> tuple:
+def save_yaml_file(filepath: str, content: str, generated_image_path: str = None) -> tuple:
     """
-    YAMLファイルを保存
+    YAMLファイルを保存（オプションでメタデータ付き）
 
     Args:
         filepath: 保存先パス
         content: YAML内容
+        generated_image_path: 生成された画像のパス（メタデータとして埋め込む）
 
     Returns:
         (success: bool, error_message: str or None)
     """
     try:
+        final_content = content
+
+        # メタデータを追加（画像パスが指定された場合）
+        if generated_image_path:
+            metadata = f"""
+# ====================================================
+# メタデータ (Metadata) - 自動生成
+# ====================================================
+_metadata:
+  created_at: "{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+  generated_image: "{os.path.basename(generated_image_path)}"
+  generated_image_full_path: "{generated_image_path}"
+"""
+            final_content = content + metadata
+
         with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(final_content)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
+def update_yaml_metadata(yaml_filepath: str, image_filepath: str) -> tuple:
+    """
+    既存のYAMLファイルにメタデータを追加/更新
+
+    Args:
+        yaml_filepath: YAMLファイルのパス
+        image_filepath: 関連付ける画像ファイルのパス
+
+    Returns:
+        (success: bool, error_message: str or None)
+    """
+    try:
+        # 既存のYAMLを読み込む
+        with open(yaml_filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # 既存のメタデータセクションを削除
+        if "# メタデータ (Metadata)" in content:
+            content = content.split("# ====================================================\n# メタデータ")[0].rstrip()
+
+        # 新しいメタデータを追加
+        metadata = f"""
+
+# ====================================================
+# メタデータ (Metadata) - 自動生成
+# ====================================================
+_metadata:
+  created_at: "{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+  generated_image: "{os.path.basename(image_filepath)}"
+  generated_image_full_path: "{image_filepath}"
+"""
+        content += metadata
+
+        with open(yaml_filepath, 'w', encoding='utf-8') as f:
             f.write(content)
         return True, None
     except Exception as e:
         return False, str(e)
+
+
+def extract_metadata_from_yaml(filepath: str) -> dict:
+    """
+    YAMLファイルからメタデータを抽出
+
+    Args:
+        filepath: YAMLファイルのパス
+
+    Returns:
+        メタデータの辞書（存在しない場合は空辞書）
+    """
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # YAMLを解析
+        data = yaml.safe_load(content)
+        if data and '_metadata' in data:
+            return data['_metadata']
+    except Exception as e:
+        print(f"Warning: Could not extract metadata: {e}")
+    return {}
+
+
+def check_yaml_image_match(yaml_filepath: str, image_filepath: str) -> dict:
+    """
+    YAMLと画像ファイルの整合性をチェック
+
+    Args:
+        yaml_filepath: YAMLファイルのパス
+        image_filepath: 画像ファイルのパス
+
+    Returns:
+        {
+            'match': bool,           # 一致しているか
+            'warning': str or None,  # 警告メッセージ
+            'yaml_image': str or None,  # YAMLに記録された画像名
+            'yaml_created': str or None  # YAML作成日時
+        }
+    """
+    result = {
+        'match': False,
+        'warning': None,
+        'yaml_image': None,
+        'yaml_created': None
+    }
+
+    # YAMLからメタデータを取得
+    metadata = extract_metadata_from_yaml(yaml_filepath)
+
+    if not metadata:
+        result['warning'] = "YAMLにメタデータがありません。画像との対応を確認してください。"
+        return result
+
+    result['yaml_image'] = metadata.get('generated_image')
+    result['yaml_created'] = metadata.get('created_at')
+
+    # 画像名を比較
+    image_basename = os.path.basename(image_filepath)
+    yaml_image = metadata.get('generated_image', '')
+
+    if image_basename == yaml_image:
+        result['match'] = True
+    else:
+        result['warning'] = f"画像ファイルが一致しません。\n" \
+                           f"  YAML記録: {yaml_image}\n" \
+                           f"  選択画像: {image_basename}\n" \
+                           f"  YAML作成: {result['yaml_created']}"
+
+    return result
 
 
 def load_yaml_file(filepath: str) -> tuple:
@@ -373,3 +502,155 @@ def parse_yaml_to_ui_data(data: dict) -> dict:
                 })
 
     return ui_data
+
+
+# ====================================================
+# 画像処理: タイトル合成機能
+# ====================================================
+
+def add_title_to_image(
+    image: Image.Image,
+    title: str,
+    position: str = "top-left",
+    font_size: int = None,
+    font_color: tuple = (255, 255, 255),
+    stroke_color: tuple = (0, 0, 0),
+    stroke_width: int = 2,
+    margin: int = 20
+) -> Image.Image:
+    """
+    画像にタイトルテキストを合成する
+
+    Args:
+        image: 元の画像（PILのImageオブジェクト）
+        title: 表示するタイトル文字列
+        position: 位置 ("top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right")
+        font_size: フォントサイズ（Noneの場合は画像サイズに応じて自動計算）
+        font_color: フォント色 (R, G, B)
+        stroke_color: 縁取り色 (R, G, B)
+        stroke_width: 縁取りの太さ
+        margin: 画像端からの余白
+
+    Returns:
+        タイトルが合成された新しい画像
+    """
+    if not title:
+        return image
+
+    # 画像をコピーして編集
+    result = image.copy()
+    draw = ImageDraw.Draw(result)
+
+    # フォントサイズを自動計算（画像の高さの約5%）
+    if font_size is None:
+        font_size = max(20, int(image.height * 0.05))
+
+    # フォントを取得（日本語対応フォントを試行）
+    font = _get_japanese_font(font_size)
+
+    # テキストのバウンディングボックスを取得
+    bbox = draw.textbbox((0, 0), title, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+
+    # 位置を計算
+    x, y = _calculate_text_position(
+        image.width, image.height,
+        text_width, text_height,
+        position, margin
+    )
+
+    # 縁取り付きでテキストを描画
+    draw.text(
+        (x, y),
+        title,
+        font=font,
+        fill=font_color,
+        stroke_width=stroke_width,
+        stroke_fill=stroke_color
+    )
+
+    return result
+
+
+def _get_japanese_font(size: int) -> ImageFont.FreeTypeFont:
+    """
+    日本語対応フォントを取得する
+
+    Args:
+        size: フォントサイズ
+
+    Returns:
+        ImageFontオブジェクト
+    """
+    # 日本語フォントの候補リスト（OS別）
+    font_candidates = [
+        # Windows
+        "C:/Windows/Fonts/meiryo.ttc",
+        "C:/Windows/Fonts/msgothic.ttc",
+        "C:/Windows/Fonts/YuGothM.ttc",
+        # macOS
+        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/Library/Fonts/Arial Unicode.ttf",
+        # Linux
+        "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        # Google Fonts (if installed)
+        "/usr/share/fonts/truetype/noto/NotoSansJP-Regular.otf",
+    ]
+
+    for font_path in font_candidates:
+        if os.path.exists(font_path):
+            try:
+                return ImageFont.truetype(font_path, size)
+            except Exception:
+                continue
+
+    # フォールバック: デフォルトフォント
+    try:
+        return ImageFont.truetype("arial.ttf", size)
+    except Exception:
+        return ImageFont.load_default()
+
+
+def _calculate_text_position(
+    img_width: int,
+    img_height: int,
+    text_width: int,
+    text_height: int,
+    position: str,
+    margin: int
+) -> tuple:
+    """
+    テキストの描画位置を計算する
+
+    Args:
+        img_width: 画像の幅
+        img_height: 画像の高さ
+        text_width: テキストの幅
+        text_height: テキストの高さ
+        position: 位置指定文字列
+        margin: 余白
+
+    Returns:
+        (x, y) 座標のタプル
+    """
+    # 水平位置
+    if "left" in position:
+        x = margin
+    elif "right" in position:
+        x = img_width - text_width - margin
+    else:  # center
+        x = (img_width - text_width) // 2
+
+    # 垂直位置
+    if "top" in position:
+        y = margin
+    elif "bottom" in position:
+        y = img_height - text_height - margin
+    else:  # center
+        y = (img_height - text_height) // 2
+
+    return x, y

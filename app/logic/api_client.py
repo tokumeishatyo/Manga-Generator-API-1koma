@@ -38,15 +38,42 @@ def generate_image_with_api(
     try:
         client = genai.Client(api_key=api_key)
 
-        # 参考画像清書モードの場合、プロンプトを修正
+        # 参考画像清書モードの場合、専用プロンプトを使用
         if ref_image_path:
-            redraw_prompt = """Based on the attached reference illustration, create a high-quality new illustration.
-- Use the composition and poses from the reference illustration as a guide
-- For character faces, use the attached character reference images to faithfully reproduce their appearance
-- Improve overall quality, details, and consistency while maintaining the original composition
-- IMPORTANT: Do NOT include any watermarks, logos, or symbols (such as ✦ or star marks) that may appear in the reference image. Generate a clean image without any watermarks.
+            # 清書モード専用プロンプト（YAMLは不要）
+            redraw_prompt = """【CRITICAL: HIGH-FIDELITY IMAGE ENHANCEMENT MODE】
 
-""" + yaml_prompt
+You are performing an Image-to-Image (i2i) "clean-up / upscale" task.
+Your ONLY job is to ENHANCE IMAGE QUALITY while preserving the original image EXACTLY.
+
+## ABSOLUTE RULES (This is NOT a creative task):
+1. PRESERVE 100%: Composition, layout, framing - DO NOT crop or reframe
+2. PRESERVE 100%: All character positions, poses, gestures, expressions
+3. PRESERVE 100%: All character designs, faces, hairstyles, outfits
+4. PRESERVE 100%: Color palette, lighting direction, shadows, atmosphere
+5. PRESERVE 100%: All objects, backgrounds, and scene elements
+
+## ONLY IMPROVE:
+- Resolution and sharpness
+- Line clarity and anti-aliasing
+- Fine detail definition
+- Noise reduction
+
+## STRICTLY FORBIDDEN:
+- Adding ANY new elements not in the original
+- Changing ANY poses or expressions
+- Modifying ANY character designs or outfits
+- Reinterpreting the scene in any way
+- Adding "creative improvements" or "enhancements"
+- Changing the art style
+
+## INPUT:
+The attached image is the source to enhance.
+
+## OUTPUT:
+A higher-quality version of the EXACT SAME image.
+The result should be indistinguishable from the original except for improved quality.
+"""
             contents = [redraw_prompt]
         else:
             contents = [yaml_prompt]

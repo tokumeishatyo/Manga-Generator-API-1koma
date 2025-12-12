@@ -6,10 +6,10 @@
 
 import os
 import threading
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
-import pyperclip
 from PIL import Image, ImageTk
 
 # Import constants
@@ -21,7 +21,8 @@ from constants import (
 from logic.api_client import generate_image_with_api
 from logic.file_manager import (
     load_template, load_recent_files, save_recent_files,
-    add_to_recent_files, save_yaml_file, load_yaml_file
+    add_to_recent_files, save_yaml_file, load_yaml_file,
+    update_yaml_metadata, add_title_to_image
 )
 
 # Import UI windows
@@ -188,11 +189,27 @@ class MangaGeneratorApp(ctk.CTk):
             info_frame,
             text="基本情報",
             font=("Arial", 16, "bold")
-        ).grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
+        ).grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
 
+        # タイトル（必須）
         ctk.CTkLabel(info_frame, text="タイトル:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.title_entry = ctk.CTkEntry(info_frame, placeholder_text="作品タイトル")
-        self.title_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+
+        title_frame = ctk.CTkFrame(info_frame, fg_color="transparent")
+        title_frame.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        title_frame.grid_columnconfigure(0, weight=1)
+
+        self.title_entry = ctk.CTkEntry(title_frame, placeholder_text="作品タイトル（必須）")
+        self.title_entry.grid(row=0, column=0, sticky="ew")
+
+        # 画像にタイトルを入れるチェックボックス
+        self.include_title_var = tk.BooleanVar(value=False)
+        self.include_title_checkbox = ctk.CTkCheckBox(
+            title_frame,
+            text="画像にタイトルを入れる",
+            variable=self.include_title_var,
+            width=160
+        )
+        self.include_title_checkbox.grid(row=0, column=1, padx=(10, 0), sticky="w")
 
         ctk.CTkLabel(info_frame, text="作者名:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.author_entry = ctk.CTkEntry(info_frame, placeholder_text="Unknown")
@@ -234,8 +251,25 @@ class MangaGeneratorApp(ctk.CTk):
 
         # API Key
         ctk.CTkLabel(api_frame, text="API Key:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.api_key_entry = ctk.CTkEntry(api_frame, placeholder_text="Google AI API Key", show="*", state="disabled")
-        self.api_key_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+        api_key_frame = ctk.CTkFrame(api_frame, fg_color="transparent")
+        api_key_frame.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+        api_key_frame.grid_columnconfigure(0, weight=1)
+
+        self.api_key_entry = ctk.CTkEntry(api_key_frame, placeholder_text="Google AI API Key", show="*", state="disabled")
+        self.api_key_entry.grid(row=0, column=0, sticky="ew")
+
+        self.api_key_clear_btn = ctk.CTkButton(
+            api_key_frame,
+            text="×",
+            width=28,
+            height=28,
+            font=("Arial", 14),
+            fg_color="gray",
+            hover_color="darkgray",
+            state="disabled",
+            command=self._clear_api_key
+        )
+        self.api_key_clear_btn.grid(row=0, column=1, padx=(5, 0))
 
         # APIモード
         ctk.CTkLabel(api_frame, text="APIモード:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
@@ -243,6 +277,8 @@ class MangaGeneratorApp(ctk.CTk):
         api_submode_frame.grid(row=3, column=1, padx=10, pady=5, sticky="w")
 
         self.api_submode_var = tk.StringVar(value="normal")
+        self.api_submode_var.trace_add("write", self._on_api_submode_change)
+
         self.api_normal_radio = ctk.CTkRadioButton(
             api_submode_frame,
             text="通常",
@@ -278,19 +314,71 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.ref_image_browse.grid(row=0, column=1)
 
-        # === 生成ボタン ===
+        # 解像度設定
+        ctk.CTkLabel(api_frame, text="解像度:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        resolution_frame = ctk.CTkFrame(api_frame, fg_color="transparent")
+        resolution_frame.grid(row=5, column=1, padx=10, pady=5, sticky="w")
+
+        self.resolution_var = tk.StringVar(value="2K")
+        self.resolution_1k_radio = ctk.CTkRadioButton(
+            resolution_frame,
+            text="1K",
+            variable=self.resolution_var,
+            value="1K",
+            state="disabled"
+        )
+        self.resolution_1k_radio.pack(side="left", padx=(0, 10))
+
+        self.resolution_2k_radio = ctk.CTkRadioButton(
+            resolution_frame,
+            text="2K",
+            variable=self.resolution_var,
+            value="2K",
+            state="disabled"
+        )
+        self.resolution_2k_radio.pack(side="left", padx=(0, 10))
+
+        self.resolution_4k_radio = ctk.CTkRadioButton(
+            resolution_frame,
+            text="4K",
+            variable=self.resolution_var,
+            value="4K",
+            state="disabled"
+        )
+        self.resolution_4k_radio.pack(side="left")
+
+        # === 生成ボタン・リセットボタン ===
         button_frame = ctk.CTkFrame(self.left_scroll)
         button_frame.grid(row=row, column=0, padx=5, pady=10, sticky="ew")
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
         row += 1
 
+        # 生成ボタンとリセットボタンを横並び
+        main_button_frame = ctk.CTkFrame(button_frame, fg_color="transparent")
+        main_button_frame.pack(fill="x", padx=10, pady=10)
+        main_button_frame.grid_columnconfigure(0, weight=1)
+        main_button_frame.grid_columnconfigure(1, weight=1)
+
         self.generate_button = ctk.CTkButton(
-            button_frame,
+            main_button_frame,
             text="YAML生成",
             font=("Arial", 14, "bold"),
             height=40,
             command=self._generate_yaml
         )
-        self.generate_button.pack(fill="x", padx=10, pady=10)
+        self.generate_button.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
+        self.reset_button = ctk.CTkButton(
+            main_button_frame,
+            text="リセット",
+            font=("Arial", 14, "bold"),
+            height=40,
+            fg_color="gray",
+            hover_color="darkgray",
+            command=self._reset_all
+        )
+        self.reset_button.grid(row=0, column=1, padx=(5, 0), sticky="ew")
 
         # シーンビルダーボタン
         self.scene_builder_button = ctk.CTkButton(
@@ -387,8 +475,65 @@ class MangaGeneratorApp(ctk.CTk):
 
         # Generated image storage
         self.generated_image = None
+        self._image_generated_by_api = False  # API生成フラグ
+
+        # 進捗表示用タイマー
+        self._generation_start_time = None
+        self._progress_timer_id = None
+
+        # 最後に保存したYAMLファイルのパス（メタデータ連携用）
+        self.last_saved_yaml_path = None
 
     # === Event Handlers ===
+
+    def _reset_all(self):
+        """すべての入力をリセットして起動直後の状態に戻す"""
+        # 確認ダイアログ
+        if not messagebox.askyesno("確認", "すべての入力をリセットしますか？"):
+            return
+
+        # 出力タイプをデフォルトに
+        self.output_type_menu.set("キャラデザイン（全身）")
+
+        # スタイル設定をデフォルトに
+        self.color_mode_menu.set("フルカラー")
+        self.duotone_color_menu.set("青")
+        self.duotone_color_menu.pack_forget()
+        self.output_style_menu.set("アニメ調")
+        self.aspect_ratio_menu.set("1:1（正方形）")
+
+        # 基本情報をクリア
+        self.title_entry.delete(0, tk.END)
+        self.include_title_var.set(False)
+        self.author_entry.delete(0, tk.END)
+
+        # API設定をデフォルトに（APIキーは保持）
+        self.output_mode_var.set("yaml")
+        # APIキーは明示的に「×」ボタンでクリアしない限り保持
+        self.api_submode_var.set("normal")
+        self.ref_image_entry.configure(state="normal")
+        self.ref_image_entry.delete(0, tk.END)
+        self.ref_image_entry.configure(state="disabled")
+        self.resolution_var.set("2K")
+
+        # 詳細設定をクリア
+        self.current_settings = {}
+        self.settings_status_label.configure(text="設定: 未設定", text_color="gray")
+
+        # YAMLプレビューをクリア
+        self.yaml_textbox.delete("1.0", tk.END)
+
+        # 画像プレビューをクリア
+        self.generated_image = None
+        self._image_generated_by_api = False
+        self.preview_label.configure(text="画像生成後に表示されます", image=None)
+        self.save_image_button.configure(state="disabled")
+
+        # ファイルパスをクリア
+        self.last_saved_yaml_path = None
+
+        # ボタンをデフォルトに
+        self.generate_button.configure(text="YAML生成", state="normal")
 
     def _on_output_type_change(self, value):
         """出力タイプ変更時"""
@@ -404,22 +549,71 @@ class MangaGeneratorApp(ctk.CTk):
             self.duotone_color_menu.pack_forget()
 
     def _on_output_mode_change(self, *args):
-        """出力モード変更時"""
+        """出力モード変更時（APIキーは保持する）"""
         mode = self.output_mode_var.get()
         if mode == "api":
             self.api_key_entry.configure(state="normal")
+            self.api_key_clear_btn.configure(state="normal")
             self.api_normal_radio.configure(state="normal")
             self.api_redraw_radio.configure(state="normal")
             self.ref_image_entry.configure(state="normal")
             self.ref_image_browse.configure(state="normal")
+            self.resolution_1k_radio.configure(state="normal")
+            self.resolution_2k_radio.configure(state="normal")
+            self.resolution_4k_radio.configure(state="normal")
             self.generate_button.configure(text="画像生成")
+            # APIサブモードに応じて詳細設定ボタンの状態を更新
+            self._on_api_submode_change()
         else:
+            # APIキーの値は保持したまま、入力を無効化
             self.api_key_entry.configure(state="disabled")
+            self.api_key_clear_btn.configure(state="disabled")
             self.api_normal_radio.configure(state="disabled")
             self.api_redraw_radio.configure(state="disabled")
             self.ref_image_entry.configure(state="disabled")
             self.ref_image_browse.configure(state="disabled")
+            self.resolution_1k_radio.configure(state="disabled")
+            self.resolution_2k_radio.configure(state="disabled")
+            self.resolution_4k_radio.configure(state="disabled")
             self.generate_button.configure(text="YAML生成")
+            # YAML出力モードでは詳細設定ボタンを有効化
+            self.settings_button.configure(state="normal")
+            # 設定状態ラベルを更新
+            if self.current_settings:
+                self.settings_status_label.configure(text="設定: 設定済み ✓", text_color="green")
+            else:
+                self.settings_status_label.configure(text="設定: 未設定", text_color="gray")
+
+    def _clear_api_key(self):
+        """APIキーをクリア"""
+        self.api_key_entry.delete(0, tk.END)
+
+    def _on_api_submode_change(self, *args):
+        """APIサブモード変更時（通常/清書切替）"""
+        if self.output_mode_var.get() != "api":
+            return
+
+        submode = self.api_submode_var.get()
+        if submode == "redraw":
+            # 清書モード：詳細設定不要、設定ボタンを無効化
+            self.settings_button.configure(state="disabled")
+            self.settings_status_label.configure(
+                text="清書モード: 詳細設定不要",
+                text_color="blue"
+            )
+        else:
+            # 通常モード：詳細設定必要
+            self.settings_button.configure(state="normal")
+            if self.current_settings:
+                self.settings_status_label.configure(
+                    text="設定: 設定済み ✓",
+                    text_color="green"
+                )
+            else:
+                self.settings_status_label.configure(
+                    text="設定: 未設定",
+                    text_color="gray"
+                )
 
     def _browse_ref_image(self):
         """参考画像参照"""
@@ -487,9 +681,22 @@ class MangaGeneratorApp(ctk.CTk):
 
     def _generate_yaml(self):
         """YAML生成"""
+        # 清書モードの場合は専用処理
+        if (self.output_mode_var.get() == "api" and
+            self.api_submode_var.get() == "redraw"):
+            self._generate_redraw_image()
+            return
+
         output_type = self.output_type_menu.get()
 
-        # 設定チェック
+        # タイトル必須チェック
+        title = self.title_entry.get().strip()
+        if not title:
+            messagebox.showwarning("警告", "タイトルを入力してください")
+            self.title_entry.focus_set()
+            return
+
+        # 設定チェック（通常モードのみ）
         if not self.current_settings:
             messagebox.showwarning("警告", "詳細設定を行ってください")
             return
@@ -499,29 +706,29 @@ class MangaGeneratorApp(ctk.CTk):
         duotone_color = self.duotone_color_menu.get() if color_mode == "2色刷り" else None
         output_style = self.output_style_menu.get()
         aspect_ratio = self.aspect_ratio_menu.get()
-        title = self.title_entry.get().strip()
+        include_title_in_image = self.include_title_var.get()
         author = self.author_entry.get().strip() or "Unknown"
 
         try:
             if output_type in ["キャラデザイン（全身）", "キャラデザイン（顔）"]:
                 yaml_content = self._generate_character_sheet_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "背景のみ生成":
                 yaml_content = self._generate_background_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "ポーズ付きキャラ":
                 yaml_content = self._generate_pose_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "エフェクト追加":
                 yaml_content = self._generate_effect_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "装飾テキスト":
                 yaml_content = self._generate_decorative_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             else:
                 yaml_content = f"# {output_type} - 未実装"
@@ -537,7 +744,7 @@ class MangaGeneratorApp(ctk.CTk):
         except Exception as e:
             messagebox.showerror("エラー", f"YAML生成中にエラーが発生しました:\n{str(e)}")
 
-    def _generate_character_sheet_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
+    def _generate_character_sheet_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """三面図用YAML生成（character_basic.yaml準拠）"""
         settings = self.current_settings
         from constants import CHARACTER_STYLES
@@ -573,18 +780,33 @@ class MangaGeneratorApp(ctk.CTk):
         sheet_label = "full body character reference sheet" if sheet_type == "fullbody" else "face character reference sheet"
         views = "front view, side view, back view" if sheet_type == "fullbody" else "front view, side view, 3/4 view"
 
+        # 顔三面図専用の指示（素体ヘッドショット）
+        face_headshot_instruction = ""
+        if sheet_type == "face":
+            face_headshot_instruction = """
+# IMPORTANT: Face Reference Sheet Instructions
+headshot_specification:
+  type: "Character design base body (sotai) headshot for reference sheet"
+  coverage: "From top of head to base of neck (around collarbone level)"
+  clothing: "NONE - Do not include any clothing or accessories"
+  accessories: "NONE - No jewelry, headwear, or decorations"
+  state: "Clean base body state only"
+  background: "Pure white background"
+  purpose: "This is professional character design reference material"
+"""
+
         yaml_content = f"""# {sheet_label.title()} (character_basic.yaml準拠)
 type: character_design
 title: "{title or name + ' Reference Sheet'}"
 author: "{author}"
 
 output_type: "{sheet_label}"
-
+{face_headshot_instruction}
 character:
   name: "{name}"
   description: "{description}"
-  outfit: "{outfit_prompt}"
-  expression: "neutral expression, standing at attention"
+  outfit: "{outfit_prompt if sheet_type == 'fullbody' else 'NONE - bare skin only, no clothing'}"
+  expression: "neutral expression{', standing at attention' if sheet_type == 'fullbody' else ''}"
 
 character_style:
   style: "{style_prompt}"
@@ -597,6 +819,9 @@ constraints:
   - Maintain consistent design across all views
   - White or simple background for clarity
   - Clean linework suitable for reference
+{'''  - This is a HEAD/FACE ONLY reference - show from top of head to neck/collarbone
+  - Do NOT draw any clothing, accessories, or decorations
+  - Keep the character in clean base body state''' if sheet_type == 'face' else ''}
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -604,12 +829,21 @@ style:
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 """
 
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
+
         if image_path:
             yaml_content += f'\nreference_image: "{os.path.basename(image_path)}"'
 
         return yaml_content
 
-    def _generate_background_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
+    def _generate_background_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """背景生成用YAML生成"""
         settings = self.current_settings
         description = settings.get('description', '')
@@ -628,9 +862,18 @@ style:
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 """
+
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
         return yaml_content
 
-    def _generate_pose_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
+    def _generate_pose_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """ポーズ付きキャラ用YAML生成（character_pose.yaml準拠）"""
         settings = self.current_settings
         from ui.pose_window import (
@@ -699,9 +942,18 @@ style:
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 """
+
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
         return yaml_content
 
-    def _generate_effect_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
+    def _generate_effect_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """エフェクト追加用YAML生成（character_effect.yaml準拠）"""
         settings = self.current_settings
         from ui.effect_window import (
@@ -778,9 +1030,18 @@ style:
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 """
+
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
         return yaml_content
 
-    def _generate_decorative_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author):
+    def _generate_decorative_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """装飾テキスト用YAML生成（ui_text_overlay.yaml準拠）"""
         from ui.decorative_text_window import (
             TEXT_TYPES, TITLE_FONTS, TITLE_SIZES, GRADIENT_COLORS,
@@ -996,55 +1257,223 @@ style:
         else:
             yaml_content = "# Unknown text type"
 
+        # タイトルオーバーレイを追加（有効な場合のみ）
+        if yaml_content != "# Unknown text type" and include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
+
         return yaml_content
 
     # === API Image Generation ===
 
-    def _generate_image_with_api(self, yaml_content: str):
-        """APIで画像生成"""
+    def _generate_redraw_image(self):
+        """清書モード専用：参考画像を高画質化"""
+        # APIキーチェック
         api_key = self.api_key_entry.get().strip()
         if not api_key:
             messagebox.showwarning("警告", "API Keyを入力してください")
             return
 
-        # 参考画像（清書モードの場合）
-        ref_image_path = None
-        if self.api_submode_var.get() == "redraw":
-            ref_image_path = self.ref_image_entry.get().strip()
-            if not ref_image_path or not os.path.exists(ref_image_path):
-                messagebox.showwarning("警告", "参考画像清書モードでは参考画像が必要です")
-                return
+        # 参考画像チェック
+        ref_image_path = self.ref_image_entry.get().strip()
+        if not ref_image_path or not os.path.exists(ref_image_path):
+            messagebox.showwarning("警告", "参考画像を選択してください")
+            return
+
+        # タイトル必須チェック（ファイル名用）
+        title = self.title_entry.get().strip()
+        if not title:
+            messagebox.showwarning("警告", "タイトルを入力してください（ファイル名に使用します）")
+            self.title_entry.focus_set()
+            return
+
+        # 確認ダイアログ
+        confirm_msg = (
+            "【清書モード】画像の高画質化を実行します\n\n"
+            f"参考画像: {os.path.basename(ref_image_path)}\n"
+            f"解像度: {self.resolution_var.get()}\n"
+            "\n※ 詳細設定・YAMLは不要です\n"
+            "※ API呼び出しには料金がかかります\n\n"
+            "実行しますか？"
+        )
+        if not messagebox.askyesno("生成確認", confirm_msg):
+            return
 
         # 生成中表示
-        self.generate_button.configure(state="disabled", text="生成中...")
-        self.preview_label.configure(text="画像生成中...", image=None)
+        self.generate_button.configure(state="disabled", text="清書中...")
+        self.preview_label.configure(text="画像を高画質化中...\n経過時間: 0秒", image=None)
+
+        # 経過時間タイマー開始
+        self._generation_start_time = time.time()
+        self._start_progress_timer()
+
+        # 解像度を取得
+        resolution = self.resolution_var.get()
+
+        # YAMLプレビューに清書モード情報を表示
+        redraw_info = f"""# 清書モード（High-Fidelity Redraw）
+# YAML設定は使用されません
+
+mode: redraw
+source_image: "{os.path.basename(ref_image_path)}"
+resolution: "{resolution}"
+title: "{title or '(未設定)'}"
+
+# 処理内容:
+# - 元画像の構図・キャラクター・色彩を100%保持
+# - 解像度・線の鮮明さ・ディテールのみ向上
+"""
+        self.yaml_textbox.delete("1.0", tk.END)
+        self.yaml_textbox.insert("1.0", redraw_info)
 
         def generate():
             try:
-                image = generate_image_with_api(api_key, yaml_content, ref_image_path)
-                self.after(0, lambda: self._on_image_generated(image))
+                result = generate_image_with_api(
+                    api_key=api_key,
+                    yaml_prompt="",  # 清書モードでは空（api_client側で専用プロンプト使用）
+                    char_image_paths=[],
+                    resolution=resolution,
+                    ref_image_path=ref_image_path
+                )
+
+                if result['success'] and result['image']:
+                    img = result['image']
+                    self.after(0, lambda img=img: self._on_image_generated(img))
+                else:
+                    error_msg = result.get('error', '不明なエラー')
+                    self.after(0, lambda msg=error_msg: self._on_image_error(msg))
             except Exception as e:
-                self.after(0, lambda: self._on_image_error(str(e)))
+                error_str = str(e)
+                self.after(0, lambda msg=error_str: self._on_image_error(msg))
 
         thread = threading.Thread(target=generate, daemon=True)
         thread.start()
 
+    def _generate_image_with_api(self, yaml_content: str):
+        """APIで画像生成（通常モード）"""
+        api_key = self.api_key_entry.get().strip()
+        if not api_key:
+            messagebox.showwarning("警告", "API Keyを入力してください")
+            return
+
+        # 確認ダイアログ
+        confirm_msg = (
+            "【通常モード】画像生成を実行します\n\n"
+            "⚠ 注意事項:\n"
+            "・API呼び出しには料金がかかります\n\n"
+            "実行しますか？"
+        )
+        if not messagebox.askyesno("生成確認", confirm_msg):
+            return
+
+        # 生成中表示
+        self.generate_button.configure(state="disabled", text="生成中...")
+        self.preview_label.configure(text="画像生成中...\n経過時間: 0秒", image=None)
+
+        # 経過時間タイマー開始
+        self._generation_start_time = time.time()
+        self._start_progress_timer()
+
+        # 解像度を取得
+        resolution = self.resolution_var.get()
+
+        def generate():
+            try:
+                # APIクライアントを呼び出し（戻り値はdict）
+                # 通常モードでは参考画像は使用しない
+                result = generate_image_with_api(
+                    api_key=api_key,
+                    yaml_prompt=yaml_content,
+                    char_image_paths=[],
+                    resolution=resolution,
+                    ref_image_path=None  # 通常モードでは参考画像なし
+                )
+
+                if result['success'] and result['image']:
+                    img = result['image']
+                    self.after(0, lambda img=img: self._on_image_generated(img))
+                else:
+                    error_msg = result.get('error', '不明なエラー')
+                    self.after(0, lambda msg=error_msg: self._on_image_error(msg))
+            except Exception as e:
+                error_str = str(e)
+                self.after(0, lambda msg=error_str: self._on_image_error(msg))
+
+        thread = threading.Thread(target=generate, daemon=True)
+        thread.start()
+
+    def _start_progress_timer(self):
+        """経過時間表示タイマーを開始"""
+        self._update_progress_display()
+
+    def _update_progress_display(self):
+        """経過時間表示を更新"""
+        if self._generation_start_time is not None:
+            elapsed = int(time.time() - self._generation_start_time)
+            minutes = elapsed // 60
+            seconds = elapsed % 60
+            if minutes > 0:
+                time_str = f"{minutes}分{seconds}秒"
+            else:
+                time_str = f"{seconds}秒"
+
+            self.preview_label.configure(
+                text=f"画像生成中...\n経過時間: {time_str}",
+                image=None
+            )
+            # 1秒後に再度更新
+            self._progress_timer_id = self.after(1000, self._update_progress_display)
+
+    def _stop_progress_timer(self):
+        """経過時間表示タイマーを停止"""
+        if self._progress_timer_id is not None:
+            self.after_cancel(self._progress_timer_id)
+            self._progress_timer_id = None
+        self._generation_start_time = None
+
     def _on_image_generated(self, image: Image.Image):
         """画像生成完了"""
+        # タイマー停止
+        self._stop_progress_timer()
+
+        # タイトル合成（チェックボックスがオンの場合）
+        if self.include_title_var.get():
+            title = self.title_entry.get().strip()
+            if title:
+                image = add_title_to_image(image, title, position="top-left")
+
         self.generated_image = image
-        self.generate_button.configure(state="normal", text="画像生成")
+        self._image_generated_by_api = True  # API生成フラグを設定
+
+        # ボタンのテキストを現在のモードに応じて設定
+        if self.output_mode_var.get() == "api":
+            self.generate_button.configure(state="normal", text="画像生成")
+        else:
+            self.generate_button.configure(state="normal", text="YAML生成")
         self.save_image_button.configure(state="normal")
 
-        # プレビュー表示
+        # プレビュー表示（元画像をコピーしてサムネイル化）
+        preview_image = image.copy()
         preview_size = (400, 400)
-        image.thumbnail(preview_size, Image.Resampling.LANCZOS)
-        photo = ImageTk.PhotoImage(image)
+        preview_image.thumbnail(preview_size, Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(preview_image)
         self.preview_label.configure(image=photo, text="")
         self.preview_label.image = photo
 
     def _on_image_error(self, error_msg: str):
         """画像生成エラー"""
-        self.generate_button.configure(state="normal", text="画像生成")
+        # タイマー停止
+        self._stop_progress_timer()
+
+        # ボタンのテキストを現在のモードに応じて設定
+        if self.output_mode_var.get() == "api":
+            self.generate_button.configure(state="normal", text="画像生成")
+        else:
+            self.generate_button.configure(state="normal", text="YAML生成")
         self.preview_label.configure(text=f"エラー: {error_msg}", image=None)
         messagebox.showerror("エラー", f"画像生成に失敗しました:\n{error_msg}")
 
@@ -1054,8 +1483,20 @@ style:
         """YAMLをクリップボードにコピー"""
         yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
         if yaml_content:
-            pyperclip.copy(yaml_content)
+            # tkinterの組み込みクリップボード機能を使用（macOSで確実に動作）
+            self.clipboard_clear()
+            self.clipboard_append(yaml_content)
+            self.update()  # クリップボードを確実に更新
             messagebox.showinfo("コピー完了", "YAMLをクリップボードにコピーしました")
+
+    def _get_safe_filename(self, title: str) -> str:
+        """タイトルからファイル名に使える文字列を生成"""
+        # ファイル名に使えない文字を置換
+        invalid_chars = '<>:"/\\|?*'
+        safe_name = title
+        for char in invalid_chars:
+            safe_name = safe_name.replace(char, '_')
+        return safe_name.strip() or "untitled"
 
     def _save_yaml(self):
         """YAMLを保存"""
@@ -1064,12 +1505,18 @@ style:
             messagebox.showwarning("警告", "保存するYAMLがありません")
             return
 
+        # タイトルからデフォルトファイル名を生成
+        title = self.title_entry.get().strip()
+        default_filename = self._get_safe_filename(title) if title else "output"
+
         filename = filedialog.asksaveasfilename(
+            initialfile=default_filename,
             defaultextension=".yaml",
             filetypes=[("YAML files", "*.yaml *.yml"), ("All files", "*.*")]
         )
         if filename:
             save_yaml_file(filename, yaml_content)
+            self.last_saved_yaml_path = filename  # パスを記録
             add_to_recent_files(self.recent_files, filename)
             save_recent_files(self.recent_files_path, self.recent_files)
             messagebox.showinfo("保存完了", f"YAMLを保存しました:\n{filename}")
@@ -1084,6 +1531,7 @@ style:
             if yaml_content:
                 self.yaml_textbox.delete("1.0", tk.END)
                 self.yaml_textbox.insert("1.0", yaml_content)
+                self.last_saved_yaml_path = filename   # 保存パスを更新
                 add_to_recent_files(self.recent_files, filename)
                 save_recent_files(self.recent_files_path, self.recent_files)
 
@@ -1093,13 +1541,37 @@ style:
             messagebox.showwarning("警告", "保存する画像がありません")
             return
 
+        # タイトルからデフォルトファイル名を生成
+        title = self.title_entry.get().strip()
+        base_filename = self._get_safe_filename(title) if title else "output"
+
+        # API生成画像には「_API」サフィックスを付ける
+        if self._image_generated_by_api:
+            default_filename = f"{base_filename}_API"
+        else:
+            default_filename = base_filename
+
         filename = filedialog.asksaveasfilename(
+            initialfile=default_filename,
             defaultextension=".png",
             filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")]
         )
         if filename:
             self.generated_image.save(filename)
-            messagebox.showinfo("保存完了", f"画像を保存しました:\n{filename}")
+
+            # YAMLにメタデータを追加（保存済みYAMLがある場合）
+            if self.last_saved_yaml_path and os.path.exists(self.last_saved_yaml_path):
+                success, error = update_yaml_metadata(self.last_saved_yaml_path, filename)
+                if success:
+                    messagebox.showinfo(
+                        "保存完了",
+                        f"画像を保存しました:\n{filename}\n\n"
+                        f"YAMLファイルにメタデータを追加しました:\n{os.path.basename(self.last_saved_yaml_path)}"
+                    )
+                else:
+                    messagebox.showinfo("保存完了", f"画像を保存しました:\n{filename}")
+            else:
+                messagebox.showinfo("保存完了", f"画像を保存しました:\n{filename}")
 
     # === Scene Builder ===
 
