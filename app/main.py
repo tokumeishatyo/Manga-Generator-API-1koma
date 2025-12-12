@@ -33,6 +33,7 @@ from ui.pose_window import PoseWindow
 from ui.effect_window import EffectWindow
 from ui.decorative_text_window import DecorativeTextWindow
 from ui.four_panel_window import FourPanelWindow
+from ui.manga_composer_window import MangaComposerWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -47,11 +48,12 @@ class MangaGeneratorApp(ctk.CTk):
 
         # Window configuration
         self.title("1コマ漫画生成アプリ")
-        self.geometry("1200x800")
+        self.geometry("1500x800")
 
-        # Layout configuration - Two column layout
-        self.grid_columnconfigure(0, weight=1, minsize=400)  # Left column (settings)
-        self.grid_columnconfigure(1, weight=2, minsize=600)  # Right column (preview)
+        # Layout configuration - Three column layout
+        self.grid_columnconfigure(0, weight=1, minsize=320)  # Left column (settings)
+        self.grid_columnconfigure(1, weight=1, minsize=280)  # Middle column (API)
+        self.grid_columnconfigure(2, weight=2, minsize=500)  # Right column (preview)
         self.grid_rowconfigure(0, weight=1)
 
         # Load template
@@ -67,6 +69,7 @@ class MangaGeneratorApp(ctk.CTk):
 
         # Build UI
         self._build_left_column()
+        self._build_middle_column()
         self._build_right_column()
 
         # Initial update
@@ -216,11 +219,75 @@ class MangaGeneratorApp(ctk.CTk):
         self.author_entry = ctk.CTkEntry(info_frame, placeholder_text="Unknown")
         self.author_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
 
-        # === API設定 ===
-        api_frame = ctk.CTkFrame(self.left_scroll)
-        api_frame.grid(row=row, column=0, padx=5, pady=5, sticky="ew")
-        api_frame.grid_columnconfigure(1, weight=1)
+        # === 生成ボタン・リセットボタン ===
+        button_frame = ctk.CTkFrame(self.left_scroll)
+        button_frame.grid(row=row, column=0, padx=5, pady=10, sticky="ew")
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
         row += 1
+
+        # 生成ボタンとリセットボタンを横並び
+        main_button_frame = ctk.CTkFrame(button_frame, fg_color="transparent")
+        main_button_frame.pack(fill="x", padx=10, pady=10)
+        main_button_frame.grid_columnconfigure(0, weight=1)
+        main_button_frame.grid_columnconfigure(1, weight=1)
+
+        self.generate_button = ctk.CTkButton(
+            main_button_frame,
+            text="YAML生成",
+            font=("Arial", 14, "bold"),
+            height=40,
+            command=self._generate_yaml
+        )
+        self.generate_button.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
+        self.reset_button = ctk.CTkButton(
+            main_button_frame,
+            text="リセット",
+            font=("Arial", 14, "bold"),
+            height=40,
+            fg_color="gray",
+            hover_color="darkgray",
+            command=self._reset_all
+        )
+        self.reset_button.grid(row=0, column=1, padx=(5, 0), sticky="ew")
+
+        # シーンビルダーボタン
+        self.scene_builder_button = ctk.CTkButton(
+            button_frame,
+            text="シーンビルダーを開く",
+            height=35,
+            command=self._open_scene_builder
+        )
+        self.scene_builder_button.pack(fill="x", padx=10, pady=(0, 5))
+
+        # 漫画ページコンポーザーボタン
+        self.manga_composer_button = ctk.CTkButton(
+            button_frame,
+            text="漫画ページコンポーザー",
+            height=35,
+            fg_color="#6B4C9A",
+            hover_color="#5A3D89",
+            command=self._open_manga_composer
+        )
+        self.manga_composer_button.pack(fill="x", padx=10, pady=(0, 10))
+
+    def _build_middle_column(self):
+        """中列を構築（API設定）"""
+        self.middle_column = ctk.CTkFrame(self)
+        self.middle_column.grid(row=0, column=1, padx=5, pady=10, sticky="nsew")
+        self.middle_column.grid_columnconfigure(0, weight=1)
+        self.middle_column.grid_rowconfigure(0, weight=1)
+
+        # Create scrollable frame
+        self.middle_scroll = ctk.CTkScrollableFrame(self.middle_column)
+        self.middle_scroll.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        self.middle_scroll.grid_columnconfigure(0, weight=1)
+
+        # === API設定 ===
+        api_frame = ctk.CTkFrame(self.middle_scroll)
+        api_frame.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        api_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
             api_frame,
@@ -348,52 +415,10 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.resolution_4k_radio.pack(side="left")
 
-        # === 生成ボタン・リセットボタン ===
-        button_frame = ctk.CTkFrame(self.left_scroll)
-        button_frame.grid(row=row, column=0, padx=5, pady=10, sticky="ew")
-        button_frame.grid_columnconfigure(0, weight=1)
-        button_frame.grid_columnconfigure(1, weight=1)
-        row += 1
-
-        # 生成ボタンとリセットボタンを横並び
-        main_button_frame = ctk.CTkFrame(button_frame, fg_color="transparent")
-        main_button_frame.pack(fill="x", padx=10, pady=10)
-        main_button_frame.grid_columnconfigure(0, weight=1)
-        main_button_frame.grid_columnconfigure(1, weight=1)
-
-        self.generate_button = ctk.CTkButton(
-            main_button_frame,
-            text="YAML生成",
-            font=("Arial", 14, "bold"),
-            height=40,
-            command=self._generate_yaml
-        )
-        self.generate_button.grid(row=0, column=0, padx=(0, 5), sticky="ew")
-
-        self.reset_button = ctk.CTkButton(
-            main_button_frame,
-            text="リセット",
-            font=("Arial", 14, "bold"),
-            height=40,
-            fg_color="gray",
-            hover_color="darkgray",
-            command=self._reset_all
-        )
-        self.reset_button.grid(row=0, column=1, padx=(5, 0), sticky="ew")
-
-        # シーンビルダーボタン
-        self.scene_builder_button = ctk.CTkButton(
-            button_frame,
-            text="シーンビルダーを開く",
-            height=35,
-            command=self._open_scene_builder
-        )
-        self.scene_builder_button.pack(fill="x", padx=10, pady=(0, 10))
-
     def _build_right_column(self):
         """右列を構築（YAML/画像プレビュー）"""
         self.right_column = ctk.CTkFrame(self)
-        self.right_column.grid(row=0, column=1, padx=(5, 10), pady=10, sticky="nsew")
+        self.right_column.grid(row=0, column=2, padx=(5, 10), pady=10, sticky="nsew")
         self.right_column.grid_columnconfigure(0, weight=1)
         self.right_column.grid_rowconfigure(1, weight=1)
 
@@ -1665,6 +1690,12 @@ title: "{title or '(未設定)'}"
         """シーンビルダーからYAMLを受け取る"""
         self.yaml_textbox.delete("1.0", tk.END)
         self.yaml_textbox.insert("1.0", yaml_content)
+
+    # === Manga Composer ===
+
+    def _open_manga_composer(self):
+        """漫画ページコンポーザーを開く"""
+        MangaComposerWindow(self)
 
 
 def main():
