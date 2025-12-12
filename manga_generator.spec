@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec file for 1コマ漫画生成アプリ
+PyInstaller spec file for 漫画生成アプリ（1コマ・4コマ対応）
 """
 
 import os
@@ -23,6 +23,7 @@ datas = [
     (os.path.join(base_path, 'story_scene_composite.yaml'), '.'),
     (os.path.join(base_path, 'boss_raid_composition.yaml'), '.'),
     (os.path.join(base_path, 'multi_character_fomation.yaml'), '.'),
+    (os.path.join(base_path, 'four_panel_manga.yaml'), '.'),
 ]
 
 # 存在するファイルのみを含める
@@ -105,14 +106,14 @@ coll = COLLECT(
 # macOS用 .app バンドル
 app = BUNDLE(
     coll,
-    name='1コマ漫画生成.app',
+    name='漫画生成.app',
     icon=None,  # アイコンがある場合はここにパスを指定
     bundle_identifier='com.nanobananapro.mangagenerator',
     info_plist={
-        'CFBundleName': '1コマ漫画生成',
-        'CFBundleDisplayName': '1コマ漫画生成',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
+        'CFBundleName': '漫画生成',
+        'CFBundleDisplayName': '漫画生成',
+        'CFBundleVersion': '2.0.0',
+        'CFBundleShortVersionString': '2.0.0',
         'NSHighResolutionCapable': True,
         'LSMinimumSystemVersion': '10.13.0',
     },
