@@ -38,43 +38,34 @@ def generate_image_with_api(
     try:
         client = genai.Client(api_key=api_key)
 
-        # 参考画像清書モードの場合、専用プロンプトを使用
+        # 参考画像清書モードの場合、YAML + 参照画像を両方使用
         if ref_image_path:
-            # 清書モード専用プロンプト（YAMLは不要）
-            redraw_prompt = """【CRITICAL: HIGH-FIDELITY IMAGE ENHANCEMENT MODE】
+            # 清書モード: YAMLの指示に従いつつ、参照画像の構図を再現して高品質化
+            redraw_instruction = """【HIGH-QUALITY REDRAW MODE】
 
-You are performing an Image-to-Image (i2i) "clean-up / upscale" task.
-Your ONLY job is to ENHANCE IMAGE QUALITY while preserving the original image EXACTLY.
+You are performing a high-quality redraw task.
+Use the YAML instructions below AND the attached reference image together.
 
-## ABSOLUTE RULES (This is NOT a creative task):
-1. PRESERVE 100%: Composition, layout, framing - DO NOT crop or reframe
-2. PRESERVE 100%: All character positions, poses, gestures, expressions
-3. PRESERVE 100%: All character designs, faces, hairstyles, outfits
-4. PRESERVE 100%: Color palette, lighting direction, shadows, atmosphere
-5. PRESERVE 100%: All objects, backgrounds, and scene elements
+## CRITICAL RULES:
+1. Follow the YAML prompt instructions for content and style
+2. Use the reference image as a guide for:
+   - Exact composition and layout
+   - Character positions and poses
+   - Speech bubble placements (if any)
+   - Scene framing and camera angle
+3. Generate a MORE DETAILED, higher quality version
+4. Improve: line art clarity, shading details, background details, facial features
+5. Maintain the same scene but with professional-level quality
 
-## ONLY IMPROVE:
-- Resolution and sharpness
-- Line clarity and anti-aliasing
-- Fine detail definition
-- Noise reduction
+## IMPORTANT:
+- The reference image shows the desired composition - MATCH IT
+- The YAML provides detailed instructions - FOLLOW THEM
+- Output should look like a polished, professional version of the reference
 
-## STRICTLY FORBIDDEN:
-- Adding ANY new elements not in the original
-- Changing ANY poses or expressions
-- Modifying ANY character designs or outfits
-- Reinterpreting the scene in any way
-- Adding "creative improvements" or "enhancements"
-- Changing the art style
-
-## INPUT:
-The attached image is the source to enhance.
-
-## OUTPUT:
-A higher-quality version of the EXACT SAME image.
-The result should be indistinguishable from the original except for improved quality.
+---
+YAML Instructions:
 """
-            contents = [redraw_prompt]
+            contents = [redraw_instruction + "\n" + yaml_prompt]
         else:
             contents = [yaml_prompt]
 

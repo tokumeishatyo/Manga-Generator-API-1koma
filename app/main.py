@@ -621,10 +621,10 @@ class MangaGeneratorApp(ctk.CTk):
 
         submode = self.api_submode_var.get()
         if submode == "redraw":
-            # 清書モード：詳細設定不要、設定ボタンを無効化
+            # 清書モード：詳細設定不要だが、YAML読込が必要
             self.settings_button.configure(state="disabled")
             self.settings_status_label.configure(
-                text="清書モード: 詳細設定不要",
+                text="清書モード: YAML読込+参照画像が必要",
                 text_color="blue"
             )
         else:
@@ -1343,7 +1343,16 @@ title_overlay:
     speeches:{speeches_yaml}{narration_line}
 """
 
-        yaml_content = f"""# 4コマ漫画生成 (four_panel_manga.yaml準拠)
+        yaml_content = f"""【画像生成指示 / Image Generation Instructions】
+以下のYAML指示に従って、4コマ漫画を1枚の画像として生成してください。
+添付したキャラクター設定画を参考に、キャラクターの外見を一貫させてください。
+
+Generate a 4-panel manga as a single image following the YAML instructions below.
+Use the attached character reference sheets to maintain consistent character appearances.
+
+---
+
+# 4コマ漫画生成 (four_panel_manga.yaml準拠)
 title: "{title}"
 author: "{author}"
 color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
@@ -1378,17 +1387,32 @@ title_overlay:
     # === API Image Generation ===
 
     def _generate_redraw_image(self):
-        """清書モード専用：参考画像を高画質化"""
+        """清書モード専用：YAML + 参照画像で高品質再描画"""
         # APIキーチェック
         api_key = self.api_key_entry.get().strip()
         if not api_key:
             messagebox.showwarning("警告", "API Keyを入力してください")
             return
 
+        # YAML必須チェック（清書モードでは読込が必要）
+        yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
+        if not yaml_content:
+            messagebox.showwarning(
+                "警告",
+                "清書モードではYAMLが必要です。\n\n"
+                "ブラウザ版で成功したYAMLを「読込」ボタンで\n"
+                "読み込むか、直接ペーストしてください。"
+            )
+            return
+
         # 参考画像チェック
         ref_image_path = self.ref_image_entry.get().strip()
         if not ref_image_path or not os.path.exists(ref_image_path):
-            messagebox.showwarning("警告", "参考画像を選択してください")
+            messagebox.showwarning(
+                "警告",
+                "参考画像を選択してください。\n\n"
+                "ブラウザ版で生成した画像を指定してください。"
+            )
             return
 
         # タイトル必須チェック（ファイル名用）
@@ -1400,10 +1424,11 @@ title_overlay:
 
         # 確認ダイアログ
         confirm_msg = (
-            "【清書モード】画像の高画質化を実行します\n\n"
+            "【清書モード】高品質再描画を実行します\n\n"
             f"参考画像: {os.path.basename(ref_image_path)}\n"
+            f"YAML: 読込済み ({len(yaml_content)}文字)\n"
             f"解像度: {self.resolution_var.get()}\n"
-            "\n※ 詳細設定・YAMLは不要です\n"
+            "\n※ YAMLの指示 + 参照画像の構図で再描画します\n"
             "※ API呼び出しには料金がかかります\n\n"
             "実行しますか？"
         )
@@ -1412,7 +1437,7 @@ title_overlay:
 
         # 生成中表示
         self.generate_button.configure(state="disabled", text="清書中...")
-        self.preview_label.configure(text="画像を高画質化中...\n経過時間: 0秒", image=None)
+        self.preview_label.configure(text="高品質再描画中...\n経過時間: 0秒", image=None)
 
         # 経過時間タイマー開始
         self._generation_start_time = time.time()
@@ -1421,27 +1446,13 @@ title_overlay:
         # 解像度を取得
         resolution = self.resolution_var.get()
 
-        # YAMLプレビューに清書モード情報を表示
-        redraw_info = f"""# 清書モード（High-Fidelity Redraw）
-# YAML設定は使用されません
-
-mode: redraw
-source_image: "{os.path.basename(ref_image_path)}"
-resolution: "{resolution}"
-title: "{title or '(未設定)'}"
-
-# 処理内容:
-# - 元画像の構図・キャラクター・色彩を100%保持
-# - 解像度・線の鮮明さ・ディテールのみ向上
-"""
-        self.yaml_textbox.delete("1.0", tk.END)
-        self.yaml_textbox.insert("1.0", redraw_info)
+        # YAMLはそのまま保持（読み込んだYAMLを使用するため上書きしない）
 
         def generate():
             try:
                 result = generate_image_with_api(
                     api_key=api_key,
-                    yaml_prompt="",  # 清書モードでは空（api_client側で専用プロンプト使用）
+                    yaml_prompt=yaml_content,  # 読み込んだYAMLを使用
                     char_image_paths=[],
                     resolution=resolution,
                     ref_image_path=ref_image_path
