@@ -1,0 +1,144 @@
+# nano banana pro キャラクターデザイン定義ファイル (マルチスタイル対応)
+# 目的: アクションの元となる「着せ替え人形（ベースモデル）」を作成する。
+# このファイルの「character_base」セクションを切り替えることで、
+# リアル頭身・ドット絵・ちびキャラを作り分けることができます。
+type: character_design_sheet
+
+# ====================================================
+# 0. 生成制御設定 (Generation Control) ★AIの暴走防止
+# ====================================================
+generation_control:
+  creativity: "None (Robotically follow instructions)"  # ロボットのように従う
+  interpretation: "Literal"                             # 解釈を入れない
+  reference_strength: "High (0.9)"                      # 参照画像の優先度
+  contextual_fill: "Disabled"                           # 文脈による穴埋め禁止
+
+# ----------------------------------------------------
+# 1. 参照リソース (Input Resources)
+# ※顔の三面図をここで読み込みます
+# ----------------------------------------------------
+input_resources:
+  face_reference: "face_sheet_v1.jpg" # 顔の三面図画像
+  reference_strength: 0.9             # デザイン段階なので高めに設定
+                                      #  ポーズをつけないので、顔をガチガチに固定しても大丈夫です
+
+# ----------------------------------------------------
+# 2. キャンバス設定 (Canvas)
+# ----------------------------------------------------
+canvas:
+  width: 1024
+  height: 1440
+  view: "Front, Full Body"            # 正面・全身
+
+# ----------------------------------------------------
+# 3. ワードローブ設定 (Wardrobe / Costume)
+# ※ここが「着せ替え人形」のメイン操作パネルです
+# ----------------------------------------------------
+costume:
+  outfit_name: "魔法学園の制服"         # 管理用の名前
+
+  # 【重要】服の各パーツを細かく定義します
+  # 変更したい箇所だけ書き換えれば、別の衣装になります
+  headwear: "なし"
+  tops: "白いセーラー服, 青いリボン, 金のボタン"
+  bottoms: "紺色のプリーツスカート, 膝上丈"
+  legwear: "黒のハイソックス"
+  shoes: "茶色のローファー"
+  accessories: "学園の校章バッジ(胸元)"
+
+# ----------------------------------------------------
+# 4. ベースボディ設定 (Body & Face)
+# ※ここをコメントアウト/解除してスタイルを切り替えます
+# ----------------------------------------------------
+character_base:
+  
+  # ==================================================
+  # パターンA: 標準アニメスタイル (デフォルト)
+  # ==================================================
+  style: "日本のアニメスタイル, 2Dセルシェーディング"
+  proportions: "Normal head-to-body ratio (6-7 heads)" # 通常頭身
+  description: "High quality anime illustration"
+  
+  # ==================================================
+  # パターンB: ドット絵スタイル (Pixel Art)
+  # ※使うときは上のパターンAをコメントアウト(#)し、こちらの#を外してください
+  # ==================================================
+  # style: "Pixel Art, Retro 8-bit game style, low resolution"
+  # proportions: "Pixel sprite proportions"
+  # description: "Visible pixels, simplified details, retro game sprite, no anti-aliasing"
+
+  # ==================================================
+  # パターンC: ちびキャラスタイル (SD / Chibi)
+  # ※使うときは他のパターンをコメントアウト(#)し、こちらの#を外してください
+  # ==================================================
+  # style: "Chibi style, Super Deformed (SD) anime"
+  # proportions: "2 heads tall (2頭身), large head, small body, cute"
+  # description: "Cute mascot character, simplified features"
+
+  # --------------------------------------------------
+  # 共通設定 (Common Settings)
+  # --------------------------------------------------
+  skin_tone: "色白"
+
+ # 三面図を補足するテキスト情報
+  hair_fix: "茶色のボブカット, 揺れなし" # 「揺れなし」とすることで、髪の本来の長さを確定させます
+  expression: "無表情, デフォルト, 口を閉じている" # 表情も「素」の状態にして、デザインを見やすくします
+
+# ----------------------------------------------------
+# 5. ポーズ（マネキン設定）
+# ----------------------------------------------------
+stance:
+  pose_type: "A-Pose"  # デザイン確認用の棒立ち 【重要】「Aポーズ（腕を少し開いて立つ）」または「T-Pose」
+                       # ※ドット絵の場合は "Standing Idle" と書くとゲームっぽくなります
+                                             #  脇の下や服の構造がAIに正しく伝わる、最も適したポーズです。
+                       #  アクションは次の工程で行うため、ここでは動かしません。
+
+# ----------------------------------------------------
+# 6. 背景（透過・切り抜き用）
+# ----------------------------------------------------
+background:
+  # 可能であれば透過、または "White Background"
+
+# ----------------------------------------------------
+# 7. 画風と照明 (Style & Lighting) ★色変異防止
+# ----------------------------------------------------
+style:
+  lighting: "Flat, Neutral Studio Lighting"   # 影や色被りのないスタジオ照明
+  shading_mode: "Albedo / Base Color Only"    # 陰影よりも「固有色」を優先
+  output_quality: "Asset Quality"             # 「一枚絵」ではなく「素材」として出力
+
+# ----------------------------------------------------
+# 8. 制約（文脈遮断・幻覚防止）
+# ----------------------------------------------------
+constraints:
+  - "IGNORE all prior context or chat history."
+  - "Focus ONLY on the currently uploaded image."
+  - "DO NOT hallucinate outfits based on pose."
+  - "Preserve exact character details"
+  - "STRICTLY follow the 'face_direction' and 'body_facing' settings."
+  - "Ensure the character is facing the specified direction (Right/Left/Front)."
+  - "Strictly follow the description in this YAML."
+
+# ----------------------------------------------------
+# 9. 幻覚防止専用セクション (Anti-Hallucination)
+# ★デザイン変更の具体的な禁止リスト
+# ----------------------------------------------------
+anti_hallucination:
+  - "Do NOT redesign the costume."
+  - "Do NOT add details not present in source."
+  - "Do NOT apply cinematic lighting to local colors."
+  - "Do NOT change body proportions."
+  - "Do NOT change the outfit into fantasy armor or kimono."
+  - "Do NOT add capes, hats, or glowing accessories."
+  - "Do NOT change the character's age or body type."
+
+# ----------------------------------------------------
+# 10. 除外設定 (Negative Prompt)
+# ----------------------------------------------------
+negative_constraints:
+  - "激しい動き"       # ポーズがつかないように制限
+  - "パースの効いた構図" # 服の細部が歪むのを防ぐ
+  - "影が濃すぎる"     # デザインが見えにくくなるのを防ぐ
+
+  # スタイルごとの除外設定（必要に応じて有効化してください）
+  # - "高解像度, 滑らか" # ← ドット絵の時はこれを有効にするとレトロ感が増します

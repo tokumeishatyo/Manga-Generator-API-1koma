@@ -1,0 +1,101 @@
+# nano banana pro 多人数合成マスター設定ファイル
+# 目的: 5人以上の配置パターンを「プリセット」から選んで使用する。
+type: multi_person_master_layout
+
+# ====================================================
+# 1. 背景とカメラ (Global)
+# ====================================================
+background:
+  source_image: "stage_bg.jpg"
+  lighting: "Global Illumination"
+
+# ====================================================
+# 2. フォーメーション選択 (Formation Select)
+# ※使いたいパターンのコメント「#」を外して有効化してください。
+# ※現在は「パターンA: V字型」が有効になっています。
+# ====================================================
+character_list:
+
+  # --------------------------------------------------
+  # 【パターンA】 V字型フォーメーション (アイドル/戦隊)
+  # センター1人 + 左右に2人ずつ展開
+  # --------------------------------------------------
+  # [センター]
+  - id: "center_leader"
+    source_image: "leader.jpg"
+    placement: { x: "50%", scale: 1.1, layer: 1 } # 最前面
+    
+  # [左の中堅]
+  - id: "left_mid"
+    source_image: "member_blue.jpg"
+    placement: { x: "30%", scale: 1.0, layer: 2 } # 少し後ろ
+    orientation: { facing: "Right_Center" }
+
+  # [右の中堅]
+  - id: "right_mid"
+    source_image: "member_yellow.jpg"
+    placement: { x: "70%", scale: 1.0, layer: 2, flip: true }
+    orientation: { facing: "Left_Center" }
+
+  # [左の大外]
+  - id: "left_outer"
+    source_image: "member_green.jpg"
+    placement: { x: "10%", scale: 0.9, layer: 3 } # 一番後ろ
+    
+  # [右の大外]
+  - id: "right_outer"
+    source_image: "member_pink.jpg"
+    placement: { x: "90%", scale: 0.9, layer: 3, flip: true }
+
+
+  # --------------------------------------------------
+  # 【パターンB】 星型・エネルギー注入 (儀式/パワーアップ)
+  # ※使う時は上のAをコメントアウトし、このBの # を外す
+  # --------------------------------------------------
+  # # [中央の主人公] (浮いている・苦しんでいる等)
+  # - id: "hero_center"
+  #   source_image: "hero_float.jpg"
+  #   placement: { x: "50%", y: "40%", scale: 1.0, layer: 2 }
+  # 
+  # # [手前・左]
+  # - id: "support_front_L"
+  #   source_image: "mage_A.jpg"
+  #   placement: { x: "20%", y: "Bottom", scale: 1.3, layer: 1 } # 手前なので大きく
+  # 
+  # # [手前・右]
+  # - id: "support_front_R"
+  #   source_image: "mage_B.jpg"
+  #   placement: { x: "80%", y: "Bottom", scale: 1.3, layer: 1, flip: true }
+  #
+  # # [奥・左]
+  # - id: "support_back_L"
+  #   source_image: "mage_C.jpg"
+  #   placement: { x: "35%", y: "Center", scale: 0.8, layer: 3 } # 奥なので小さく
+  #
+  # # [奥・右]
+  # - id: "support_back_R"
+  #   source_image: "mage_D.jpg"
+  #   placement: { x: "65%", y: "Center", scale: 0.8, layer: 3, flip: true }
+  #
+  # # [真後ろ] (主人公の背後霊的な位置)
+  # - id: "support_back_Center"
+  #   source_image: "mage_E.jpg"
+  #   placement: { x: "50%", y: "Center", scale: 0.7, layer: 4 }
+
+
+  # --------------------------------------------------
+  # 【パターンC】 横一列・集合写真 (登校/EDロール)
+  # 単純な等間隔の並び
+  # --------------------------------------------------
+  # - { id: "char1", x: "10%", scale: 1.0, layer: 2 }
+  # - { id: "char2", x: "30%", scale: 1.0, layer: 2 }
+  # - { id: "char3", x: "50%", scale: 1.1, layer: 1 } # 真ん中だけ少し前に出すと自然
+  # - { id: "char4", x: "70%", scale: 1.0, layer: 2 }
+  # - { id: "char5", x: "90%", scale: 1.0, layer: 2 }
+
+# ====================================================
+# 3. エフェクト連携 (Optional)
+# ====================================================
+formation_vfx:
+  enabled: true
+  type: "None" # "Energy Gathering"(集合), "Spotlights"(個別に照明)
