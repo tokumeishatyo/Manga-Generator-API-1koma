@@ -34,7 +34,8 @@ OUTPUT_TYPES = {
     "ポーズ付きキャラ": "character_pose",
     "エフェクト追加": "character_effect",
     "背景のみ生成": "background",
-    "装飾テキスト": "decorative_text"
+    "装飾テキスト": "decorative_text",
+    "4コマ漫画": "four_panel_manga"
 }
 
 # 装飾テキストスタイル定義

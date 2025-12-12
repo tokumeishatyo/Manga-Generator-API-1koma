@@ -32,6 +32,7 @@ from ui.background_window import BackgroundWindow
 from ui.pose_window import PoseWindow
 from ui.effect_window import EffectWindow
 from ui.decorative_text_window import DecorativeTextWindow
+from ui.four_panel_window import FourPanelWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -669,6 +670,12 @@ class MangaGeneratorApp(ctk.CTk):
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
+        elif output_type == "4コマ漫画":
+            FourPanelWindow(
+                self,
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings
+            )
         else:
             messagebox.showinfo("情報", f"'{output_type}'の設定ウィンドウは未実装です")
 
@@ -729,6 +736,10 @@ class MangaGeneratorApp(ctk.CTk):
             elif output_type == "装飾テキスト":
                 yaml_content = self._generate_decorative_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
+            elif output_type == "4コマ漫画":
+                yaml_content = self._generate_four_panel_yaml(
+                    color_mode, duotone_color, output_style, title, author, include_title_in_image
                 )
             else:
                 yaml_content = f"# {output_type} - 未実装"
@@ -1266,6 +1277,77 @@ title_overlay:
   position: "top-left"
 """
 
+        return yaml_content
+
+    def _generate_four_panel_yaml(self, color_mode, duotone_color, output_style, title, author, include_title_in_image):
+        """4コマ漫画用YAML生成（four_panel_manga.yaml準拠）"""
+        settings = self.current_settings
+
+        characters = settings.get('characters', [])
+        panels = settings.get('panels', [])
+
+        # キャラクターセクション生成
+        char_yaml = ""
+        for i, char in enumerate(characters):
+            char_yaml += f"""
+  - name: "{char.get('name', f'キャラ{i+1}')}"
+    reference: "添付画像{i+1}を参照してください"
+    description: "{char.get('description', '')}\""""
+
+        # パネルセクション生成
+        panel_labels = ["起", "承", "転", "結"]
+        panels_yaml = ""
+        for i, panel in enumerate(panels):
+            label = panel_labels[i] if i < len(panel_labels) else str(i+1)
+
+            # セリフ生成
+            speeches_yaml = ""
+            for speech in panel.get('speeches', []):
+                speeches_yaml += f"""
+      - character: "{speech.get('character', '')}"
+        content: "{speech.get('content', '')}"
+        position: "{speech.get('position', 'left')}\""""
+
+            narration = panel.get('narration', '')
+            narration_line = f'\n    narration: "{narration}"' if narration else ""
+
+            panels_yaml += f"""
+  # --- {i+1}コマ目（{label}）---
+  - panel_number: {i+1}
+    prompt: "{panel.get('prompt', '')}"
+    speeches:{speeches_yaml}{narration_line}
+"""
+
+        yaml_content = f"""# 4コマ漫画生成 (four_panel_manga.yaml準拠)
+title: "{title}"
+author: "{author}"
+color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
+output_style: "{OUTPUT_STYLES.get(output_style, 'manga')}"
+
+# 登場人物
+characters:{char_yaml}
+
+# 4コマの内容
+panels:{panels_yaml}
+# レイアウト指示
+layout_instruction: |
+  4コマ漫画を縦1列に配置してください。
+  横並びにせず、上から下へ1コマずつ縦に4つ並べてください。
+  出力画像は縦長（9:16または2:5の比率）で、4コマ漫画だけが画像全体を占めるようにしてください。
+  余白は不要です。
+  各キャラクターの外見は添付画像と説明を忠実に再現してください。
+  セリフは吹き出しで表示し、指定された位置に配置してください。
+  ナレーションがある場合は、コマの上部または下部にテキストボックスで表示してください。
+"""
+
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-center"
+"""
         return yaml_content
 
     # === API Image Generation ===
