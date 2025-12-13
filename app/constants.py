@@ -127,6 +127,74 @@ CHARACTER_STYLES = {
     }
 }
 
+# 体型プリセット（Step2: 素体三面図用）
+BODY_TYPE_PRESETS = {
+    "標準体型（女性）": {
+        "description": "average female body, slim build, normal proportions",
+        "height": "average height",
+        "build": "slim",
+        "gender": "female"
+    },
+    "標準体型（男性）": {
+        "description": "average male body, normal build, normal proportions",
+        "height": "average height",
+        "build": "normal",
+        "gender": "male"
+    },
+    "スリム体型": {
+        "description": "slender body, thin build, long limbs",
+        "height": "tall",
+        "build": "slender",
+        "gender": "neutral"
+    },
+    "筋肉質": {
+        "description": "muscular body, athletic build, well-defined muscles",
+        "height": "average to tall",
+        "build": "muscular",
+        "gender": "neutral"
+    },
+    "ぽっちゃり": {
+        "description": "chubby body, soft round build, plump",
+        "height": "average",
+        "build": "chubby",
+        "gender": "neutral"
+    },
+    "子供体型": {
+        "description": "child body, small stature, childlike proportions",
+        "height": "short",
+        "build": "childlike",
+        "gender": "neutral"
+    },
+    "高身長": {
+        "description": "tall body, long legs, model-like proportions",
+        "height": "tall",
+        "build": "slim",
+        "gender": "neutral"
+    },
+    "低身長": {
+        "description": "short body, compact build, petite",
+        "height": "short",
+        "build": "petite",
+        "gender": "neutral"
+    }
+}
+
+# 素体表現タイプ（Step2用）
+BODY_RENDER_TYPES = {
+    "シルエット": {
+        "description": "solid silhouette, no details, shape only",
+        "prompt": "solid black silhouette, shape only, no details, clean outline"
+    },
+    "素体（レオタード）": {
+        "description": "simple leotard/bodysuit, minimal details",
+        "prompt": "wearing plain gray leotard, simple bodysuit, minimal details, reference mannequin"
+    },
+    "解剖学的": {
+        "description": "anatomical reference, muscle structure visible",
+        "prompt": "anatomical reference, muscle groups visible, artistic anatomy study"
+    }
+}
+
 # 背景生成用プロンプト
 BACKGROUND_PROMPT = "background only, no characters, no people, detailed environment, scenic"
 

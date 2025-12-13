@@ -29,6 +29,7 @@ from logic.file_manager import (
 # Import UI windows
 from ui.scene_builder_window import SceneBuilderWindow
 from ui.character_sheet_window import CharacterSheetWindow
+from ui.body_sheet_window import BodySheetWindow
 from ui.background_window import BackgroundWindow
 from ui.pose_window import PoseWindow
 from ui.effect_window import EffectWindow
@@ -712,8 +713,14 @@ class MangaGeneratorApp(ctk.CTk):
                 initial_data=self.current_settings
             )
         elif output_type == "Step2: 素体三面図":
-            # TODO: 素体三面図用の設定ウィンドウを実装
-            messagebox.showinfo("情報", "Step2: 素体三面図の設定ウィンドウは実装予定です")
+            # Step1の出力画像を取得
+            face_sheet_path = self._get_previous_step_image("step2_body")
+            BodySheetWindow(
+                self,
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings,
+                face_sheet_path=face_sheet_path
+            )
         elif output_type == "Step3: 衣装着用":
             CharacterSheetWindow(
                 self,
@@ -855,8 +862,9 @@ class MangaGeneratorApp(ctk.CTk):
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "Step2: 素体三面図":
-                # TODO: 素体三面図YAML生成を実装
-                yaml_content = f"# Step2: 素体三面図 - 実装予定\n# 前ステップ画像: {self._get_previous_step_image('step2_body')}"
+                yaml_content = self._generate_body_sheet_yaml(
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
             elif output_type == "Step3: 衣装着用":
                 yaml_content = self._generate_character_sheet_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
@@ -998,6 +1006,111 @@ title_overlay:
 
         if image_path:
             yaml_content += f'\nreference_image: "{os.path.basename(image_path)}"'
+
+        return yaml_content
+
+    def _generate_body_sheet_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
+        """素体三面図用YAML生成（Step2）"""
+        settings = self.current_settings
+        from constants import BODY_TYPE_PRESETS, BODY_RENDER_TYPES, CHARACTER_STYLES
+
+        face_sheet_path = settings.get('face_sheet_path', '')
+        body_type = settings.get('body_type', '標準体型（女性）')
+        render_type = settings.get('render_type', '素体（レオタード）')
+        character_style = settings.get('character_style', '標準アニメ')
+        additional_desc = settings.get('additional_description', '')
+
+        # プリセット情報取得
+        body_preset = BODY_TYPE_PRESETS.get(body_type, BODY_TYPE_PRESETS['標準体型（女性）'])
+        render_preset = BODY_RENDER_TYPES.get(render_type, BODY_RENDER_TYPES['素体（レオタード）'])
+        style_info = CHARACTER_STYLES.get(character_style, CHARACTER_STYLES['標準アニメ'])
+
+        yaml_content = f"""# Step 2: Body Reference Sheet (素体三面図)
+# Purpose: Generate full body reference from face sheet
+type: body_reference_sheet
+title: "{title or 'Body Reference Sheet'}"
+author: "{author}"
+
+# ====================================================
+# Input: Face Sheet from Step 1
+# ====================================================
+input:
+  face_sheet: "{os.path.basename(face_sheet_path) if face_sheet_path else 'REQUIRED'}"
+  preserve_face: true
+  preserve_face_details: "exact match required - do not alter facial features"
+
+# ====================================================
+# Body Configuration
+# ====================================================
+body:
+  type: "{body_type}"
+  description: "{body_preset.get('description', '')}"
+  height: "{body_preset.get('height', 'average')}"
+  build: "{body_preset.get('build', 'normal')}"
+  gender: "{body_preset.get('gender', 'neutral')}"
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Render Type
+# ====================================================
+render:
+  type: "{render_type}"
+  style: "{render_preset.get('prompt', '')}"
+  clothing: "NONE - this is a base body reference"
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, arms slightly away from body"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "{style_info.get('style', '')}"
+  proportions: "{style_info.get('proportions', '')}"
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input face_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from reference"
+  body_generation:
+    - "Generate body matching the specified body type"
+    - "Do NOT add any clothing or accessories"
+    - "Maintain anatomically correct proportions"
+  consistency:
+    - "All three views must show the same character"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT add clothing that was not specified"
+  - "Do NOT change the face from the reference"
+  - "Do NOT add accessories or decorations"
+  - "Do NOT change body proportions from specified type"
+"""
+
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
 
         return yaml_content
 
