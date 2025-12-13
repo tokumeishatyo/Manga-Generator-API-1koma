@@ -30,6 +30,7 @@ from logic.file_manager import (
 from ui.scene_builder_window import SceneBuilderWindow
 from ui.character_sheet_window import CharacterSheetWindow
 from ui.body_sheet_window import BodySheetWindow
+from ui.outfit_window import OutfitWindow
 from ui.background_window import BackgroundWindow
 from ui.pose_window import PoseWindow
 from ui.effect_window import EffectWindow
@@ -722,11 +723,13 @@ class MangaGeneratorApp(ctk.CTk):
                 face_sheet_path=face_sheet_path
             )
         elif output_type == "Step3: 衣装着用":
-            CharacterSheetWindow(
+            # Step2の出力画像を取得
+            body_sheet_path = self._get_previous_step_image("step3_outfit")
+            OutfitWindow(
                 self,
-                sheet_type="fullbody",
                 callback=self._on_settings_complete,
-                initial_data=self.current_settings
+                initial_data=self.current_settings,
+                body_sheet_path=body_sheet_path
             )
         # === ポーズ生成フェーズ ===
         elif output_type == "Step4: ポーズ付与":
@@ -866,7 +869,7 @@ class MangaGeneratorApp(ctk.CTk):
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "Step3: 衣装着用":
-                yaml_content = self._generate_character_sheet_yaml(
+                yaml_content = self._generate_outfit_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             # === ポーズ生成フェーズ ===
@@ -1102,6 +1105,116 @@ anti_hallucination:
   - "Do NOT change the face from the reference"
   - "Do NOT add accessories or decorations"
   - "Do NOT change body proportions from specified type"
+"""
+
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
+
+        return yaml_content
+
+    def _generate_outfit_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
+        """衣装着用用YAML生成（Step3）"""
+        settings = self.current_settings
+        from constants import OUTFIT_DATA, CHARACTER_STYLES
+        from logic.character import generate_outfit_prompt
+
+        body_sheet_path = settings.get('body_sheet_path', '')
+        outfit = settings.get('outfit', {})
+        character_style = settings.get('character_style', '標準アニメ')
+        additional_desc = settings.get('additional_description', '')
+
+        # 衣装プロンプト生成
+        outfit_prompt = generate_outfit_prompt(
+            outfit.get('category', 'おまかせ'),
+            outfit.get('shape', 'おまかせ'),
+            outfit.get('color', 'おまかせ'),
+            outfit.get('pattern', 'おまかせ'),
+            outfit.get('style', 'おまかせ')
+        )
+
+        style_info = CHARACTER_STYLES.get(character_style, CHARACTER_STYLES['標準アニメ'])
+
+        yaml_content = f"""# Step 3: Outfit Application (衣装着用)
+# Purpose: Apply clothing to body reference sheet
+type: outfit_reference_sheet
+title: "{title or 'Outfit Reference Sheet'}"
+author: "{author}"
+
+# ====================================================
+# Input: Body Sheet from Step 2
+# ====================================================
+input:
+  body_sheet: "{os.path.basename(body_sheet_path) if body_sheet_path else 'REQUIRED'}"
+  preserve_body: true
+  preserve_face: true
+  preserve_details: "exact match required - do not alter face or body shape"
+
+# ====================================================
+# Outfit Configuration
+# ====================================================
+outfit:
+  category: "{outfit.get('category', 'おまかせ')}"
+  shape: "{outfit.get('shape', 'おまかせ')}"
+  color: "{outfit.get('color', 'おまかせ')}"
+  pattern: "{outfit.get('pattern', 'おまかせ')}"
+  style_impression: "{outfit.get('style', 'おまかせ')}"
+  prompt: "{outfit_prompt}"
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, same as body sheet"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "{style_info.get('style', '')}"
+  proportions: "{style_info.get('proportions', '')}"
+  color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
+  output_style: "{OUTPUT_STYLES.get(output_style, '')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from reference"
+  body_preservation:
+    - "MUST use exact body shape from input body_sheet"
+    - "Do NOT alter body proportions or pose"
+    - "Body should be visible through/under clothing naturally"
+  outfit_application:
+    - "Apply specified outfit to the body"
+    - "Maintain clothing consistency across all three views"
+    - "Show realistic fabric draping and fit"
+  consistency:
+    - "All three views must show the same character in same outfit"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT change the face from the body sheet reference"
+  - "Do NOT alter body proportions"
+  - "Do NOT add accessories not specified in outfit"
+  - "Do NOT change hair style or color"
+  - "Apply ONLY the specified outfit"
 """
 
         if include_title_in_image:
