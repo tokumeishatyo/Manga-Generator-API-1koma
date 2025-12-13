@@ -1430,7 +1430,8 @@ title_overlay:
         """ポーズ付きキャラ用YAML生成（character_pose.yaml準拠）"""
         settings = self.current_settings
         from ui.pose_window import (
-            ACTION_CATEGORIES, DYNAMISM_LEVELS, WIND_EFFECTS, CAMERA_ANGLES, ZOOM_LEVELS, EXPRESSIONS
+            ACTION_CATEGORIES, DYNAMISM_LEVELS, WIND_EFFECTS, CAMERA_ANGLES, ZOOM_LEVELS, EXPRESSIONS,
+            LIMB_HAND, LIMB_FOOT
         )
         from constants import CHARACTER_FACING, CHARACTER_POSES
 
@@ -1445,6 +1446,11 @@ title_overlay:
         pose = CHARACTER_POSES.get(settings.get('pose', '攻撃'), 'attacking')
         action_desc = settings.get('action_description', '')
         dynamism = DYNAMISM_LEVELS.get(settings.get('dynamism', '誇張'), 'High (Exaggerated)')
+        # 手足の指定
+        hand = LIMB_HAND.get(settings.get('hand', '指定なし'), '')
+        hand_detail = settings.get('hand_detail', '')
+        foot = LIMB_FOOT.get(settings.get('foot', '指定なし'), '')
+        foot_detail = settings.get('foot_detail', '')
         include_effects = settings.get('include_effects', False)
         transparent_bg = settings.get('transparent_bg', False)
         wind = WIND_EFFECTS.get(settings.get('wind_effect', '前からの風'), 'Strong Wind from Front')
@@ -1457,15 +1463,40 @@ title_overlay:
         if expression_detail:
             expression_prompt = f"{expression}, {expression_detail}"
 
+        # 手足プロンプト生成
+        limb_prompts = []
+        if hand:
+            limb_prompt = hand
+            if hand_detail:
+                limb_prompt = f"{hand}, {hand_detail}"
+            limb_prompts.append(limb_prompt)
+        elif hand_detail:  # 手の指定なしでも詳細があれば追加
+            limb_prompts.append(hand_detail)
+
+        if foot:
+            foot_prompt = foot
+            if foot_detail:
+                foot_prompt = f"{foot}, {foot_detail}"
+            limb_prompts.append(foot_prompt)
+        elif foot_detail:  # 足の指定なしでも詳細があれば追加
+            limb_prompts.append(foot_detail)
+
         # プリセットコメント
         preset_comment = f"# Preset: {preset}\n" if preset != "（プリセットなし）" else ""
 
-        # 追加プロンプトセクション
-        additional_section = ""
+        # 追加プロンプトセクション（手足の指定を含む）
+        additional_items = []
         if additional_prompt:
+            additional_items.append(additional_prompt)
+        if limb_prompts:
+            additional_items.extend(limb_prompts)
+
+        additional_section = ""
+        if additional_items:
+            additional_lines = "\n".join([f"  - {item}" for item in additional_items])
             additional_section = f"""
 additional_details:
-  - {additional_prompt}
+{additional_lines}
 """
 
         yaml_content = f"""# Step 4: Character Pose Generation (character_pose.yaml準拠)

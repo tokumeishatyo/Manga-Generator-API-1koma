@@ -121,6 +121,21 @@ EXPRESSIONS = {
     "恥じらい": "shy expression, blushing, embarrassed face"
 }
 
+# 使用する手足
+LIMB_HAND = {
+    "指定なし": "",
+    "右手": "using right hand",
+    "左手": "using left hand",
+    "両手": "using both hands"
+}
+
+LIMB_FOOT = {
+    "指定なし": "",
+    "右足": "using right foot, right leg extended",
+    "左足": "using left foot, left leg extended",
+    "両足": "using both feet"
+}
+
 
 class PoseWindow(BaseSettingsWindow):
     """ポーズ付きキャラ設定ウィンドウ（Step4）"""
@@ -144,8 +159,8 @@ class PoseWindow(BaseSettingsWindow):
         super().__init__(
             parent,
             title="Step4: ポーズ付きキャラ設定",
-            width=700,
-            height=800,
+            width=750,
+            height=880,
             callback=callback
         )
 
@@ -322,6 +337,44 @@ class PoseWindow(BaseSettingsWindow):
         self.dynamism_menu.set("誇張")
         self.dynamism_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
+        # 使用する手
+        ctk.CTkLabel(action_frame, text="使用する手:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        self.hand_menu = ctk.CTkOptionMenu(
+            action_frame,
+            values=list(LIMB_HAND.keys()),
+            width=100
+        )
+        self.hand_menu.set("指定なし")
+        self.hand_menu.grid(row=4, column=1, padx=5, pady=5, sticky="w")
+
+        # 手の詳細
+        ctk.CTkLabel(action_frame, text="手の詳細:").grid(row=4, column=2, padx=10, pady=5, sticky="w")
+        self.hand_detail_entry = ctk.CTkEntry(
+            action_frame,
+            placeholder_text="例：右手が前、右手縦・左手横",
+            width=180
+        )
+        self.hand_detail_entry.grid(row=4, column=3, padx=5, pady=5, sticky="w")
+
+        # 使用する足
+        ctk.CTkLabel(action_frame, text="使用する足:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        self.foot_menu = ctk.CTkOptionMenu(
+            action_frame,
+            values=list(LIMB_FOOT.keys()),
+            width=100
+        )
+        self.foot_menu.set("指定なし")
+        self.foot_menu.grid(row=5, column=1, padx=5, pady=5, sticky="w")
+
+        # 足の詳細
+        ctk.CTkLabel(action_frame, text="足の詳細:").grid(row=5, column=2, padx=10, pady=5, sticky="w")
+        self.foot_detail_entry = ctk.CTkEntry(
+            action_frame,
+            placeholder_text="例：右足を前に出す",
+            width=180
+        )
+        self.foot_detail_entry.grid(row=5, column=3, padx=5, pady=5, sticky="w")
+
         # === ビジュアル効果 ===
         visual_frame = ctk.CTkFrame(self.content_frame)
         visual_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
@@ -438,6 +491,10 @@ class PoseWindow(BaseSettingsWindow):
             'pose': self.pose_menu.get(),
             'action_description': self.action_desc_entry.get().strip(),
             'dynamism': self.dynamism_menu.get(),
+            'hand': self.hand_menu.get(),
+            'hand_detail': self.hand_detail_entry.get().strip(),
+            'foot': self.foot_menu.get(),
+            'foot_detail': self.foot_detail_entry.get().strip(),
             'include_effects': self.include_effects_var.get(),
             'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),
