@@ -1067,18 +1067,23 @@ title_overlay:
     def _generate_body_sheet_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
         """素体三面図用YAML生成（Step2）"""
         settings = self.current_settings
-        from constants import BODY_TYPE_PRESETS, BODY_RENDER_TYPES, CHARACTER_STYLES
+        from constants import BODY_TYPE_PRESETS, BODY_RENDER_TYPES, CHARACTER_STYLES, BUST_FEATURES
 
         face_sheet_path = settings.get('face_sheet_path', '')
         body_type = settings.get('body_type', '標準体型（女性）')
+        bust_feature = settings.get('bust_feature', 'おまかせ')
         render_type = settings.get('render_type', '素体（白レオタード）')
         character_style = settings.get('character_style', '標準アニメ')
         additional_desc = settings.get('additional_description', '')
 
         # プリセット情報取得
         body_preset = BODY_TYPE_PRESETS.get(body_type, BODY_TYPE_PRESETS['標準体型（女性）'])
+        bust_preset = BUST_FEATURES.get(bust_feature, BUST_FEATURES['おまかせ'])
         render_preset = BODY_RENDER_TYPES.get(render_type, BODY_RENDER_TYPES['素体（白レオタード）'])
         style_info = CHARACTER_STYLES.get(character_style, CHARACTER_STYLES['標準アニメ'])
+
+        # バスト特徴のプロンプト
+        bust_prompt = bust_preset.get('prompt', '')
 
         yaml_content = f"""# Step 2: Body Reference Sheet (素体三面図)
 # Purpose: Generate full body reference from face sheet
@@ -1103,6 +1108,7 @@ body:
   height: "{body_preset.get('height', 'average')}"
   build: "{body_preset.get('build', 'normal')}"
   gender: "{body_preset.get('gender', 'neutral')}"
+{f'  figure_style: "{bust_prompt}"' if bust_prompt else ''}
 {f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
 
 # ====================================================

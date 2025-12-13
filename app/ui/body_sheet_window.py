@@ -14,7 +14,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.base_settings_window import BaseSettingsWindow
-from constants import BODY_TYPE_PRESETS, BODY_RENDER_TYPES, CHARACTER_STYLES
+from constants import BODY_TYPE_PRESETS, BODY_RENDER_TYPES, CHARACTER_STYLES, BUST_FEATURES
 
 
 class BodySheetWindow(BaseSettingsWindow):
@@ -111,25 +111,46 @@ class BodySheetWindow(BaseSettingsWindow):
         self.body_type_desc.grid(row=2, column=0, columnspan=2, padx=15, pady=(0, 5), sticky="w")
         self._on_body_type_change("標準体型（女性）")
 
+        # バスト特徴（間接表現）
+        ctk.CTkLabel(body_frame, text="バスト:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.bust_menu = ctk.CTkOptionMenu(
+            body_frame,
+            values=list(BUST_FEATURES.keys()),
+            width=180,
+            command=self._on_bust_change
+        )
+        self.bust_menu.set("おまかせ")
+        self.bust_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+
+        # バスト説明
+        self.bust_desc = ctk.CTkLabel(
+            body_frame,
+            text="",
+            font=("Arial", 10),
+            text_color="gray"
+        )
+        self.bust_desc.grid(row=4, column=0, columnspan=2, padx=15, pady=(0, 5), sticky="w")
+        self._on_bust_change("おまかせ")
+
         # 素体表現タイプ
-        ctk.CTkLabel(body_frame, text="表現:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(body_frame, text="表現:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
         self.render_type_menu = ctk.CTkOptionMenu(
             body_frame,
             values=list(BODY_RENDER_TYPES.keys()),
             width=180
         )
         self.render_type_menu.set("素体（白レオタード）")
-        self.render_type_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+        self.render_type_menu.grid(row=5, column=1, padx=5, pady=5, sticky="w")
 
         # スタイル（継承）
-        ctk.CTkLabel(body_frame, text="スタイル:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(body_frame, text="スタイル:").grid(row=6, column=0, padx=10, pady=5, sticky="w")
         self.style_menu = ctk.CTkOptionMenu(
             body_frame,
             values=list(CHARACTER_STYLES.keys()),
             width=150
         )
         self.style_menu.set("標準アニメ")
-        self.style_menu.grid(row=4, column=1, padx=5, pady=5, sticky="w")
+        self.style_menu.grid(row=6, column=1, padx=5, pady=5, sticky="w")
 
         # === 詳細設定 ===
         detail_frame = ctk.CTkFrame(self.content_frame)
@@ -185,6 +206,12 @@ class BodySheetWindow(BaseSettingsWindow):
         desc = preset.get("description", "")
         self.body_type_desc.configure(text=f"→ {desc}")
 
+    def _on_bust_change(self, value):
+        """バスト特徴変更時"""
+        preset = BUST_FEATURES.get(value, {})
+        desc = preset.get("description", "")
+        self.bust_desc.configure(text=f"→ {desc}")
+
     def collect_data(self) -> dict:
         """UIから設定データを収集"""
         desc = self.description_textbox.get("1.0", tk.END).strip()
@@ -195,6 +222,7 @@ class BodySheetWindow(BaseSettingsWindow):
             'step_type': 'step2_body',
             'face_sheet_path': self.face_image_entry.get().strip(),
             'body_type': self.body_type_menu.get(),
+            'bust_feature': self.bust_menu.get(),
             'render_type': self.render_type_menu.get(),
             'character_style': self.style_menu.get(),
             'additional_description': desc

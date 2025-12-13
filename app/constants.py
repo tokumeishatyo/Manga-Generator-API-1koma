@@ -159,10 +159,10 @@ BODY_TYPE_PRESETS = {
         "build": "chubby",
         "gender": "neutral"
     },
-    "子供体型": {
-        "description": "child body, small stature, childlike proportions",
-        "height": "short",
-        "build": "childlike",
+    "幼児体型": {
+        "description": "petite build, very short stature, small compact frame, tiny body",
+        "height": "very short",
+        "build": "petite compact",
         "gender": "neutral"
     },
     "高身長": {
@@ -196,6 +196,26 @@ BODY_RENDER_TYPES = {
     "解剖学的": {
         "description": "anatomical reference, muscle structure visible",
         "prompt": "anatomical reference, muscle groups visible, artistic anatomy study"
+    }
+}
+
+# バスト特徴（Step2用・間接表現でセーフティ対応）
+BUST_FEATURES = {
+    "おまかせ": {
+        "description": "標準的な体型",
+        "prompt": ""
+    },
+    "控えめ": {
+        "description": "スレンダー・アスリート体型",
+        "prompt": "slender athletic figure, sports bra style, flat chest area"
+    },
+    "標準": {
+        "description": "標準的なシルエット",
+        "prompt": "normal proportions"
+    },
+    "豊か": {
+        "description": "女性らしいシルエット",
+        "prompt": "feminine silhouette, hourglass figure, curvy body shape"
     }
 }
 
