@@ -76,20 +76,29 @@ INTENSITY_LEVELS = {
 
 
 class EffectWindow(BaseSettingsWindow):
-    """エフェクト追加設定ウィンドウ"""
+    """エフェクト追加設定ウィンドウ（Step5）"""
 
     def __init__(
         self,
         parent,
         callback: Optional[Callable] = None,
-        initial_data: Optional[dict] = None
+        initial_data: Optional[dict] = None,
+        posed_image_path: Optional[str] = None  # Step4の出力画像パス
     ):
+        """
+        Args:
+            parent: 親ウィンドウ
+            callback: 設定完了時のコールバック
+            initial_data: 初期データ（編集時）
+            posed_image_path: Step4で生成したポーズ付きキャラ画像のパス
+        """
         self.initial_data = initial_data or {}
+        self.posed_image_path = posed_image_path
         super().__init__(
             parent,
-            title="エフェクト追加設定",
+            title="Step5: エフェクト追加設定",
             width=750,
-            height=850,
+            height=900,
             callback=callback
         )
 
@@ -102,13 +111,13 @@ class EffectWindow(BaseSettingsWindow):
 
         ctk.CTkLabel(
             input_frame,
-            text="ベース画像",
+            text="ベース画像（ポーズ付きキャラ）",
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
 
         ctk.CTkLabel(
             input_frame,
-            text="ポーズ付きキャラ画像を指定（キャラ自体は再描画しません）",
+            text="Step4で生成したポーズ付きキャラ画像を指定（キャラ自体は再描画しません）",
             font=("Arial", 11),
             text_color="gray"
         ).grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 5), sticky="w")
@@ -119,8 +128,13 @@ class EffectWindow(BaseSettingsWindow):
         img_frame.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
         img_frame.grid_columnconfigure(0, weight=1)
 
-        self.image_entry = ctk.CTkEntry(img_frame, placeholder_text="ポーズ付きキャラ画像")
+        self.image_entry = ctk.CTkEntry(img_frame, placeholder_text="Step4の出力画像パス")
         self.image_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        # Step4の出力パスがあれば自動入力
+        if self.posed_image_path:
+            self.image_entry.insert(0, self.posed_image_path)
+
         ctk.CTkButton(
             img_frame,
             text="参照",
@@ -299,6 +313,14 @@ class EffectWindow(BaseSettingsWindow):
         self.intensity_menu.set("派手")
         self.intensity_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
 
+        # 背景透過オプション
+        self.transparent_bg_var = tk.BooleanVar(value=False)
+        ctk.CTkCheckBox(
+            global_frame,
+            text="背景を透過にする（合成用）",
+            variable=self.transparent_bg_var
+        ).grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+
     def _browse_image(self):
         """画像参照ダイアログ"""
         filename = filedialog.askopenfilename(
@@ -333,7 +355,8 @@ class EffectWindow(BaseSettingsWindow):
             'global_style': {
                 'vfx_style': self.vfx_style_menu.get(),
                 'intensity': self.intensity_menu.get()
-            }
+            },
+            'transparent_bg': self.transparent_bg_var.get()
         }
 
     def validate(self) -> tuple[bool, str]:

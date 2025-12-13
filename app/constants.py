@@ -263,17 +263,33 @@ BACKGROUND_PROMPT = "background only, no characters, no people, detailed environ
 
 # エフェクト付きキャラ生成用定数
 CHARACTER_FACING = {
-    "→右向き": "right",
-    "←左向き": "left"
+    "正面": "facing front, looking at camera",
+    "→右向き": "facing right, profile view",
+    "←左向き": "facing left, profile view",
+    "↗斜め右": "facing right at 3/4 angle, three-quarter view",
+    "↖斜め左": "facing left at 3/4 angle, three-quarter view",
+    "背面": "facing away, back view, showing back"
 }
 
 CHARACTER_POSES = {
+    # バトル系
     "攻撃": "attacking, offensive pose",
     "防御": "defending, blocking, guarding pose",
     "ダメージ": "taking damage, hurt, recoiling",
     "勝利": "victorious, triumphant, winning pose",
     "構え": "battle ready, fighting stance",
-    "必殺技チャージ": "charging special attack, power gathering, glowing aura"
+    "必殺技チャージ": "charging special attack, power gathering, glowing aura",
+    # 基本動作
+    "立ち": "standing, idle pose, natural standing position",
+    "座り": "sitting, seated pose",
+    "しゃがみ": "crouching, squatting pose",
+    "ジャンプ": "jumping, mid-air, airborne",
+    "走り": "running, sprinting pose",
+    "歩き": "walking pose",
+    # 静的ポーズ
+    "瞑想": "meditating, meditation pose, zen sitting, lotus position",
+    "祈り": "praying, prayer pose, hands together",
+    "腕組み": "arms crossed, confident pose"
 }
 
 EFFECT_TYPES = {

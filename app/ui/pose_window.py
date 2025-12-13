@@ -63,7 +63,7 @@ POSE_PRESETS = {
     },
     "坐禅（瞑想）": {
         "category": "待機",
-        "pose": "立ち",
+        "pose": "瞑想",
         "description": "Sitting cross-legged in lotus position, hands resting on knees, eyes closed, meditative posture",
         "dynamism": "控えめ",
         "include_effects": False,
@@ -111,18 +111,27 @@ ZOOM_LEVELS = {
 
 
 class PoseWindow(BaseSettingsWindow):
-    """ポーズ付きキャラ設定ウィンドウ"""
+    """ポーズ付きキャラ設定ウィンドウ（Step4）"""
 
     def __init__(
         self,
         parent,
         callback: Optional[Callable] = None,
-        initial_data: Optional[dict] = None
+        initial_data: Optional[dict] = None,
+        outfit_sheet_path: Optional[str] = None  # Step3の出力画像パス
     ):
+        """
+        Args:
+            parent: 親ウィンドウ
+            callback: 設定完了時のコールバック
+            initial_data: 初期データ（編集時）
+            outfit_sheet_path: Step3で生成した衣装着用三面図のパス
+        """
         self.initial_data = initial_data or {}
+        self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
-            title="ポーズ付きキャラ設定",
+            title="Step4: ポーズ付きキャラ設定",
             width=700,
             height=800,
             callback=callback
@@ -166,13 +175,13 @@ class PoseWindow(BaseSettingsWindow):
 
         ctk.CTkLabel(
             input_frame,
-            text="入力画像（立ち絵）",
+            text="入力画像（衣装着用三面図）",
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
 
         ctk.CTkLabel(
             input_frame,
-            text="三面図やベースデザインから作成したキャラ画像を指定",
+            text="Step3で生成した衣装着用三面図、または任意のキャラ画像を指定",
             font=("Arial", 11),
             text_color="gray"
         ).grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 5), sticky="w")
@@ -183,8 +192,13 @@ class PoseWindow(BaseSettingsWindow):
         img_frame.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
         img_frame.grid_columnconfigure(0, weight=1)
 
-        self.image_entry = ctk.CTkEntry(img_frame, placeholder_text="キャラクター画像パス")
+        self.image_entry = ctk.CTkEntry(img_frame, placeholder_text="Step3の出力画像パス")
         self.image_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        # Step3の出力パスがあれば自動入力
+        if self.outfit_sheet_path:
+            self.image_entry.insert(0, self.outfit_sheet_path)
+
         ctk.CTkButton(
             img_frame,
             text="参照",
@@ -295,8 +309,16 @@ class PoseWindow(BaseSettingsWindow):
             variable=self.include_effects_var
         ).grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="w")
 
+        # 背景透過
+        self.transparent_bg_var = tk.BooleanVar(value=False)
+        ctk.CTkCheckBox(
+            visual_frame,
+            text="背景を透過にする（合成用）",
+            variable=self.transparent_bg_var
+        ).grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+
         # 風の影響
-        ctk.CTkLabel(visual_frame, text="風の影響:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(visual_frame, text="風の影響:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
         self.wind_menu = ctk.CTkOptionMenu(
             visual_frame,
             values=list(WIND_EFFECTS.keys()),
@@ -384,6 +406,7 @@ class PoseWindow(BaseSettingsWindow):
             'action_description': self.action_desc_entry.get().strip(),
             'dynamism': self.dynamism_menu.get(),
             'include_effects': self.include_effects_var.get(),
+            'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),
             'camera_angle': self.camera_angle_menu.get(),
             'zoom': self.zoom_menu.get(),

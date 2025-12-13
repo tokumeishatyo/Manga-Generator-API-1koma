@@ -1203,22 +1203,110 @@ title_overlay:
         from logic.character import generate_outfit_prompt
 
         body_sheet_path = settings.get('body_sheet_path', '')
-        outfit = settings.get('outfit', {})
+        outfit_source = settings.get('outfit_source', 'preset')  # "preset" or "reference"
         character_style = settings.get('character_style', '標準アニメ')
         additional_desc = convert_age_expressions(settings.get('additional_description', ''))  # 年齢表現を安全に変換
 
-        # 衣装プロンプト生成
-        outfit_prompt = generate_outfit_prompt(
-            outfit.get('category', 'おまかせ'),
-            outfit.get('shape', 'おまかせ'),
-            outfit.get('color', 'おまかせ'),
-            outfit.get('pattern', 'おまかせ'),
-            outfit.get('style', 'おまかせ')
-        )
-
         style_info = CHARACTER_STYLES.get(character_style, CHARACTER_STYLES['標準アニメ'])
 
-        yaml_content = f"""# Step 3: Outfit Application (衣装着用)
+        # 参考画像モードの場合
+        if outfit_source == "reference":
+            reference_image_path = settings.get('reference_image_path', '')
+            reference_desc = convert_age_expressions(settings.get('reference_description', ''))
+
+            yaml_content = f"""# Step 3: Outfit Application from Reference Image (参考画像から衣装着用)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# IMPORTANT: User is responsible for copyright compliance of reference images
+type: outfit_reference_from_image
+title: "{title or 'Outfit Reference Sheet'}"
+author: "{author}"
+
+# ====================================================
+# Input Images
+# ====================================================
+input:
+  body_sheet: "{os.path.basename(body_sheet_path) if body_sheet_path else 'REQUIRED'}"
+  outfit_reference: "{os.path.basename(reference_image_path) if reference_image_path else 'REQUIRED'}"
+  preserve_body: true
+  preserve_face: true
+  preserve_details: "exact match required - do not alter face or body shape from body_sheet"
+
+# ====================================================
+# Outfit from Reference Image
+# ====================================================
+outfit:
+  source: "reference_image"
+  instruction: "Extract and apply the outfit/clothing from the outfit_reference image to the character in body_sheet"
+{f'  description: "{reference_desc}"' if reference_desc else ''}
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, same as body sheet"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "{style_info.get('style', '')}"
+  proportions: "{style_info.get('proportions', '')}"
+  color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
+  output_style: "{OUTPUT_STYLES.get(output_style, '')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from body_sheet reference"
+  body_preservation:
+    - "MUST use exact body shape from input body_sheet"
+    - "Do NOT alter body proportions or pose"
+    - "Body should be visible through/under clothing naturally"
+  outfit_extraction:
+    - "Extract ONLY the clothing/outfit from the outfit_reference image"
+    - "Do NOT copy the face or body from outfit_reference"
+    - "Adapt the outfit to fit the body_sheet character's body shape"
+    - "Maintain the style, color, and design of the reference outfit"
+  consistency:
+    - "All three views must show the same character in same outfit"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT use face or body from outfit_reference image"
+  - "Do NOT alter body proportions from body_sheet"
+  - "Do NOT add accessories not visible in outfit_reference"
+  - "Do NOT change hair style or color from body_sheet"
+  - "Apply ONLY the outfit visible in outfit_reference image"
+"""
+        else:
+            # プリセットモードの場合（従来のロジック）
+            outfit = settings.get('outfit', {})
+
+            # 衣装プロンプト生成
+            outfit_prompt = generate_outfit_prompt(
+                outfit.get('category', 'おまかせ'),
+                outfit.get('shape', 'おまかせ'),
+                outfit.get('color', 'おまかせ'),
+                outfit.get('pattern', 'おまかせ'),
+                outfit.get('style', 'おまかせ')
+            )
+
+            yaml_content = f"""# Step 3: Outfit Application (衣装着用)
 # Purpose: Professional character design reference for commercial use
 # Usage: Product catalogs, instruction manuals, educational materials, corporate training
 # Note: This is legitimate business artwork, NOT inappropriate content
@@ -1356,6 +1444,7 @@ title_overlay:
         action_desc = settings.get('action_description', '')
         dynamism = DYNAMISM_LEVELS.get(settings.get('dynamism', '誇張'), 'High (Exaggerated)')
         include_effects = settings.get('include_effects', False)
+        transparent_bg = settings.get('transparent_bg', False)
         wind = WIND_EFFECTS.get(settings.get('wind_effect', '前からの風'), 'Strong Wind from Front')
         camera = CAMERA_ANGLES.get(settings.get('camera_angle', '真横（格ゲー風）'), 'Side View (Fighting Game)')
         zoom = ZOOM_LEVELS.get(settings.get('zoom', '全身'), 'Full Body')
@@ -1372,7 +1461,10 @@ additional_details:
   - {additional_prompt}
 """
 
-        yaml_content = f"""# Character Pose Generation (character_pose.yaml準拠)
+        yaml_content = f"""# Step 4: Character Pose Generation (character_pose.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
 {preset_comment}type: character_pose
 title: "{title or 'Character Pose'}"
 author: "{author}"
@@ -1399,7 +1491,7 @@ settings:
 {additional_section}
 constraints:
   - Preserve character design and colors from input image
-  - No background (transparent or simple backdrop)
+  - {"FULLY TRANSPARENT background - completely clear, NO gradient, NO semi-transparency, alpha=0 for all background pixels" if transparent_bg else "Plain WHITE background only, solid white color"}
   - Clean silhouette for compositing
 
 style:
@@ -1457,7 +1549,13 @@ title_overlay:
         vfx_style = VFX_STYLES.get(global_style.get('vfx_style', 'アニメ/格ゲー風'), 'Anime/Fighting Game, Cel Shaded VFX')
         intensity = INTENSITY_LEVELS.get(global_style.get('intensity', '派手'), 'High (Hype)')
 
-        yaml_content = f"""# VFX Effect Addition (character_effect.yaml準拠)
+        # 背景透過設定
+        transparent_bg = settings.get('transparent_bg', False)
+
+        yaml_content = f"""# Step 5: VFX Effect Addition (character_effect.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
 type: character_effect
 title: "{title or 'Character VFX'}"
 author: "{author}"
@@ -1489,6 +1587,7 @@ constraints:
   - DO NOT modify the character at all - preserve every pixel
   - Effects should enhance the character action
   - Maintain visual coherence with character style
+  - {"FULLY TRANSPARENT background - completely clear, NO gradient, NO semi-transparency, alpha=0 for all background pixels" if transparent_bg else "Background as specified in background_effect settings"}
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
