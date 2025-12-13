@@ -2025,7 +2025,8 @@ title_overlay:
 
         # タイトルからデフォルトファイル名を生成
         title = self.title_entry.get().strip()
-        default_filename = self._get_safe_filename(title) if title else "output"
+        base_name = self._get_safe_filename(title) if title else "output"
+        default_filename = f"{base_name}.yaml"
 
         filename = filedialog.asksaveasfilename(
             initialfile=default_filename,
