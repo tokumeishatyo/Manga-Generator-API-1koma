@@ -1,0 +1,29 @@
+Generate single panel illustration faithfully based on the YAML below. Reference attached images if available.
+
+color_mode: fullcolor
+aspect_ratio: '16:9'
+output_type: illustration
+output_style: auto
+scene:
+  prompt: 真夏のビーチ。二人が海の家で向かい合って座っている。キャラ1はかき氷を、キャラ2はトロピカルドリンクを飲んでいる
+  texts:
+  - content: といいつつ、ノンアルコールを飲むりんだった
+    position: middle-right
+  speeches:
+  - character: 彩瀬こよみ
+    content: 美味し〜
+    position: left
+  - character: 篠宮りん
+    content: もう、子供なんだから
+    position: right
+layout_instruction: Generate single panel illustration. Faithfully reproduce each
+  character's appearance from attached images and descriptions. Display dialogue in
+  speech bubbles.
+characters:
+- name: 彩瀬こよみ
+  description: 'generate character based on description: ショートヘアの女子高生 outfit: pink,
+    floral pattern, triangle bikini, cute, kawaii'
+- name: 篠宮りん
+  reference: see attached image
+  description: '黒髪のロングヘアの女子高生 outfit: yellow, animal print, leopard, high-leg swimsuit,
+    sexy, alluring'

@@ -14,7 +14,8 @@ from PIL import Image, ImageTk
 
 # Import constants
 from constants import (
-    COLOR_MODES, DUOTONE_COLORS, OUTPUT_TYPES, OUTPUT_STYLES, ASPECT_RATIOS
+    COLOR_MODES, DUOTONE_COLORS, OUTPUT_TYPES, OUTPUT_STYLES, ASPECT_RATIOS,
+    STEP_ORDER, STEP_LABELS, STEP_REQUIREMENTS
 )
 
 # Import logic modules
@@ -67,6 +68,12 @@ class MangaGeneratorApp(ctk.CTk):
         # Current settings data (from settings windows)
         self.current_settings = {}
 
+        # 進捗トラッカー: 各ステップの完了状態と生成画像パス
+        self.step_progress = {
+            step: {"completed": False, "image_path": None}
+            for step in STEP_ORDER
+        }
+
         # Build UI
         self._build_left_column()
         self._build_middle_column()
@@ -105,10 +112,10 @@ class MangaGeneratorApp(ctk.CTk):
         self.output_type_menu = ctk.CTkOptionMenu(
             type_frame,
             values=list(OUTPUT_TYPES.keys()),
-            width=180,
+            width=200,
             command=self._on_output_type_change
         )
-        self.output_type_menu.set("キャラデザイン（全身）")
+        self.output_type_menu.set("Step1: 顔三面図")
         self.output_type_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
         self.settings_button = ctk.CTkButton(
@@ -127,6 +134,43 @@ class MangaGeneratorApp(ctk.CTk):
             text_color="gray"
         )
         self.settings_status_label.grid(row=2, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="w")
+
+        # === 進捗トラッカー ===
+        progress_frame = ctk.CTkFrame(self.left_scroll)
+        progress_frame.grid(row=row, column=0, padx=5, pady=5, sticky="ew")
+        progress_frame.grid_columnconfigure(0, weight=1)
+        row += 1
+
+        ctk.CTkLabel(
+            progress_frame,
+            text="ワークフロー進捗",
+            font=("Arial", 16, "bold")
+        ).grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
+
+        # 進捗表示用のラベルを格納
+        self.progress_labels = {}
+        for i, step_key in enumerate(STEP_ORDER):
+            step_label = STEP_LABELS.get(step_key, step_key)
+            label = ctk.CTkLabel(
+                progress_frame,
+                text=f"⬜ {step_label}",
+                font=("Arial", 11),
+                text_color="gray"
+            )
+            label.grid(row=i + 1, column=0, padx=15, pady=1, sticky="w")
+            self.progress_labels[step_key] = label
+
+        # 進捗リセットボタン
+        self.progress_reset_btn = ctk.CTkButton(
+            progress_frame,
+            text="進捗リセット",
+            width=100,
+            height=25,
+            fg_color="gray",
+            hover_color="darkgray",
+            command=self._reset_progress
+        )
+        self.progress_reset_btn.grid(row=len(STEP_ORDER) + 1, column=0, padx=10, pady=(5, 10), sticky="w")
 
         # === スタイル設定 ===
         style_frame = ctk.CTkFrame(self.left_scroll)
@@ -565,7 +609,9 @@ class MangaGeneratorApp(ctk.CTk):
         """出力タイプ変更時"""
         # 設定をリセット
         self.current_settings = {}
-        self.settings_status_label.configure(text="設定: 未設定")
+        self.settings_status_label.configure(text="設定: 未設定", text_color="gray")
+        # 進捗表示を更新
+        self._update_progress_display()
 
     def _on_color_mode_change(self, value):
         """カラーモード変更時"""
@@ -657,33 +703,51 @@ class MangaGeneratorApp(ctk.CTk):
         """詳細設定ウィンドウを開く"""
         output_type = self.output_type_menu.get()
 
-        if output_type == "キャラデザイン（全身）":
-            CharacterSheetWindow(
-                self,
-                sheet_type="fullbody",
-                callback=self._on_settings_complete,
-                initial_data=self.current_settings
-            )
-        elif output_type == "キャラデザイン（顔）":
+        # === キャラクター生成フェーズ ===
+        if output_type == "Step1: 顔三面図":
             CharacterSheetWindow(
                 self,
                 sheet_type="face",
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
-        elif output_type == "ポーズ付きキャラ":
+        elif output_type == "Step2: 素体三面図":
+            # TODO: 素体三面図用の設定ウィンドウを実装
+            messagebox.showinfo("情報", "Step2: 素体三面図の設定ウィンドウは実装予定です")
+        elif output_type == "Step3: 衣装着用":
+            CharacterSheetWindow(
+                self,
+                sheet_type="fullbody",
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings
+            )
+        # === ポーズ生成フェーズ ===
+        elif output_type == "Step4: ポーズ付与":
             PoseWindow(
                 self,
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
-        elif output_type == "エフェクト追加":
+        # === エフェクト生成フェーズ ===
+        elif output_type in ["Step5a: オーラ追加", "Step5b: 攻撃エフェクト", "Step5c: 覚醒変形"]:
             EffectWindow(
                 self,
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
-        elif output_type == "背景のみ生成":
+        # === 最終合成・特化プリセット ===
+        elif output_type == "合成: シンプル":
+            messagebox.showinfo("情報", "シンプル合成の設定ウィンドウは実装予定です")
+        elif output_type == "合成: 力の解放":
+            messagebox.showinfo("情報", "力の解放（power.yaml）の設定ウィンドウは実装予定です")
+        elif output_type == "合成: 参戦スプラッシュ":
+            messagebox.showinfo("情報", "参戦スプラッシュ（sansen.yaml）の設定ウィンドウは実装予定です")
+        elif output_type == "合成: バトル画面":
+            messagebox.showinfo("情報", "バトル画面（battle.yaml）の設定ウィンドウは実装予定です")
+        elif output_type == "合成: バリア展開":
+            messagebox.showinfo("情報", "バリア展開（barrier.yaml）の設定ウィンドウは実装予定です")
+        # === その他 ===
+        elif output_type == "背景生成":
             BackgroundWindow(
                 self,
                 callback=self._on_settings_complete,
@@ -708,6 +772,49 @@ class MangaGeneratorApp(ctk.CTk):
         """設定完了時のコールバック"""
         self.current_settings = data
         self.settings_status_label.configure(text="設定: 設定済み ✓", text_color="green")
+
+    # === 進捗トラッカー ===
+
+    def _reset_progress(self):
+        """進捗をリセット"""
+        if messagebox.askyesno("確認", "すべての進捗をリセットしますか？"):
+            self.step_progress = {
+                step: {"completed": False, "image_path": None}
+                for step in STEP_ORDER
+            }
+            self._update_progress_display()
+
+    def _update_progress_display(self):
+        """進捗表示を更新"""
+        for step_key, label in self.progress_labels.items():
+            step_label = STEP_LABELS.get(step_key, step_key)
+            progress = self.step_progress.get(step_key, {})
+
+            if progress.get("completed"):
+                label.configure(text=f"✅ {step_label}", text_color="green")
+            else:
+                # 前のステップが完了しているか確認
+                req_step = STEP_REQUIREMENTS.get(step_key)
+                if req_step is None or self.step_progress.get(req_step, {}).get("completed"):
+                    # このステップは実行可能
+                    label.configure(text=f"🔄 {step_label}", text_color="orange")
+                else:
+                    # 前のステップが未完了
+                    label.configure(text=f"⬜ {step_label}", text_color="gray")
+
+    def _mark_step_complete(self, step_key: str, image_path: str = None):
+        """ステップを完了としてマーク"""
+        if step_key in self.step_progress:
+            self.step_progress[step_key]["completed"] = True
+            self.step_progress[step_key]["image_path"] = image_path
+            self._update_progress_display()
+
+    def _get_previous_step_image(self, step_key: str) -> str:
+        """前のステップの画像パスを取得"""
+        req_step = STEP_REQUIREMENTS.get(step_key)
+        if req_step and self.step_progress.get(req_step, {}).get("completed"):
+            return self.step_progress[req_step].get("image_path")
+        return None
 
     # === YAML Generation ===
 
@@ -742,20 +849,35 @@ class MangaGeneratorApp(ctk.CTk):
         author = self.author_entry.get().strip() or "Unknown"
 
         try:
-            if output_type in ["キャラデザイン（全身）", "キャラデザイン（顔）"]:
+            # === キャラクター生成フェーズ ===
+            if output_type == "Step1: 顔三面図":
                 yaml_content = self._generate_character_sheet_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "背景のみ生成":
-                yaml_content = self._generate_background_yaml(
+            elif output_type == "Step2: 素体三面図":
+                # TODO: 素体三面図YAML生成を実装
+                yaml_content = f"# Step2: 素体三面図 - 実装予定\n# 前ステップ画像: {self._get_previous_step_image('step2_body')}"
+            elif output_type == "Step3: 衣装着用":
+                yaml_content = self._generate_character_sheet_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "ポーズ付きキャラ":
+            # === ポーズ生成フェーズ ===
+            elif output_type == "Step4: ポーズ付与":
                 yaml_content = self._generate_pose_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "エフェクト追加":
+            # === エフェクト生成フェーズ ===
+            elif output_type in ["Step5a: オーラ追加", "Step5b: 攻撃エフェクト", "Step5c: 覚醒変形"]:
                 yaml_content = self._generate_effect_yaml(
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
+            # === 最終合成・特化プリセット ===
+            elif output_type.startswith("合成:"):
+                # TODO: 各特化プリセットのYAML生成を実装
+                yaml_content = f"# {output_type} - 特化プリセット実装予定"
+            # === その他 ===
+            elif output_type == "背景生成":
+                yaml_content = self._generate_background_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             elif output_type == "装飾テキスト":

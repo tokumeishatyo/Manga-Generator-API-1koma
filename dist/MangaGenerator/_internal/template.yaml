@@ -1,0 +1,26 @@
+# 1コマ漫画生成アプリ テンプレート
+
+title: "作品タイトル"
+author: "作者名"
+color_mode: "fullcolor"
+output_style: "auto"
+
+characters:
+  - name: "キャラ1"
+    reference: "添付画像を参照してください"
+    description: "キャラクターの外見説明"
+
+scene:
+  prompt: "シーンの説明（背景、キャラクターの配置、表情、アクションなど）"
+  texts:
+    - content: "ナレーション"
+      position: "top-left"
+  speeches:
+    - character: "キャラ1"
+      content: "セリフ"
+      position: "left"
+
+layout_instruction: |
+  1コマのイラストを生成してください。
+  各キャラクターの外見は添付画像と説明を忠実に再現してください。
+  セリフは吹き出しで表示してください。

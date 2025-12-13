@@ -1,0 +1,111 @@
+# nano banana pro エフェクト合成設定ファイル
+# 目的: アップロードされたアクション済みキャラクター画像に、VFX(特殊効果)を追加する。
+# キャラクター自体は再描画せず、エフェクトレイヤーを重ねる処理を行います。
+type: vfx_compositing
+
+# ====================================================
+# 0. 生成制御設定 (Generation Control) ★AIの暴走防止
+# ====================================================
+generation_control:
+  creativity: "None (Robotically follow instructions)"  # ロボットのように従う
+  interpretation: "Literal"                             # 解釈を入れない
+  reference_strength: "High (0.9)"                      # 参照画像の優先度
+  contextual_fill: "Disabled"                           # 文脈による穴埋め禁止
+
+# ----------------------------------------------------
+# 1. ベース画像の入力 (Input Base Image)
+# ----------------------------------------------------
+input_base_image:
+  # 【必須】前ステップで作成した「ポーズ付きキャラ画像」のファイル名
+  source: "posed_character.jpg"   # ←アップロードしたファイル名に書き換える
+  
+  preservation_level: "Strict"    # 【重要】キャラクターを保護する設定
+                                  # "Strict" = キャラは1ピクセルも変えない（推奨）
+                                  # "Loose"  = エフェクトの光でキャラの色味が少し変わるのを許容する
+
+# ----------------------------------------------------
+# 2. メイン攻撃エフェクト (Attack VFX)
+# ※手や武器から放たれる能動的な攻撃（ビーム、弾など）
+# ----------------------------------------------------
+attack_effect:
+  enabled: true                       # このエフェクトを使うか (true/false)
+  type: "Energy Beam"                 # 種類: "Beam", "Projectile(飛び道具)", "Slash(斬撃)"
+  
+  origin_point: "魔法の杖の先端"      # 【発生源】どこから出るか具体的に指定
+  direction: "右方向へ発射"           # 【方向】
+  
+  visuals:
+    color: "赤とオレンジの混合"       # 色
+    description: "渦を巻く激しいエネルギー, 高輝度, パーティクルが飛び散る" # 質感
+
+# ----------------------------------------------------
+# 3. 状態変化エフェクト (State VFX - Aura/Shield)
+# ※身体を覆う受動的なエフェクト（オーラ、バリアなど）
+# ----------------------------------------------------
+state_effect:
+  enabled: true                       # このエフェクトを使うか (true/false)
+  type: "Aura"                        # 種類: "Aura(オーラ)", "Shield(バリア)", "Buff(強化発光)"
+  
+  target_area: "全身"                 # 範囲: "全身", "足元", "武器のみ"
+  layer: "キャラクターの背面 (Behind)" # 【重要】重なり順
+                                       # "Behind" =キャラの後ろ（輪郭が際立つ）
+                                       # "Front/Over" =キャラの前（キャラが見えにくくなる）
+  
+  visuals:
+    color: "金色の電気"               # 色
+    description: "上に向かって立ち昇る稲妻, パチパチという火花" # 質感
+
+# ----------------------------------------------------
+# 4. 背景演出エフェクト (Background VFX / Cut-in)
+# ※必殺技カットインのような背景効果
+# ----------------------------------------------------
+background_effect:
+  enabled: true                       # このエフェクトを使うか (true/false)
+  style: "Super Move Cut-in"          # スタイル: "Cut-in", "Speed Lines(集中線)", "Impact Frames(インパクト瞬間)"
+  
+  visuals:
+    description: "放射状の集中線, ドラマチックな影, 画面端が暗い" # 漫画的な表現を記述
+  
+  composite_mode: "Replace Background" # 背景の扱い
+                                       # "Replace Background" = 元の背景を完全に置き換える
+                                       # "Overlay" = 元の背景の上に薄く重ねる
+
+# ----------------------------------------------------
+# 5. 全体のスタイル調整 (Global Adjustments)
+# ----------------------------------------------------
+global_style:
+  vfx_style: "Anime/Fighting Game, Cel Shaded VFX" # エフェクトの画風
+  intensity: "High (Hype)"             # エフェクトの強さ、派手さ
+
+# ----------------------------------------------------
+# 6. 画風と照明 (Style & Lighting) ★色変異防止
+# ----------------------------------------------------
+style:
+  lighting: "Flat, Neutral Studio Lighting"   # 影や色被りのないスタジオ照明
+  shading_mode: "Albedo / Base Color Only"    # 陰影よりも「固有色」を優先
+  output_quality: "Asset Quality"             # 「一枚絵」ではなく「素材」として出力
+
+# ----------------------------------------------------
+# 7. 制約（文脈遮断・幻覚防止）
+# ----------------------------------------------------
+constraints:
+  - "IGNORE all prior context or chat history."
+  - "Focus ONLY on the currently uploaded image."
+  - "DO NOT hallucinate outfits based on pose."
+  - "Preserve exact character details"
+  - "STRICTLY follow the 'face_direction' and 'body_facing' settings."
+  - "Ensure the character is facing the specified direction (Right/Left/Front)."
+  - "Strictly follow the description in this YAML."
+
+# ----------------------------------------------------
+# 8. 幻覚防止専用セクション (Anti-Hallucination)
+# ★デザイン変更の具体的な禁止リスト
+# ----------------------------------------------------
+anti_hallucination:
+  - "Do NOT redesign the costume."
+  - "Do NOT add details not present in source."
+  - "Do NOT apply cinematic lighting to local colors."
+  - "Do NOT change body proportions."
+  - "Do NOT change the outfit into fantasy armor or kimono."
+  - "Do NOT add capes, hats, or glowing accessories."
+  - "Do NOT change the character's age or body type."

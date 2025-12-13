@@ -1,0 +1,11 @@
+Generate background image based on the YAML below. Draw background only, no people or characters.
+
+color_mode: fullcolor
+aspect_ratio: '16:9'
+output_type: background
+output_style: anime style, vibrant colors, expressive
+scene:
+  prompt: 夜の学校の教室。何かが暴れたようで、机や椅子が乱雑に散らかり、窓ガラスも所々破れている。
+layout_instruction: 'style: anime style, vibrant colors, expressive background only,
+  no characters, no people, detailed environment, scenic Generate background only.
+  Do not include people or characters.'

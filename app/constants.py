@@ -26,16 +26,65 @@ DUOTONE_COLORS = {
     "オレンジ×黒": ("orange and black duotone, two-color print", "orange_black"),
 }
 
-# 出力タイプ定義（ステップバイステップワークフロー）
-# 1. キャラデザイン → 2. ポーズ付け → 3. エフェクト追加 → 4. シーン合成（SceneBuilder）
+# 出力タイプ定義（完全ステップワークフロー）
+# Step 1-3: キャラクター生成フェーズ
+# Step 4: ポーズ生成フェーズ
+# Step 5: エフェクト生成フェーズ
+# Step 6-8: 最終合成フェーズ / 特化プリセット
 OUTPUT_TYPES = {
-    "キャラデザイン（全身）": "fullbody_sheet",
-    "キャラデザイン（顔）": "face_sheet",
-    "ポーズ付きキャラ": "character_pose",
-    "エフェクト追加": "character_effect",
-    "背景のみ生成": "background",
+    # === キャラクター生成フェーズ ===
+    "Step1: 顔三面図": "step1_face",
+    "Step2: 素体三面図": "step2_body",
+    "Step3: 衣装着用": "step3_outfit",
+    # === ポーズ生成フェーズ ===
+    "Step4: ポーズ付与": "step4_pose",
+    # === エフェクト生成フェーズ ===
+    "Step5a: オーラ追加": "step5a_aura",
+    "Step5b: 攻撃エフェクト": "step5b_attack",
+    "Step5c: 覚醒変形": "step5c_transform",
+    # === 最終合成・特化プリセット ===
+    "合成: シンプル": "compose_simple",
+    "合成: 力の解放": "compose_power",
+    "合成: 参戦スプラッシュ": "compose_sansen",
+    "合成: バトル画面": "compose_battle",
+    "合成: バリア展開": "compose_barrier",
+    # === その他 ===
+    "背景生成": "background",
     "装飾テキスト": "decorative_text",
     "4コマ漫画": "four_panel_manga"
+}
+
+# ステップの順序定義（進捗トラッカー用）
+STEP_ORDER = [
+    "step1_face",
+    "step2_body",
+    "step3_outfit",
+    "step4_pose",
+    "step5a_aura",
+    "step5b_attack",
+    "step5c_transform",
+]
+
+# ステップの表示名
+STEP_LABELS = {
+    "step1_face": "Step1: 顔三面図",
+    "step2_body": "Step2: 素体三面図",
+    "step3_outfit": "Step3: 衣装着用",
+    "step4_pose": "Step4: ポーズ付与",
+    "step5a_aura": "Step5a: オーラ追加",
+    "step5b_attack": "Step5b: 攻撃エフェクト",
+    "step5c_transform": "Step5c: 覚醒変形",
+}
+
+# 各ステップの必須入力（前ステップの出力）
+STEP_REQUIREMENTS = {
+    "step1_face": None,  # 最初のステップ、入力不要
+    "step2_body": "step1_face",  # 顔三面図が必要
+    "step3_outfit": "step2_body",  # 素体三面図が必要
+    "step4_pose": "step3_outfit",  # 衣装着用三面図が必要
+    "step5a_aura": "step4_pose",  # ポーズ付きキャラが必要
+    "step5b_attack": "step4_pose",  # ポーズ付きキャラが必要（オーラなしでもOK）
+    "step5c_transform": "step4_pose",  # ポーズ付きキャラが必要
 }
 
 # 装飾テキストスタイル定義

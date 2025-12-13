@@ -1,0 +1,153 @@
+# nano banana pro ストーリーシーン合成設定ファイル
+# 目的: 戦闘ではなく、会話・移動・食事などの「日常的な相互作用」を描画する。
+# 「対立」ではなく「調和」を重視した配置を行います。
+type: story_scene_composition
+
+# ====================================================
+# 0. 生成制御設定 (Generation Control) ★AIの暴走防止
+# ====================================================
+generation_control:
+  creativity: "None (Robotically follow instructions)"  # ロボットのように従う
+  interpretation: "Literal"                             # 解釈を入れない
+  reference_strength: "High (0.9)"                      # 参照画像の優先度
+  contextual_fill: "Disabled"                           # 文脈による穴埋め禁止
+
+# ----------------------------------------------------
+# 1. 背景と環境 (Environment)
+# ----------------------------------------------------
+background:
+  source_image: "school_gate.jpg"     # 背景画像
+  
+  # 日常シーン向けの調整
+  blur_amount: 10                     # 少しぼかすとキャラにピントが合って見えます(0-100)
+  lighting_mood: "Morning Sunlight"   # "Soft Morning", "Sunset", "Summer Noon"
+                                      # 全体の色味を「優しい雰囲気」に統一します
+
+# ----------------------------------------------------
+# 2. キャラクター配置と関係性 (Relationship & Placement)
+# ※ここがバトル用との最大の違いです
+# ----------------------------------------------------
+scene_interaction:
+  # 【配置パターン】
+  layout_type: "Side by Side (Walking)" 
+      # "Side by Side (Walking)" : 並んで歩く（登校シーンなど）
+      # "Face to Face (Table)"   : 向かい合って座る（カフェ、食事など）
+      # "Center & Listener"      : 中央で話す人と、それを聞く人
+  
+  # 【距離感】
+  distance: "Close Friends"           # "Close", "Normal", "Distant"
+
+# ----------------------------------------------------
+# 3. 左側のキャラクター (Left Actor)
+# ----------------------------------------------------
+left_character:
+  source_image: "koyomi_school_uniform.jpg"
+  
+  scale: 1.0
+  offset_x: "25%"                     # 並んで歩くなら少し中央寄り
+  
+  # 【視線と姿勢】
+  pose_tweak: "Walking"               # "Walking", "Sitting", "Standing"
+  facing_direction: "Forward-Right"   # "Forward"(前), "Right"(隣の子を見る)
+  expression_override: "Smiling"      # 表情の微調整
+
+# ----------------------------------------------------
+# 4. 右側のキャラクター (Right Actor)
+# ----------------------------------------------------
+right_character:
+  source_image: "friend_school_uniform.jpg"
+  
+  scale: 1.0
+  offset_x: "75%"
+  
+  # 【視線と姿勢】
+  pose_tweak: "Walking"
+  facing_direction: "Forward-Left"    # "Left"(隣の子を見る)
+  flip_image: false                   # 並んで歩く時は、同じ向き（反転なし）の場合も多いので注意
+
+# ----------------------------------------------------
+# 5. 漫画的UI表現 (Comic UI)
+# ※添付画像の「今日から新学期」「おはよう」などを再現します
+# ----------------------------------------------------
+comic_overlay:
+  enabled: true
+  style: "Slice of Life / Visual Novel"
+  
+  # 【ナレーションボックス（四角）】
+  narration_box:
+    text: "今日から新学期が始まる"
+    position: "Top Left"              # "Top Left", "Bottom Center"
+  
+  # 【セリフ吹き出し】
+  dialogues:
+    - speaker: "Left Character"
+      text: "おはよう！"
+      shape: "Round (Normal)"         # "Round", "Spiky(叫び)", "Cloud(思考)"
+      
+    - speaker: "Right Character"
+      text: "おはよう"
+      shape: "Round (Normal)"
+
+# ----------------------------------------------------
+# 6. 最終仕上げ (Final Polish)
+# ----------------------------------------------------
+post_processing:
+  filter: "Soft Anime Look"           # 戦闘用のようなハイコントラストではなく、柔らかい画質に
+  bloom_effect: "Low"                 # ほわっとした光の演出
+
+# 合成用YAMLの最後にこれを追記するだけです
+
+# ----------------------------------------------------
+# 簡易テキストオーバーレイ (Simple Text)
+# 目的: 漫画的な「ナレーション」と「吹き出し」を最短手数で配置する。
+# ----------------------------------------------------
+simple_text:
+  enabled: true
+  
+  # 【1. ナレーションボックス】 (四角い枠)
+  narration:
+    text: "今日から新学期が始まる"   # ここに文章を入れる
+    position: "Top Left"             # "Top Left"(左上), "Bottom"(下部), "Top Right"(右上)
+  
+  # 【2. セリフ吹き出し】 (リスト形式)
+  dialogues:
+    # 左のキャラのセリフ
+    - speaker: "Left"                # "Left", "Right", "Center"
+      text: "おはよう"
+    
+    # 右のキャラのセリフ
+    - speaker: "Right"
+      text: "おはよう"
+      
+      # ※オプション: 必要ならここだけ形を変えることも可能
+      # shape: "Shout" (叫び) 
+
+  # 【共通設定】 (AIがよしなにやってくれる設定)
+  auto_style:
+    theme: "Clean Manga"             # "Clean Manga"(白黒), "Visual Novel"(半透明ウィンドウ)
+    font_size: "Standard"            # 自動調整
+
+# ----------------------------------------------------
+# 7. 制約（文脈遮断・幻覚防止）
+# ----------------------------------------------------
+constraints:
+  - "IGNORE all prior context or chat history."
+  - "Focus ONLY on the currently uploaded image."
+  - "DO NOT hallucinate outfits based on pose."
+  - "Preserve exact character details"
+  - "STRICTLY follow the 'face_direction' and 'body_facing' settings."
+  - "Ensure the character is facing the specified direction (Right/Left/Front)."
+  - "Strictly follow the description in this YAML."
+
+# ----------------------------------------------------
+# 8. 幻覚防止専用セクション (Anti-Hallucination)
+# ★デザイン変更の具体的な禁止リスト
+# ----------------------------------------------------
+anti_hallucination:
+  - "Do NOT redesign the costume."
+  - "Do NOT add details not present in source."
+  - "Do NOT apply cinematic lighting to local colors."
+  - "Do NOT change body proportions."
+  - "Do NOT change the outfit into fantasy armor or kimono."
+  - "Do NOT add capes, hats, or glowing accessories."
+  - "Do NOT change the character's age or body type."

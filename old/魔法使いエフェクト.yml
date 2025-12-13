@@ -1,0 +1,23 @@
+Generate a single character image with effects based on the YAML below.
+The character should be facing right, looking right with the effect/attack directed to the right.
+Reference attached character image if available.
+
+output_type: effect_character
+color_mode: fullcolor
+character:
+  name: Character
+  facing: right
+  pose: 攻撃
+  description: ''
+effect:
+  type: ビーム
+  color: 赤
+  emission: 杖から
+  direction: right
+composition: カットイン（大）
+background: 透明風（白）
+scene:
+  prompt: dramatic full-screen anime-style character cut-in, intense close-up filling
+    most of the frame. Character facing right, looking right. attacking, offensive
+    pose. red energy beam, from staff, wand, shooting towards the right. plain white
+    background, clean, no distractions.

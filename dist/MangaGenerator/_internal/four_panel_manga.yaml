@@ -1,0 +1,64 @@
+# 4コマ漫画生成テンプレート
+# 縦1列に4コマを配置する標準的な4コマ漫画形式
+
+title: "作品タイトル"
+author: "作者名"
+color_mode: "fullcolor"  # fullcolor / monochrome / sepia / two_tone
+output_style: "manga"    # manga / anime / gekiga / watercolor / american_comic
+
+# 登場人物
+characters:
+  - name: "キャラ1"
+    reference: "添付画像1を参照してください"
+    description: "キャラクターの外見説明"
+  - name: "キャラ2"
+    reference: "添付画像2を参照してください"
+    description: "キャラクターの外見説明"
+
+# 4コマの内容
+panels:
+  # --- 1コマ目（起）---
+  - panel_number: 1
+    prompt: "1コマ目のシーン説明（背景、キャラクターの配置、表情、アクションなど）"
+    speeches:
+      - character: "キャラ1"
+        content: "セリフ"
+        position: "left"  # left / right
+    narration: ""  # ナレーション（任意）
+
+  # --- 2コマ目（承）---
+  - panel_number: 2
+    prompt: "2コマ目のシーン説明"
+    speeches:
+      - character: "キャラ2"
+        content: "セリフ"
+        position: "right"
+    narration: ""
+
+  # --- 3コマ目（転）---
+  - panel_number: 3
+    prompt: "3コマ目のシーン説明（転換点や意外な展開）"
+    speeches:
+      - character: "キャラ1"
+        content: "セリフ"
+        position: "left"
+    narration: ""
+
+  # --- 4コマ目（結）---
+  - panel_number: 4
+    prompt: "4コマ目のシーン説明（オチ・結末）"
+    speeches:
+      - character: "キャラ2"
+        content: "セリフ"
+        position: "right"
+    narration: ""
+
+# レイアウト指示
+layout_instruction: |
+  4コマ漫画を縦1列に配置してください。
+  横並びにせず、上から下へ1コマずつ縦に4つ並べてください。
+  出力画像は縦長（9:16または2:5の比率）で、4コマ漫画だけが画像全体を占めるようにしてください。
+  余白は不要です。
+  各キャラクターの外見は添付画像と説明を忠実に再現してください。
+  セリフは吹き出しで表示し、指定された位置に配置してください。
+  ナレーションがある場合は、コマの上部または下部にテキストボックスで表示してください。

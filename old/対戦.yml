@@ -1,0 +1,26 @@
+Composite the 2 character/element images with the background image based on the YAML below.
+Combine all attached images into a single cohesive 格闘ゲーム風 scene.
+Maintain the style and quality of the original images while blending them naturally.
+
+output_type: image_composite
+layout: 格闘ゲーム風
+images:
+- position: 右
+  size: 特大
+  description: Character/element image 1
+- position: 左
+  size: 特大
+  description: Character/element image 2
+background: see attached background image
+ui_elements:
+  health_bars: false
+  super_meter: false
+  character_names: false
+  move_name: ''
+scene:
+  prompt: Composite image in fighting game style battle screen style. Combine the
+    provided images into a cohesive scene. Place Character/element image 1 on the
+    right side, very large, filling most of that area size. Place Character/element
+    image 2 on the left side, very large, filling most of that area size. Use the
+    background image as the scene backdrop. Ensure all elements blend naturally with
+    consistent lighting and style.
