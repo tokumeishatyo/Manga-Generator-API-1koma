@@ -351,8 +351,8 @@ class PoseWindow(BaseSettingsWindow):
         ctk.CTkLabel(action_frame, text="手の詳細:").grid(row=4, column=2, padx=10, pady=5, sticky="w")
         self.hand_detail_entry = ctk.CTkEntry(
             action_frame,
-            placeholder_text="例：右手が前、右手縦・左手横",
-            width=180
+            placeholder_text="例：右手が上 / right hand on top",
+            width=200
         )
         self.hand_detail_entry.grid(row=4, column=3, padx=5, pady=5, sticky="w")
 
@@ -370,8 +370,8 @@ class PoseWindow(BaseSettingsWindow):
         ctk.CTkLabel(action_frame, text="足の詳細:").grid(row=5, column=2, padx=10, pady=5, sticky="w")
         self.foot_detail_entry = ctk.CTkEntry(
             action_frame,
-            placeholder_text="例：右足を前に出す",
-            width=180
+            placeholder_text="例：左足が前 / left foot forward",
+            width=200
         )
         self.foot_detail_entry.grid(row=5, column=3, padx=5, pady=5, sticky="w")
 
