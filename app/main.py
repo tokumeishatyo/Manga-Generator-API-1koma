@@ -957,24 +957,23 @@ class MangaGeneratorApp(ctk.CTk):
 # ====================================================
 # Layout: Triangular arrangement (inverted triangle)
 #
-#   [FRONT VIEW]     [3/4 VIEW]
-#         [SIDE VIEW / PROFILE]
+#   [FRONT VIEW]     [3/4 LEFT VIEW]
+#         [LEFT PROFILE]
 #
-# Top-left: Front view (looking straight at camera)
-# Top-right: 3/4 view (angled, showing depth)
-# Bottom-center: Side view / Profile (pure side profile)
+# All views facing LEFT direction for consistency
 # ====================================================
 
 layout:
   arrangement: "triangular, inverted triangle formation"
+  direction: "all views facing LEFT"
   top_row:
     - position: "top-left"
-      view: "front view, looking straight at camera"
+      view: "front view, facing directly at camera, eyes looking at viewer"
     - position: "top-right"
-      view: "3/4 view, angled view showing facial depth"
+      view: "3/4 left view, head turned 45 degrees to the left, showing left side of face"
   bottom_row:
     - position: "bottom-center"
-      view: "side view, pure profile, looking left or right"
+      view: "left profile, pure side view facing left, showing only left side of face"
 
 headshot_specification:
   type: "Character design base body (sotai) headshot for reference sheet"
@@ -1018,7 +1017,8 @@ output:
 # ====================================================
 constraints:
   layout:
-    - "{'Triangular arrangement: front view top-left, 3/4 view top-right, side profile bottom-center' if sheet_type == 'face' else 'Horizontal row: front, side, back'}"
+    - "{'Triangular arrangement: front view top-left, 3/4 left view top-right, left profile bottom-center' if sheet_type == 'face' else 'Horizontal row: front, side, back'}"
+    - "{'All angled views must face LEFT direction' if sheet_type == 'face' else ''}"
     - "Each view should be clearly separated with white space"
     - "All views same size and scale"
   design:
@@ -1029,7 +1029,9 @@ constraints:
     - "HEAD/FACE ONLY - show from top of head to neck/collarbone"
     - "Do NOT draw any clothing, accessories, or decorations"
     - "Keep the character in clean base body state"
-    - "Neutral expression, emotionless"''' if sheet_type == 'face' else ''}
+    - "Neutral expression, emotionless"
+    - "3/4 view: head turned 45 degrees to the LEFT"
+    - "Profile view: pure side view facing LEFT"''' if sheet_type == 'face' else ''}
 
 # ====================================================
 # Anti-Hallucination (MUST FOLLOW)
