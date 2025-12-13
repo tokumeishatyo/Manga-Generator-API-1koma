@@ -28,3 +28,4 @@ memo.txt
 # Build artifacts (PyInstaller)
 build/
 dist/
+CLAUDE_CONTEXT*
