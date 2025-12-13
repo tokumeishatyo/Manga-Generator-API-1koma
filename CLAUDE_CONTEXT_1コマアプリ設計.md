@@ -1,6 +1,14 @@
 # 1コマ漫画生成アプリ - 開発コンテキスト
 
-## 最終更新: 2025-12-12 (清書モード改善・4コマ指示文追加)
+## 最終更新: 2025-12-13 (Step4機能拡張: 表情・ズーム・手足指定)
+
+---
+
+## 次回作業予定
+
+**Step 5: オーラ（エフェクト）付与機能**
+- EffectWindow の確認・調整
+- オーラエフェクトの生成テスト
 
 ---
 
@@ -43,8 +51,18 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 | 出力タイプ | YAMLテンプレート | UIウィンドウ | 状態 |
 |------------|------------------|--------------|------|
 | キャラデザイン（全身/顔） | character_basic.yaml | CharacterSheetWindow | ✅ |
+| 衣装着用三面図 | character_basic.yaml | OutfitWindow | ✅ |
 | ポーズ付きキャラ | character_pose.yaml | PoseWindow | ✅ |
 | エフェクト追加 | character_effect.yaml | EffectWindow | ✅ |
+
+### Step3 衣装着用三面図
+
+| モード | 説明 |
+|--------|------|
+| プリセットから選ぶ | 服装ビルダーで英語プロンプト自動生成 |
+| 参考画像から着せる | 別画像の衣装をキャラに着せる（著作権注意） |
+
+**参考画像モード**: 参考画像のパス＋衣装説明テキストを指定
 
 ### ポーズプリセット（5種類）
 
@@ -57,6 +75,21 @@ Google Gemini API (`gemini-3-pro-image-preview`) を使用した1コマ高品質
 | 坐禅（瞑想） | 結跏趺坐で瞑想 | `Sitting cross-legged in lotus position...` |
 
 ※プリセット選択で自動入力、プロンプトはcharacter_pose.yaml準拠
+
+### Step4 追加機能（2025-12-13実装）
+
+| 機能 | 選択肢 | 備考 |
+|------|--------|------|
+| **表情** | 無表情/笑顔/怒り/泣き/恥じらい | 補足テキストで「苦笑い」等も指定可 |
+| **向き拡張** | 正面/→右向き/←左向き/↗斜め右/↖斜め左/背面 | 三面図の角度に対応 |
+| **ポーズ拡張** | 立ち/座り/しゃがみ/ジャンプ/走り/歩き/瞑想/祈り/腕組み等 | バトル系＋基本動作 |
+| **ズーム拡張** | 全身/上半身/バストアップ/胸から上/胴体中ほどから上/みぞおちから上/顔アップ | 「バストアップ」→Medium Close Upに変換（セーフティ対策） |
+| **手足の指定** | 使用する手・足（指定なし/右/左/両方） | 詳細テキストで「右手が上」「左足が前」等も指定可 |
+| **背景透過** | チェックボックス | 合成用に透過PNG出力 |
+
+**ズーム設定のTips**（README記載済み）:
+- 攻撃系ポーズ + 顔アップ → 実質バストアップになる（腕を含めるため）
+- 座りポーズ + ズーム → 効きにくい（体がコンパクトなため）
 
 | 出力タイプ | YAMLテンプレート | UIウィンドウ | 状態 |
 |------------|------------------|--------------|------|
@@ -273,10 +306,14 @@ python -m py_compile app/main.py app/ui/*.py
 2. 現在の状態確認: `git status` と `git log --oneline -5`
 3. 主要ファイル:
    - メイン: `app/main.py`
+   - ポーズ設定: `app/ui/pose_window.py` ← **Step4の中心**
+   - エフェクト設定: `app/ui/effect_window.py` ← **次回作業対象**
+   - 衣装設定: `app/ui/outfit_window.py`
    - 装飾テキスト: `app/ui/decorative_text_window.py`
    - シーンビルダー: `app/ui/scene_builder_window.py`
    - テキスト配置: `app/ui/text_overlay_placement_window.py`
 4. YAMLテンプレート: `/workspace/*.yaml`
+5. 定数定義: `app/constants.py`（CHARACTER_FACING, CHARACTER_POSES等）
 
 ---
 
