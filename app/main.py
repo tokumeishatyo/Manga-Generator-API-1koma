@@ -1071,13 +1071,13 @@ title_overlay:
 
         face_sheet_path = settings.get('face_sheet_path', '')
         body_type = settings.get('body_type', '標準体型（女性）')
-        render_type = settings.get('render_type', '素体（レオタード）')
+        render_type = settings.get('render_type', '素体（白レオタード）')
         character_style = settings.get('character_style', '標準アニメ')
         additional_desc = settings.get('additional_description', '')
 
         # プリセット情報取得
         body_preset = BODY_TYPE_PRESETS.get(body_type, BODY_TYPE_PRESETS['標準体型（女性）'])
-        render_preset = BODY_RENDER_TYPES.get(render_type, BODY_RENDER_TYPES['素体（レオタード）'])
+        render_preset = BODY_RENDER_TYPES.get(render_type, BODY_RENDER_TYPES['素体（白レオタード）'])
         style_info = CHARACTER_STYLES.get(character_style, CHARACTER_STYLES['標準アニメ'])
 
         yaml_content = f"""# Step 2: Body Reference Sheet (素体三面図)
