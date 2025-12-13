@@ -947,21 +947,43 @@ class MangaGeneratorApp(ctk.CTk):
 
         # YAMLテンプレート生成
         sheet_label = "full body character reference sheet" if sheet_type == "fullbody" else "face character reference sheet"
-        views = "front view, side view, back view" if sheet_type == "fullbody" else "front view, side view, 3/4 view"
 
-        # 顔三面図専用の指示（素体ヘッドショット）
+        # 顔三面図専用の指示（素体ヘッドショット・三角形配置）
         face_headshot_instruction = ""
         if sheet_type == "face":
             face_headshot_instruction = """
-# IMPORTANT: Face Reference Sheet Instructions
+# ====================================================
+# IMPORTANT: Face Reference Sheet Layout
+# ====================================================
+# Layout: Triangular arrangement (inverted triangle)
+#
+#   [FRONT VIEW]     [3/4 VIEW]
+#         [SIDE VIEW / PROFILE]
+#
+# Top-left: Front view (looking straight at camera)
+# Top-right: 3/4 view (angled, showing depth)
+# Bottom-center: Side view / Profile (pure side profile)
+# ====================================================
+
+layout:
+  arrangement: "triangular, inverted triangle formation"
+  top_row:
+    - position: "top-left"
+      view: "front view, looking straight at camera"
+    - position: "top-right"
+      view: "3/4 view, angled view showing facial depth"
+  bottom_row:
+    - position: "bottom-center"
+      view: "side view, pure profile, looking left or right"
+
 headshot_specification:
   type: "Character design base body (sotai) headshot for reference sheet"
   coverage: "From top of head to base of neck (around collarbone level)"
   clothing: "NONE - Do not include any clothing or accessories"
   accessories: "NONE - No jewelry, headwear, or decorations"
   state: "Clean base body state only"
-  background: "Pure white background"
-  purpose: "This is professional character design reference material"
+  background: "Pure white background, seamless"
+  purpose: "Professional character design reference material"
 """
 
         yaml_content = f"""# {sheet_label.title()} (character_basic.yaml準拠)
@@ -982,19 +1004,47 @@ character_style:
   proportions: "{proportions}"
   style_description: "{style_description}"
 
-views: "{views}"
+# ====================================================
+# Output Specifications
+# ====================================================
+output:
+  format: "reference sheet with multiple views"
+  views: "{'front view, side view, back view' if sheet_type == 'fullbody' else 'front view, 3/4 view, side profile'}"
+  background: "pure white, clean, seamless, no borders"
+  text_overlay: "NONE - absolutely no text, labels, or titles on the image"
 
+# ====================================================
+# Constraints (Critical)
+# ====================================================
 constraints:
-  - Maintain consistent design across all views
-  - White or simple background for clarity
-  - Clean linework suitable for reference
-{'''  - This is a HEAD/FACE ONLY reference - show from top of head to neck/collarbone
-  - Do NOT draw any clothing, accessories, or decorations
-  - Keep the character in clean base body state''' if sheet_type == 'face' else ''}
+  layout:
+    - "{'Triangular arrangement: front view top-left, 3/4 view top-right, side profile bottom-center' if sheet_type == 'face' else 'Horizontal row: front, side, back'}"
+    - "Each view should be clearly separated with white space"
+    - "All views same size and scale"
+  design:
+    - "Maintain consistent design across all views"
+    - "Pure white background for clarity"
+    - "Clean linework suitable for reference"
+{'''  face_specific:
+    - "HEAD/FACE ONLY - show from top of head to neck/collarbone"
+    - "Do NOT draw any clothing, accessories, or decorations"
+    - "Keep the character in clean base body state"
+    - "Neutral expression, emotionless"''' if sheet_type == 'face' else ''}
+
+# ====================================================
+# Anti-Hallucination (MUST FOLLOW)
+# ====================================================
+anti_hallucination:
+  - "Do NOT add any text or labels to the image"
+  - "Do NOT include character names on the image"
+  - "Do NOT add view labels like 'FRONT VIEW' or 'SIDE VIEW'"
+  - "Do NOT add borders or frames around views"
+  - "Do NOT add any decorative elements"
+  - "Output ONLY the character views on white background"
 
 style:
-  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
-  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
+  output_style: "{OUTPUT_STYLES.get(output_style, '')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 """
 
