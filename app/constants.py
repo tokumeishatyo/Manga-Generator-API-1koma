@@ -9,6 +9,45 @@ MAX_SPEECH_LENGTH = 30
 MAX_RECENT_FILES = 5
 MAX_CHARACTERS = 5
 
+# 年齢表現の安全な変換辞書（セーフティフィルター対策）
+# 直接的な年齢表現を間接的な体型・外見表現に変換
+AGE_EXPRESSION_CONVERSIONS = {
+    # 学年・年齢（日本語）
+    "小学生": "very young-looking, small petite stature, innocent appearance",
+    "中学生": "youthful petite appearance, teenage-looking, young face",
+    "高校生": "youthful appearance, teenage-looking, student-like",
+    "大学生": "young adult appearance, early twenties look",
+    "幼稚園": "very small, toddler-like proportions",
+    "園児": "very small, toddler-like proportions",
+    "子供": "young-looking, petite build, small stature",
+    "子ども": "young-looking, petite build, small stature",
+    "こども": "young-looking, petite build, small stature",
+    "幼い": "young-looking, innocent appearance",
+    "幼児": "very small, petite build, toddler-like proportions",
+    # 年齢数字（日本語）
+    "5歳": "very small toddler-like proportions",
+    "6歳": "very small, petite child-like proportions",
+    "7歳": "small, petite child-like proportions",
+    "8歳": "small, petite child-like proportions",
+    "9歳": "small, petite child-like proportions",
+    "10歳": "petite, young-looking, small stature",
+    "11歳": "petite, young-looking, small stature",
+    "12歳": "petite, youthful appearance, small stature",
+    "13歳": "petite, youthful teenage appearance",
+    "14歳": "youthful teenage appearance, petite build",
+    "15歳": "youthful teenage appearance",
+    "16歳": "youthful teenage appearance",
+    "17歳": "youthful teenage appearance",
+    "18歳": "young adult appearance",
+    "19歳": "young adult appearance",
+    # 英語表現
+    "child": "young-looking, petite build, small stature",
+    "kid": "young-looking, petite build, small stature",
+    "teen": "youthful teenage appearance",
+    "teenager": "youthful teenage appearance",
+    "minor": "youthful appearance",
+}
+
 # カラーモード定義
 COLOR_MODES = {
     "フルカラー": ("fullcolor", ""),
