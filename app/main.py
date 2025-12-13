@@ -1119,11 +1119,12 @@ render:
 output:
   format: "three view reference sheet"
   views:
-    - "front view"
-    - "side view (left or right)"
+    - "front view, facing directly at camera"
+    - "left side view, profile facing left"
     - "back view"
-  pose: "T-pose or A-pose, arms slightly away from body"
-  background: "pure white, clean"
+  pose: "attention pose (kiwotsuke), standing straight, arms at sides, heels together"
+  background: "pure white, clean, seamless"
+  text_overlay: "NONE - no text or labels on the image"
 
 # ====================================================
 # Style Settings
@@ -1145,10 +1146,15 @@ constraints:
     - "Maintain exact hair style and color from reference"
   body_generation:
     - "Generate body matching the specified body type"
-    - "Do NOT add any clothing or accessories"
+    - "Do NOT add any clothing or accessories beyond specified render type"
     - "Maintain anatomically correct proportions"
+  pose:
+    - "Attention pose (kiwotsuke): standing straight with arms at sides"
+    - "Heels together, toes slightly apart"
+    - "Arms relaxed at sides, palms facing inward"
+    - "Do NOT use T-pose or A-pose"
   consistency:
-    - "All three views must show the same character"
+    - "All three views must show the same character in same pose"
     - "Maintain consistent proportions across views"
     - "Use clean linework suitable for reference"
 
@@ -1157,6 +1163,8 @@ anti_hallucination:
   - "Do NOT change the face from the reference"
   - "Do NOT add accessories or decorations"
   - "Do NOT change body proportions from specified type"
+  - "Do NOT add any text or labels to the image"
+  - "Do NOT use T-pose or A-pose - use attention pose only"
 """
 
         if include_title_in_image:

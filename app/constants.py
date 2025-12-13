@@ -185,9 +185,13 @@ BODY_RENDER_TYPES = {
         "description": "solid silhouette, no details, shape only",
         "prompt": "solid black silhouette, shape only, no details, clean outline"
     },
-    "素体（レオタード）": {
-        "description": "simple leotard/bodysuit, minimal details",
-        "prompt": "wearing plain gray leotard, simple bodysuit, minimal details, reference mannequin"
+    "素体（白レオタード）": {
+        "description": "white leotard/bodysuit, minimal details",
+        "prompt": "wearing plain white leotard, simple white bodysuit, minimal details, reference mannequin"
+    },
+    "素体（白下着）": {
+        "description": "white underwear, body shape clearly visible",
+        "prompt": "wearing simple white underwear, white bra and white panties, minimal clothing, body shape clearly visible, reference mannequin"
     },
     "解剖学的": {
         "description": "anatomical reference, muscle structure visible",

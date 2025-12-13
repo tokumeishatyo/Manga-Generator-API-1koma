@@ -118,7 +118,7 @@ class BodySheetWindow(BaseSettingsWindow):
             values=list(BODY_RENDER_TYPES.keys()),
             width=180
         )
-        self.render_type_menu.set("素体（レオタード）")
+        self.render_type_menu.set("素体（白レオタード）")
         self.render_type_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
         # スタイル（継承）
