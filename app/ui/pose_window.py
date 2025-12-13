@@ -105,8 +105,20 @@ CAMERA_ANGLES = {
 
 ZOOM_LEVELS = {
     "全身": "Full Body",
-    "上半身": "Upper Body",
-    "バストアップ": "Bust Shot"
+    "上半身": "Upper Body, waist up",
+    "バストアップ": "Medium Close Up, chest and head visible, cutting off above the waist",
+    "胸から上": "Chest up shot, head and chest visible",
+    "胴体中ほどから上": "Shot from mid-torso up, framing from navel area to head",
+    "みぞおちから上": "Shot from solar plexus up, framing from solar plexus to top of head",
+    "顔アップ": "Close Up, face only, facial features detail"
+}
+
+EXPRESSIONS = {
+    "無表情": "neutral expression, calm face, no emotion",
+    "笑顔": "smiling, happy expression, cheerful face",
+    "怒り": "angry expression, furious face, frowning",
+    "泣き": "crying, tearful expression, sad face with tears",
+    "恥じらい": "shy expression, blushing, embarrassed face"
 }
 
 
@@ -241,6 +253,25 @@ class PoseWindow(BaseSettingsWindow):
         )
         self.eye_line_menu.set("相手を見る")
         self.eye_line_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
+
+        # 表情
+        ctk.CTkLabel(orient_frame, text="表情:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.expression_menu = ctk.CTkOptionMenu(
+            orient_frame,
+            values=list(EXPRESSIONS.keys()),
+            width=120
+        )
+        self.expression_menu.set("無表情")
+        self.expression_menu.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+
+        # 表情補足（テキストボックス）
+        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
+        self.expression_detail_entry = ctk.CTkEntry(
+            orient_frame,
+            placeholder_text="例：苦笑い、泣き笑い、ニヤリ",
+            width=150
+        )
+        self.expression_detail_entry.grid(row=2, column=3, padx=5, pady=5, sticky="w")
 
         # === アクション設定 ===
         action_frame = ctk.CTkFrame(self.content_frame)
@@ -401,6 +432,8 @@ class PoseWindow(BaseSettingsWindow):
             'identity_preservation': self.preservation_slider.get(),
             'facing': self.facing_menu.get(),
             'eye_line': self.eye_line_menu.get(),
+            'expression': self.expression_menu.get(),
+            'expression_detail': self.expression_detail_entry.get().strip(),
             'action_category': self.category_menu.get(),
             'pose': self.pose_menu.get(),
             'action_description': self.action_desc_entry.get().strip(),

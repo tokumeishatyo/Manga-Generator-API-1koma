@@ -1430,7 +1430,7 @@ title_overlay:
         """ポーズ付きキャラ用YAML生成（character_pose.yaml準拠）"""
         settings = self.current_settings
         from ui.pose_window import (
-            ACTION_CATEGORIES, DYNAMISM_LEVELS, WIND_EFFECTS, CAMERA_ANGLES, ZOOM_LEVELS
+            ACTION_CATEGORIES, DYNAMISM_LEVELS, WIND_EFFECTS, CAMERA_ANGLES, ZOOM_LEVELS, EXPRESSIONS
         )
         from constants import CHARACTER_FACING, CHARACTER_POSES
 
@@ -1439,6 +1439,8 @@ title_overlay:
         identity = settings.get('identity_preservation', 0.85)
         facing = CHARACTER_FACING.get(settings.get('facing', '→右向き'), 'Facing Right')
         eye_line = settings.get('eye_line', '相手を見る')
+        expression = EXPRESSIONS.get(settings.get('expression', '無表情'), 'neutral expression')
+        expression_detail = settings.get('expression_detail', '')
         category = ACTION_CATEGORIES.get(settings.get('action_category', '攻撃（魔法）'), 'Magic Attack')
         pose = CHARACTER_POSES.get(settings.get('pose', '攻撃'), 'attacking')
         action_desc = settings.get('action_description', '')
@@ -1449,6 +1451,11 @@ title_overlay:
         camera = CAMERA_ANGLES.get(settings.get('camera_angle', '真横（格ゲー風）'), 'Side View (Fighting Game)')
         zoom = ZOOM_LEVELS.get(settings.get('zoom', '全身'), 'Full Body')
         additional_prompt = settings.get('additional_prompt', '')
+
+        # 表情プロンプト生成（補足があれば追加）
+        expression_prompt = expression
+        if expression_detail:
+            expression_prompt = f"{expression}, {expression_detail}"
 
         # プリセットコメント
         preset_comment = f"# Preset: {preset}\n" if preset != "（プリセットなし）" else ""
@@ -1477,6 +1484,7 @@ settings:
   orientation:
     body_direction: "{facing}"
     eye_line: "{eye_line}"
+    expression: "{expression_prompt}"
   action:
     category: "{category}"
     pose_type: "{pose}"
