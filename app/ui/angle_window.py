@@ -19,37 +19,38 @@ from ui.base_settings_window import BaseSettingsWindow
 
 
 # 角度設定
+# NOTE: プロンプトはキャラクターの回転方向を明確に指示
 VIEW_ANGLES = {
     "正面": {
-        "prompt": "Front view, facing camera directly",
+        "prompt": "Front view, character facing directly toward camera, no rotation",
         "description": "正面から見た状態"
     },
     "←左向き": {
-        "prompt": "Left side view, profile facing left",
+        "prompt": "Character rotated 90 degrees to their LEFT, showing LEFT PROFILE (left side of face visible), character's nose pointing to the LEFT edge of the image",
         "description": "左を向いた状態（横顔）"
     },
     "→右向き": {
-        "prompt": "Right side view, profile facing right",
+        "prompt": "Character rotated 90 degrees to their RIGHT, showing RIGHT PROFILE (right side of face visible), character's nose pointing to the RIGHT edge of the image",
         "description": "右を向いた状態（横顔）"
     },
     "↖左斜め前": {
-        "prompt": "3/4 view facing left, turned 45 degrees to the left",
+        "prompt": "Character rotated 45 degrees to their LEFT, 3/4 view showing more of left side, face angled toward left side of image",
         "description": "左斜め45度から見た状態"
     },
     "↗右斜め前": {
-        "prompt": "3/4 view facing right, turned 45 degrees to the right",
+        "prompt": "Character rotated 45 degrees to their RIGHT, 3/4 view showing more of right side, face angled toward right side of image",
         "description": "右斜め45度から見た状態"
     },
     "背面": {
-        "prompt": "Back view, rear view from behind",
+        "prompt": "Character rotated 180 degrees, back of head and body visible, showing rear view, character facing away from camera",
         "description": "後ろから見た状態"
     },
     "↑上から見下ろす": {
-        "prompt": "High angle view, looking down from above, bird's eye perspective",
+        "prompt": "High angle shot, camera looking DOWN at character from above, top of head prominent, bird's eye perspective",
         "description": "上から見下ろした状態（俯瞰）"
     },
     "↓下から見上げる": {
-        "prompt": "Low angle view, looking up from below, dramatic upward perspective",
+        "prompt": "Low angle shot, camera looking UP at character from below, chin and underside visible, dramatic upward perspective, hero shot",
         "description": "下から見上げた状態（煽り）"
     }
 }
