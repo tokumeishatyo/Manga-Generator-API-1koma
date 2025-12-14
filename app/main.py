@@ -1070,7 +1070,7 @@ anti_hallucination:
 style:
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
   output_style: "{OUTPUT_STYLES.get(output_style, '')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+  aspect_ratio: "{'1:1' if sheet_type == 'face' else '16:9'}"  # 顔三面図は1:1、全身三面図は16:9固定
 """
 
         # タイトルオーバーレイ（有効な場合のみ出力）
@@ -1165,7 +1165,7 @@ style:
   proportions: "{style_info.get('proportions', '')}"
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+  aspect_ratio: "16:9"  # 素体三面図は16:9固定
 
 # ====================================================
 # Constraints (Critical)
@@ -1246,12 +1246,17 @@ title_overlay:
     - "MUST use exact face from input body_sheet"
     - "Do NOT alter facial features, expression, or proportions"
     - "Maintain exact hair style and color from body_sheet reference"
+  pose_preservation:
+    - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
+    - "Do NOT copy the pose from outfit_reference image"
+    - "Extract ONLY the clothing design, IGNORE the pose in reference"
   outfit_extraction:
-    - "Extract the clothing/outfit from the outfit_reference image"
+    - "Extract ONLY the clothing/outfit from the outfit_reference image"
     - "KEEP the body proportions that fit the outfit from reference"
     - "Maintain the style, color, design, and SHAPE of the reference outfit"
     - "Do NOT shrink or resize outfit to fit body_sheet body"""
                 anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image"
+  - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT shrink or compress outfit elements (like protectors)"
   - "ALLOW body proportions to change to match outfit reference"
   - "Do NOT add accessories not visible in outfit_reference"
@@ -1267,15 +1272,20 @@ title_overlay:
     - "MUST use exact face from input body_sheet"
     - "Do NOT alter facial features, expression, or proportions"
     - "Maintain exact hair style and color from body_sheet reference"
+  pose_preservation:
+    - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
+    - "Do NOT copy the pose from outfit_reference image"
+    - "Extract ONLY the clothing design, IGNORE the pose in reference"
   body_adaptation:
     - "Adapt body proportions to match the outfit_reference image"
     - "Keep protectors, padding, and bulky elements at their original size"
     - "Body shape should fit the outfit naturally"
   outfit_extraction:
-    - "Extract the clothing/outfit from the outfit_reference image"
+    - "Extract ONLY the clothing/outfit from the outfit_reference image"
     - "KEEP the body proportions that fit the outfit from reference"
     - "Maintain the style, color, design, and SHAPE of the reference outfit"""
                 anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image - ONLY use body_sheet face"
+  - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT shrink or compress outfit elements (like protectors)"
   - "ALLOW body proportions to change to match outfit reference"
   - "Do NOT add accessories not visible in outfit_reference"
@@ -1292,12 +1302,17 @@ title_overlay:
     - "MUST use exact body shape from input body_sheet"
     - "Do NOT alter body proportions or pose"
     - "Body should be visible through/under clothing naturally"
+  pose_preservation:
+    - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
+    - "Do NOT copy the pose from outfit_reference image"
+    - "Extract ONLY the clothing design, IGNORE the pose in reference"
   outfit_extraction:
     - "Extract ONLY the clothing/outfit from the outfit_reference image"
     - "Do NOT copy the face or body from outfit_reference"
     - "Adapt the outfit to fit the body_sheet character's body shape"
     - "Maintain the style, color, and design of the reference outfit"""
                 anti_hallucination_rules = """  - "Do NOT use face or body from outfit_reference image"
+  - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT alter body proportions from body_sheet"
   - "Do NOT add accessories not visible in outfit_reference"
   - "Do NOT change hair style or color from body_sheet"
@@ -1350,7 +1365,7 @@ style:
   proportions: "{style_info.get('proportions', '')}"
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
   output_style: "{OUTPUT_STYLES.get(output_style, '')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+  aspect_ratio: "16:9"  # 衣装三面図は16:9固定
 
 # ====================================================
 # Constraints (Critical) - Fit Mode: {fit_mode_label}
@@ -1432,7 +1447,7 @@ style:
   proportions: "{style_info.get('proportions', '')}"
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
   output_style: "{OUTPUT_STYLES.get(output_style, '')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
+  aspect_ratio: "16:9"  # 衣装三面図は16:9固定
 
 # ====================================================
 # Constraints (Critical)
