@@ -90,7 +90,9 @@ OUTPUT_TYPES = {
     # === その他 ===
     "背景生成": "background",
     "装飾テキスト": "decorative_text",
-    "4コマ漫画": "four_panel_manga"
+    "4コマ漫画": "four_panel_manga",
+    # === スタイル変換 ===
+    "スタイル変換": "style_transform"
 }
 
 # ステップの順序定義（進捗トラッカー用）

@@ -218,13 +218,54 @@ class OutfitWindow(BaseSettingsWindow):
         self.reference_desc_textbox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
         self.reference_desc_textbox.insert("1.0", "（任意）参考画像の衣装について補足説明")
 
+        # === 衣装フィットモード ===
+        ctk.CTkLabel(
+            self.reference_frame,
+            text="フィットモード:",
+        ).grid(row=3, column=0, padx=10, pady=5, sticky="nw")
+
+        fit_mode_frame = ctk.CTkFrame(self.reference_frame, fg_color="transparent")
+        fit_mode_frame.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+
+        self.fit_mode_var = tk.StringVar(value="base_priority")
+
+        ctk.CTkRadioButton(
+            fit_mode_frame,
+            text="素体優先",
+            variable=self.fit_mode_var,
+            value="base_priority"
+        ).pack(side="left", padx=(0, 15))
+
+        ctk.CTkRadioButton(
+            fit_mode_frame,
+            text="衣装優先",
+            variable=self.fit_mode_var,
+            value="outfit_priority"
+        ).pack(side="left", padx=(0, 15))
+
+        ctk.CTkRadioButton(
+            fit_mode_frame,
+            text="ハイブリッド",
+            variable=self.fit_mode_var,
+            value="hybrid"
+        ).pack(side="left")
+
+        # フィットモード説明
+        fit_mode_desc = ctk.CTkLabel(
+            self.reference_frame,
+            text="素体優先: 衣装を素体にフィット / 衣装優先: 体型を衣装に合わせる / ハイブリッド: 顔は素体、体型は衣装",
+            font=("Arial", 10),
+            text_color="gray"
+        )
+        fit_mode_desc.grid(row=4, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+
         # 注意書き
         ctk.CTkLabel(
             self.reference_frame,
             text="※ 参考画像の著作権はユーザー責任です",
             font=("Arial", 10),
             text_color="orange"
-        ).grid(row=3, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+        ).grid(row=5, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
 
         # 初期状態では参考画像フレームを無効化
         self._set_frame_state(self.reference_frame, "disabled")
@@ -363,6 +404,7 @@ class OutfitWindow(BaseSettingsWindow):
         else:
             data['reference_image_path'] = self.reference_image_entry.get().strip()
             data['reference_description'] = ref_desc
+            data['fit_mode'] = self.fit_mode_var.get()  # base_priority / outfit_priority / hybrid
 
         return data
 

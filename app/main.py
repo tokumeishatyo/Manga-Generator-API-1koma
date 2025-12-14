@@ -48,6 +48,7 @@ from ui.effect_window import EffectWindow
 from ui.decorative_text_window import DecorativeTextWindow
 from ui.four_panel_window import FourPanelWindow
 from ui.manga_composer_window import MangaComposerWindow
+from ui.style_transform_window import StyleTransformWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -786,6 +787,12 @@ class MangaGeneratorApp(ctk.CTk):
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
+        elif output_type == "スタイル変換":
+            StyleTransformWindow(
+                self,
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings
+            )
         else:
             messagebox.showinfo("情報", f"'{output_type}'の設定ウィンドウは未実装です")
 
@@ -910,6 +917,10 @@ class MangaGeneratorApp(ctk.CTk):
                 yaml_content = self._generate_four_panel_yaml(
                     color_mode, duotone_color, output_style, title, author, include_title_in_image
                 )
+            elif output_type == "スタイル変換":
+                yaml_content = self._generate_style_transform_yaml(
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
             else:
                 yaml_content = f"# {output_type} - 未実装"
 
@@ -1028,10 +1039,11 @@ output:
 # ====================================================
 constraints:
   layout:
-    - "{'Triangular arrangement: front view top-left, 3/4 left view top-right, left profile bottom-center' if sheet_type == 'face' else 'Horizontal row: front, side, back'}"
-    - "{'All angled views must face LEFT direction' if sheet_type == 'face' else ''}"
+    - "{'Triangular arrangement: front view top-left, 3/4 left view top-right, left profile bottom-center' if sheet_type == 'face' else 'Horizontal row with STRICT order: LEFT=front view, CENTER=left side view, RIGHT=back view'}"
+    - "{'All angled views must face LEFT direction' if sheet_type == 'face' else 'Side view MUST show LEFT side of body (character facing left)'}"
     - "Each view should be clearly separated with white space"
     - "All views same size and scale"
+    - "{'POSITION ORDER IS CRITICAL: Front view on LEFT, Side view in CENTER, Back view on RIGHT' if sheet_type == 'fullbody' else ''}"
   design:
     - "Maintain consistent design across all views"
     - "Pure white background for clarity"
@@ -1159,6 +1171,11 @@ style:
 # Constraints (Critical)
 # ====================================================
 constraints:
+  layout:
+    - "STRICT horizontal arrangement: LEFT=front view, CENTER=left side view, RIGHT=back view"
+    - "Side view MUST show LEFT side of body (character facing left)"
+    - "POSITION ORDER IS CRITICAL: Front on LEFT, Side in CENTER, Back on RIGHT"
+    - "Each view should be clearly separated with white space"
   face_preservation:
     - "MUST use exact face from input face_sheet"
     - "Do NOT alter facial features, expression, or proportions"
@@ -1184,6 +1201,7 @@ anti_hallucination:
   - "Do NOT change body proportions from specified type"
   - "Do NOT add any text or labels to the image"
   - "Do NOT use T-pose or A-pose - use attention pose only"
+  - "Do NOT change the view order - ALWAYS front/side/back from left to right"
 """
 
         if include_title_in_image:
@@ -1213,6 +1231,77 @@ title_overlay:
         if outfit_source == "reference":
             reference_image_path = settings.get('reference_image_path', '')
             reference_desc = convert_age_expressions(settings.get('reference_description', ''))
+            fit_mode = settings.get('fit_mode', 'base_priority')  # base_priority / outfit_priority / hybrid
+
+            # フィットモードに応じた制約を生成
+            if fit_mode == "outfit_priority":
+                # 衣装優先: 体型を参考画像に合わせる
+                fit_mode_label = "outfit_priority (衣装優先)"
+                body_constraints = """  body_adaptation:
+    - "Adapt body proportions to match the outfit_reference image"
+    - "Maintain the silhouette and shape of the outfit from reference"
+    - "Keep protectors, padding, and bulky elements at their original size"
+    - "Body shape should fit the outfit, not the other way around"
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from body_sheet reference"
+  outfit_extraction:
+    - "Extract the clothing/outfit from the outfit_reference image"
+    - "KEEP the body proportions that fit the outfit from reference"
+    - "Maintain the style, color, design, and SHAPE of the reference outfit"
+    - "Do NOT shrink or resize outfit to fit body_sheet body"""
+                anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image"
+  - "Do NOT shrink or compress outfit elements (like protectors)"
+  - "ALLOW body proportions to change to match outfit reference"
+  - "Do NOT add accessories not visible in outfit_reference"
+  - "Do NOT change hair style or color from body_sheet"
+  - "Apply the outfit with its ORIGINAL proportions from reference image"""
+            elif fit_mode == "hybrid":
+                # ハイブリッド: 顔は素体、体型は衣装に合わせる
+                fit_mode_label = "hybrid (ハイブリッド: 顔は素体、体型は衣装)"
+                body_constraints = """  hybrid_mode:
+    - "Face ONLY from body_sheet, body proportions from outfit_reference"
+    - "This creates a hybrid: original face on a body that fits the outfit"
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from body_sheet reference"
+  body_adaptation:
+    - "Adapt body proportions to match the outfit_reference image"
+    - "Keep protectors, padding, and bulky elements at their original size"
+    - "Body shape should fit the outfit naturally"
+  outfit_extraction:
+    - "Extract the clothing/outfit from the outfit_reference image"
+    - "KEEP the body proportions that fit the outfit from reference"
+    - "Maintain the style, color, design, and SHAPE of the reference outfit"""
+                anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image - ONLY use body_sheet face"
+  - "Do NOT shrink or compress outfit elements (like protectors)"
+  - "ALLOW body proportions to change to match outfit reference"
+  - "Do NOT add accessories not visible in outfit_reference"
+  - "Do NOT change hair style or color from body_sheet"
+  - "Apply the outfit with its ORIGINAL proportions from reference image"""
+            else:
+                # base_priority（素体優先）: 現状の動作（デフォルト）
+                fit_mode_label = "base_priority (素体優先)"
+                body_constraints = """  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from body_sheet reference"
+  body_preservation:
+    - "MUST use exact body shape from input body_sheet"
+    - "Do NOT alter body proportions or pose"
+    - "Body should be visible through/under clothing naturally"
+  outfit_extraction:
+    - "Extract ONLY the clothing/outfit from the outfit_reference image"
+    - "Do NOT copy the face or body from outfit_reference"
+    - "Adapt the outfit to fit the body_sheet character's body shape"
+    - "Maintain the style, color, and design of the reference outfit"""
+                anti_hallucination_rules = """  - "Do NOT use face or body from outfit_reference image"
+  - "Do NOT alter body proportions from body_sheet"
+  - "Do NOT add accessories not visible in outfit_reference"
+  - "Do NOT change hair style or color from body_sheet"
+  - "Apply ONLY the outfit visible in outfit_reference image"""
 
             yaml_content = f"""# Step 3: Outfit Application from Reference Image (参考画像から衣装着用)
 # Purpose: Professional character design reference for commercial use
@@ -1229,9 +1318,7 @@ author: "{author}"
 input:
   body_sheet: "{os.path.basename(body_sheet_path) if body_sheet_path else 'REQUIRED'}"
   outfit_reference: "{os.path.basename(reference_image_path) if reference_image_path else 'REQUIRED'}"
-  preserve_body: true
-  preserve_face: true
-  preserve_details: "exact match required - do not alter face or body shape from body_sheet"
+  fit_mode: "{fit_mode_label}"
 
 # ====================================================
 # Outfit from Reference Image
@@ -1239,6 +1326,7 @@ input:
 outfit:
   source: "reference_image"
   instruction: "Extract and apply the outfit/clothing from the outfit_reference image to the character in body_sheet"
+  fit_mode: "{fit_mode}"
 {f'  description: "{reference_desc}"' if reference_desc else ''}
 {f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
 
@@ -1265,33 +1353,22 @@ style:
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '16:9')}"
 
 # ====================================================
-# Constraints (Critical)
+# Constraints (Critical) - Fit Mode: {fit_mode_label}
 # ====================================================
 constraints:
-  face_preservation:
-    - "MUST use exact face from input body_sheet"
-    - "Do NOT alter facial features, expression, or proportions"
-    - "Maintain exact hair style and color from body_sheet reference"
-  body_preservation:
-    - "MUST use exact body shape from input body_sheet"
-    - "Do NOT alter body proportions or pose"
-    - "Body should be visible through/under clothing naturally"
-  outfit_extraction:
-    - "Extract ONLY the clothing/outfit from the outfit_reference image"
-    - "Do NOT copy the face or body from outfit_reference"
-    - "Adapt the outfit to fit the body_sheet character's body shape"
-    - "Maintain the style, color, and design of the reference outfit"
+  layout:
+    - "STRICT horizontal arrangement: LEFT=front view, CENTER=left side view, RIGHT=back view"
+    - "Side view MUST show LEFT side of body (character facing left)"
+    - "POSITION ORDER IS CRITICAL: Front on LEFT, Side in CENTER, Back on RIGHT"
+{body_constraints}
   consistency:
     - "All three views must show the same character in same outfit"
     - "Maintain consistent proportions across views"
     - "Use clean linework suitable for reference"
 
 anti_hallucination:
-  - "Do NOT use face or body from outfit_reference image"
-  - "Do NOT alter body proportions from body_sheet"
-  - "Do NOT add accessories not visible in outfit_reference"
-  - "Do NOT change hair style or color from body_sheet"
-  - "Apply ONLY the outfit visible in outfit_reference image"
+{anti_hallucination_rules}
+  - "Do NOT change the view order - ALWAYS front/side/back from left to right"
 """
         else:
             # プリセットモードの場合（従来のロジック）
@@ -1361,6 +1438,10 @@ style:
 # Constraints (Critical)
 # ====================================================
 constraints:
+  layout:
+    - "STRICT horizontal arrangement: LEFT=front view, CENTER=left side view, RIGHT=back view"
+    - "Side view MUST show LEFT side of body (character facing left)"
+    - "POSITION ORDER IS CRITICAL: Front on LEFT, Side in CENTER, Back on RIGHT"
   face_preservation:
     - "MUST use exact face from input body_sheet"
     - "Do NOT alter facial features, expression, or proportions"
@@ -1384,6 +1465,7 @@ anti_hallucination:
   - "Do NOT add accessories not specified in outfit"
   - "Do NOT change hair style or color"
   - "Apply ONLY the specified outfit"
+  - "Do NOT change the view order - ALWAYS front/side/back from left to right"
 """
 
         if include_title_in_image:
@@ -1948,6 +2030,188 @@ title_overlay:
   enabled: true
   text: "{title}"
   position: "top-center"
+"""
+        return yaml_content
+
+    def _generate_style_transform_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
+        """スタイル変換用YAML生成（ちびキャラ化・ドットキャラ化）"""
+        settings = self.current_settings
+        from ui.style_transform_window import CHIBI_STYLES, PIXEL_STYLES, SPRITE_SIZES
+
+        source_image_path = settings.get('source_image_path', '')
+        transform_type = settings.get('transform_type', 'ちびキャラ化')
+        transform_type_en = settings.get('transform_type_en', 'chibi')
+        additional_desc = convert_age_expressions(settings.get('additional_description', ''))
+
+        if transform_type == "ちびキャラ化":
+            chibi_settings = settings.get('chibi_settings', {})
+            style_name = chibi_settings.get('style', 'スタンダード（2頭身）')
+            style_info = chibi_settings.get('style_info', CHIBI_STYLES.get(style_name, {}))
+            preserve_outfit = chibi_settings.get('preserve_outfit', True)
+            preserve_pose = chibi_settings.get('preserve_pose', True)
+            preserve_effect = chibi_settings.get('preserve_effect', True)
+
+            # 保持する要素のリスト作成
+            preserve_list = []
+            if preserve_outfit:
+                preserve_list.append("outfit and clothing")
+            if preserve_pose:
+                preserve_list.append("pose and action")
+            if preserve_effect:
+                preserve_list.append("effects and aura (if present)")
+            preserve_str = ", ".join(preserve_list) if preserve_list else "basic appearance"
+
+            yaml_content = f"""# Style Transform: Chibi Conversion (スタイル変換: ちびキャラ化)
+# Transform realistic/normal character to chibi (super-deformed) style
+# The source image can be from any stage (base/outfit/pose/effect)
+type: style_transform_chibi
+title: "{title or 'Chibi Character'}"
+author: "{author}"
+
+# ====================================================
+# Input Image (Source Character)
+# ====================================================
+input:
+  source_image: "{os.path.basename(source_image_path) if source_image_path else 'REQUIRED'}"
+  source_stage: "any (base body / with outfit / with pose / with effects)"
+
+# ====================================================
+# Transform Settings
+# ====================================================
+transform:
+  type: "chibi"
+  style: "{style_name}"
+  style_prompt: "{style_info.get('prompt', '')}"
+  head_ratio: "{style_info.get('head_ratio', '2:1')}"
+
+# ====================================================
+# Preservation Settings
+# ====================================================
+preserve:
+  elements: "{preserve_str}"
+  face_features: "Maintain character's face identity (eyes, hair color, expression)"
+  outfit_details: {"true" if preserve_outfit else "false"}
+  pose_action: {"true" if preserve_pose else "false"}
+  effects: {"true" if preserve_effect else "false"}
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Output Settings
+# ====================================================
+output:
+  style: "chibi / super-deformed"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+  background: "transparent or simple"
+  quality: "clean linework, cute proportions"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  chibi_rules:
+    - "Transform to chibi style with {style_info.get('head_ratio', '2:1')} head-to-body ratio"
+    - "Large head, small body, simplified features"
+    - "Maintain character identity (face, hair, colors)"
+    - "Keep the cuteness and appeal of chibi style"
+  preservation_rules:
+    - "Preserve: {preserve_str}"
+    - "Maintain the same outfit design (simplified for chibi proportions)"
+    - "Keep the same pose action (adapted for chibi body)"
+  style_consistency:
+    - "Use consistent chibi proportions throughout"
+    - "Clean, cute linework suitable for chibi style"
+
+anti_hallucination:
+  - "Do NOT change character's identity (face, hair color)"
+  - "Do NOT add new accessories not in source"
+  - "Do NOT change outfit design significantly"
+  - "MAINTAIN chibi proportions consistently"
+"""
+        else:
+            # ドットキャラ化
+            pixel_settings = settings.get('pixel_settings', {})
+            style_name = pixel_settings.get('style', '16bit風（スーファミ）')
+            style_info = pixel_settings.get('style_info', PIXEL_STYLES.get(style_name, {}))
+            sprite_size = pixel_settings.get('sprite_size', '64x64')
+            sprite_size_prompt = pixel_settings.get('sprite_size_prompt', SPRITE_SIZES.get(sprite_size, ''))
+            preserve_colors = pixel_settings.get('preserve_colors', True)
+            transparent_bg = pixel_settings.get('transparent_bg', True)
+
+            yaml_content = f"""# Style Transform: Pixel Art Conversion (スタイル変換: ドットキャラ化)
+# Transform character to pixel art / sprite style
+# The source image can be from any stage (base/outfit/pose/effect)
+type: style_transform_pixel
+title: "{title or 'Pixel Character'}"
+author: "{author}"
+
+# ====================================================
+# Input Image (Source Character)
+# ====================================================
+input:
+  source_image: "{os.path.basename(source_image_path) if source_image_path else 'REQUIRED'}"
+  source_stage: "any (base body / with outfit / with pose / with effects)"
+
+# ====================================================
+# Transform Settings
+# ====================================================
+transform:
+  type: "pixel_art"
+  style: "{style_name}"
+  style_prompt: "{style_info.get('prompt', '')}"
+  resolution: "{style_info.get('resolution', 'medium')}"
+  color_depth: "{style_info.get('colors', '256')}"
+
+# ====================================================
+# Sprite Settings
+# ====================================================
+sprite:
+  size: "{sprite_size}"
+  size_prompt: "{sprite_size_prompt}"
+  preserve_colors: {"true" if preserve_colors else "false"}
+  transparent_background: {"true" if transparent_bg else "false"}
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Output Settings
+# ====================================================
+output:
+  style: "pixel art sprite"
+  aspect_ratio: "1:1"
+  background: "{'transparent' if transparent_bg else 'simple solid color'}"
+  quality: "clean pixels, game sprite aesthetic"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  pixel_art_rules:
+    - "Convert to {style_name} pixel art style"
+    - "Use {sprite_size} sprite size"
+    - "Clean, sharp pixels with no anti-aliasing blur"
+    - "Limited color palette appropriate for {style_name}"
+  preservation_rules:
+    - "Maintain character identity (recognizable silhouette)"
+    - "Keep the same outfit and pose from source"
+    - "{'Reference original colors from source image' if preserve_colors else 'Use appropriate pixel art palette'}"
+  style_consistency:
+    - "Consistent pixel size throughout the sprite"
+    - "Game sprite aesthetic, suitable for game use"
+    - "{'Transparent background for easy compositing' if transparent_bg else 'Simple background'}"
+
+anti_hallucination:
+  - "Do NOT add pixel art artifacts or noise"
+  - "Do NOT blur or anti-alias the pixels"
+  - "MAINTAIN consistent pixel grid"
+  - "Do NOT change character's recognizable features"
+"""
+
+        # タイトルオーバーレイ
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "bottom-center"
 """
         return yaml_content
 
