@@ -902,7 +902,7 @@ class MangaGeneratorApp(ctk.CTk):
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             # === ポーズ生成フェーズ ===
-            elif output_type == "Step4: ポーズ付与（正面）":
+            elif output_type == "Step4: ポーズ三面図":
                 yaml_content = self._generate_pose_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
