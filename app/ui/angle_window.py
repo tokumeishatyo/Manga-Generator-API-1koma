@@ -19,38 +19,38 @@ from ui.base_settings_window import BaseSettingsWindow
 
 
 # 角度設定
-# NOTE: プロンプトはキャラクターの回転方向を明確に指示
+# NOTE: "rotate"は画像回転と誤解されるため、"turn"や"facing"を使用
 VIEW_ANGLES = {
     "正面": {
-        "prompt": "Front view, character facing directly toward camera, no rotation",
+        "prompt": "Front view, character standing upright facing the camera directly",
         "description": "正面から見た状態"
     },
     "←左向き": {
-        "prompt": "Character rotated 90 degrees to their LEFT, showing LEFT PROFILE (left side of face visible), character's nose pointing to the LEFT edge of the image",
+        "prompt": "Side profile view, character standing upright turned to face LEFT, showing the LEFT side of face (left ear visible, right ear hidden), nose pointing toward LEFT side of frame",
         "description": "左を向いた状態（横顔）"
     },
     "→右向き": {
-        "prompt": "Character rotated 90 degrees to their RIGHT, showing RIGHT PROFILE (right side of face visible), character's nose pointing to the RIGHT edge of the image",
+        "prompt": "Side profile view, character standing upright turned to face RIGHT, showing the RIGHT side of face (right ear visible, left ear hidden), nose pointing toward RIGHT side of frame",
         "description": "右を向いた状態（横顔）"
     },
     "↖左斜め前": {
-        "prompt": "Character rotated 45 degrees to their LEFT, 3/4 view showing more of left side, face angled toward left side of image",
+        "prompt": "Three-quarter view, character standing upright turned slightly LEFT (about 45 degrees), showing more of left cheek, looking toward upper-left of frame",
         "description": "左斜め45度から見た状態"
     },
     "↗右斜め前": {
-        "prompt": "Character rotated 45 degrees to their RIGHT, 3/4 view showing more of right side, face angled toward right side of image",
+        "prompt": "Three-quarter view, character standing upright turned slightly RIGHT (about 45 degrees), showing more of right cheek, looking toward upper-right of frame",
         "description": "右斜め45度から見た状態"
     },
     "背面": {
-        "prompt": "Character rotated 180 degrees, back of head and body visible, showing rear view, character facing away from camera",
+        "prompt": "Back view, character standing upright facing AWAY from camera, showing back of head and body, rear view",
         "description": "後ろから見た状態"
     },
     "↑上から見下ろす": {
-        "prompt": "High angle shot, camera looking DOWN at character from above, top of head prominent, bird's eye perspective",
+        "prompt": "High angle shot, camera positioned ABOVE looking DOWN at standing character, top of head visible, bird's eye perspective",
         "description": "上から見下ろした状態（俯瞰）"
     },
     "↓下から見上げる": {
-        "prompt": "Low angle shot, camera looking UP at character from below, chin and underside visible, dramatic upward perspective, hero shot",
+        "prompt": "Low angle shot, camera positioned BELOW looking UP at standing character, chin prominent, dramatic upward hero shot perspective",
         "description": "下から見上げた状態（煽り）"
     }
 }
