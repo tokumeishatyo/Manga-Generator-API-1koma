@@ -1705,14 +1705,14 @@ title_overlay:
         reference_section = ""
         if angle != "正面" and outfit_sheet_path:
             reference_section = f"""
-# Reference Images for angle reconstruction
+# Reference Guidance (三面図による補完)
 reference_guidance:
   outfit_sheet: "{os.path.basename(outfit_sheet_path)}"
-  usage: "Use the three-view sheet to accurately reconstruct side/back views"
+  usage: "Use standard three-view to reconstruct unseen angles."
   constraints:
-    - "Side view clothing details should match the side view in outfit_sheet"
-    - "Back view should match the back view in outfit_sheet"
-    - "Maintain consistent character design across all angles"
+    - "Back design MUST match the back view of the sheet."
+    - "Side details MUST match the side view of the sheet."
+    - "Do NOT invent details not present in the reference."
 """
 
         yaml_content = f"""# Step 5: Angle & Zoom Change (角度・ズーム変更)
@@ -1728,7 +1728,7 @@ author: "{author}"
 input:
   front_pose_image: "{os.path.basename(front_pose_path) if front_pose_path else 'REQUIRED'}"
   outfit_three_view_sheet: "{os.path.basename(outfit_sheet_path) if outfit_sheet_path else ''}"
-  purpose: "Reconstruct character from front pose to different angle using three-view as reference"
+  purpose: "Change camera angle while STRICTLY freezing the character's pose."
 {reference_section}
 # ====================================================
 # Camera Settings
@@ -1756,27 +1756,27 @@ style:
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
 
 # ====================================================
-# Constraints (Critical)
+# CRITICAL CONSTRAINTS (ポーズ維持の核心設定)
 # ====================================================
 constraints:
   character_preservation:
-    - "MUST preserve exact character identity from front_pose_image"
-    - "Maintain face, hair, clothing design exactly as shown"
-    - "Keep pose (arm positions, leg positions) consistent with front pose"
+    # ポーズを絶対に維持するための超重要指示
+    - "CRITICAL: The character is FROZEN in the specific pose from 'front_pose_image'. Do NOT change the pose."
+    - "Keep exact positions of bent arms, hands, legs, and body twist relative to the character's own axis."
+    - "The ONLY thing changing is the camera's viewpoint around the static subject."
   angle_reconstruction:
-    - "Use outfit_three_view_sheet to reconstruct unseen parts"
-    - "Side/back clothing details must match the three-view reference"
-    - "Do NOT invent or hallucinate details not shown in references"
+    # 三面図による補完指示
+    - "Seamlessly reconstruct unseen parts (back, sides, top) referring STRICTLY to 'outfit_three_view_sheet'."
+    - "Ensure consistent lighting and shadows corresponding to the new camera angle."
   camera:
     - "Apply camera angle: {angle_prompt}"
     - "Apply zoom level: {zoom_prompt}"
 
 anti_hallucination:
-  - "Do NOT change character's face or expression"
-  - "Do NOT modify clothing design or colors"
-  - "Do NOT alter the pose from front_pose_image"
-  - "Use ONLY information from the two input images"
-  - "For unseen parts, refer ONLY to outfit_three_view_sheet"
+  - "Do NOT straighten limbs."
+  - "Do NOT alter facial expression."
+  - "Do NOT invent details absent in the reference sheet."
+  - "Use ONLY information from the two input images."
 """
 
         # タイトルオーバーレイ（有効な場合のみ出力）

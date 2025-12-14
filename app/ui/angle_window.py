@@ -19,38 +19,38 @@ from ui.base_settings_window import BaseSettingsWindow
 
 
 # 角度設定
-# NOTE: "Camera moves to..."形式でカメラ位置を明示（Google推奨形式）
+# NOTE: "FROZEN/static pose"を強調し、カメラだけが移動する形式（Google推奨形式）
 VIEW_ANGLES = {
     "正面": {
-        "prompt": "Camera is positioned directly in front of the character, capturing the character in the exact pose. Body and face are perfectly forward-facing.",
+        "prompt": "Camera is positioned directly in front of the character at eye level. The character's face is looking straight into the lens, maintaining the static pose.",
         "description": "正面から見た状態"
     },
     "←左向き": {
-        "prompt": "Camera moves to the character's LEFT side. The view is a profile from the left, showing the left side of face, arms, and legs.",
+        "prompt": "Camera moves to the character's direct LEFT side (90 degrees). A full profile view showing the left side of the face, body, and the specific configuration of the bent left arm and leg in the static pose.",
         "description": "左を向いた状態（横顔）"
     },
     "→右向き": {
-        "prompt": "Camera moves to the character's RIGHT side. The view is a profile from the right, showing the right side of face, arms, and legs.",
+        "prompt": "Camera moves to the character's direct RIGHT side (90 degrees). A full profile view showing the right side of the face, body, and the specific configuration of the bent right arm and leg in the static pose.",
         "description": "右を向いた状態（横顔）"
     },
     "↖左斜め前": {
-        "prompt": "Camera is positioned at a 45-degree angle to the LEFT and front of the character, capturing the pose with a slight turn, showing three-quarter view from left.",
+        "prompt": "Camera moves to a 45-degree angle to the character's front-left. A standard three-quarter view showing both the front details and the left side of the static pose.",
         "description": "左斜め45度から見た状態"
     },
     "↗右斜め前": {
-        "prompt": "Camera is positioned at a 45-degree angle to the RIGHT and front of the character, capturing the pose with a slight turn, showing three-quarter view from right.",
+        "prompt": "Camera moves to a 45-degree angle to the character's front-right. A standard three-quarter view showing both the front details and the right side of the static pose.",
         "description": "右斜め45度から見た状態"
     },
     "背面": {
-        "prompt": "Camera moves completely behind the character. The view is from the back, showing the back of head and body, rear view.",
+        "prompt": "Camera moves to directly behind the static character. View shows the back of the head, shoulders, and the full back. The pose is viewed from the rear.",
         "description": "後ろから見た状態"
     },
     "↑上から見下ろす": {
-        "prompt": "Camera is positioned directly above the character, looking down. The view shows the top of head, shoulders, and full body from an overhead perspective.",
+        "prompt": "Camera is positioned directly ABOVE the character, looking straight down. Shows the top of the head, shoulders, and the foreshortened perspective of the body and limbs in the fixed pose.",
         "description": "上から見下ろした状態（俯瞰）"
     },
     "↓下から見上げる": {
-        "prompt": "Camera moves forward and down, looking up at the character from below. This low angle shot emphasizes legs and body, looking up at the face.",
+        "prompt": "Camera is lowered in front of the character, looking UP at a 45-degree angle. A low-angle shot emphasizing the legs and torso, looking up towards the face in the static pose.",
         "description": "下から見上げた状態（煽り）"
     }
 }
