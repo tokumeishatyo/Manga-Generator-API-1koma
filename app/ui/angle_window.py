@@ -84,25 +84,25 @@ class AngleWindow(BaseSettingsWindow):
         parent,
         callback: Optional[Callable] = None,
         initial_data: Optional[dict] = None,
-        front_pose_path: Optional[str] = None,   # Step4の出力画像パス
-        outfit_sheet_path: Optional[str] = None  # Step3の出力画像パス
+        pose_sheet_path: Optional[str] = None,   # Step4のポーズ三面図パス
+        outfit_sheet_path: Optional[str] = None  # Step3の衣装三面図パス（任意）
     ):
         """
         Args:
             parent: 親ウィンドウ
             callback: 設定完了時のコールバック
             initial_data: 初期データ（編集時）
-            front_pose_path: Step4で生成した正面ポーズ画像のパス
-            outfit_sheet_path: Step3で生成した衣装三面図のパス
+            pose_sheet_path: Step4で生成したポーズ三面図のパス
+            outfit_sheet_path: Step3で生成した衣装三面図のパス（任意・補助参照用）
         """
         self.initial_data = initial_data or {}
-        self.front_pose_path = front_pose_path
+        self.pose_sheet_path = pose_sheet_path
         self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
             title="Step5: 角度・ズーム変更",
             width=700,
-            height=650,
+            height=600,
             callback=callback
         )
 
@@ -118,8 +118,8 @@ class AngleWindow(BaseSettingsWindow):
             font=("Arial", 16, "bold")
         ).pack(anchor="w", padx=10, pady=(10, 5))
 
-        desc_text = """正面ポーズ画像を基に、角度とズームを変更します。
-衣装三面図を参照として使用することで、横・後ろの情報を補完します。"""
+        desc_text = """ポーズ三面図を基に、任意の角度とズームで1枚の画像を生成します。
+三面図の正面・横・背面を参照するため、角度変換の精度が向上します。"""
 
         ctk.CTkLabel(
             desc_frame,
@@ -139,57 +139,35 @@ class AngleWindow(BaseSettingsWindow):
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=3, padx=10, pady=(10, 5), sticky="w")
 
-        # 正面ポーズ画像
-        ctk.CTkLabel(input_frame, text="正面ポーズ画像:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        # ポーズ三面図（メイン入力）
+        ctk.CTkLabel(input_frame, text="ポーズ三面図:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
         pose_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
         pose_frame.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         pose_frame.grid_columnconfigure(0, weight=1)
 
-        self.front_pose_entry = ctk.CTkEntry(
+        self.pose_sheet_entry = ctk.CTkEntry(
             pose_frame,
-            placeholder_text="Step4で生成した正面ポーズ画像"
+            placeholder_text="Step4で生成したポーズ三面図"
         )
-        self.front_pose_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+        self.pose_sheet_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
 
-        if self.front_pose_path:
-            self.front_pose_entry.insert(0, self.front_pose_path)
+        if self.pose_sheet_path:
+            self.pose_sheet_entry.insert(0, self.pose_sheet_path)
 
         ctk.CTkButton(
             pose_frame,
             text="参照",
             width=60,
-            command=self._browse_front_pose
+            command=self._browse_pose_sheet
         ).grid(row=0, column=1)
 
-        # 衣装三面図
-        ctk.CTkLabel(input_frame, text="衣装三面図:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        outfit_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
-        outfit_frame.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-        outfit_frame.grid_columnconfigure(0, weight=1)
-
-        self.outfit_sheet_entry = ctk.CTkEntry(
-            outfit_frame,
-            placeholder_text="Step3で生成した衣装三面図（横・後ろの参照用）"
-        )
-        self.outfit_sheet_entry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
-
-        if self.outfit_sheet_path:
-            self.outfit_sheet_entry.insert(0, self.outfit_sheet_path)
-
-        ctk.CTkButton(
-            outfit_frame,
-            text="参照",
-            width=60,
-            command=self._browse_outfit_sheet
-        ).grid(row=0, column=1)
-
-        # 三面図の説明
+        # ポーズ三面図の説明
         ctk.CTkLabel(
             input_frame,
-            text="※ 三面図は横・後ろの情報補完に使用。正面以外の角度で精度が向上します。",
+            text="※ 三面図の正面・横・背面を参照して、指定角度の画像を生成します。",
             font=("Arial", 10),
             text_color="gray"
-        ).grid(row=3, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w")
+        ).grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w")
 
         # === 角度設定 ===
         angle_frame = ctk.CTkFrame(self.content_frame)
@@ -284,23 +262,14 @@ class AngleWindow(BaseSettingsWindow):
         self.description_textbox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.description_textbox.insert("1.0", "（任意）追加の指示")
 
-    def _browse_front_pose(self):
-        """正面ポーズ画像参照ダイアログ"""
+    def _browse_pose_sheet(self):
+        """ポーズ三面図参照ダイアログ"""
         filename = filedialog.askopenfilename(
             filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.webp")]
         )
         if filename:
-            self.front_pose_entry.delete(0, tk.END)
-            self.front_pose_entry.insert(0, filename)
-
-    def _browse_outfit_sheet(self):
-        """衣装三面図参照ダイアログ"""
-        filename = filedialog.askopenfilename(
-            filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.webp")]
-        )
-        if filename:
-            self.outfit_sheet_entry.delete(0, tk.END)
-            self.outfit_sheet_entry.insert(0, filename)
+            self.pose_sheet_entry.delete(0, tk.END)
+            self.pose_sheet_entry.insert(0, filename)
 
     def collect_data(self) -> dict:
         """UIから設定データを収集"""
@@ -313,8 +282,7 @@ class AngleWindow(BaseSettingsWindow):
 
         return {
             'step_type': 'step5_angle',
-            'front_pose_path': self.front_pose_entry.get().strip(),
-            'outfit_sheet_path': self.outfit_sheet_entry.get().strip(),
+            'pose_sheet_path': self.pose_sheet_entry.get().strip(),
             'angle': angle,
             'angle_info': VIEW_ANGLES.get(angle, {}),
             'zoom': zoom,
@@ -325,14 +293,8 @@ class AngleWindow(BaseSettingsWindow):
 
     def validate(self) -> tuple[bool, str]:
         """入力検証"""
-        front_pose = self.front_pose_entry.get().strip()
-        if not front_pose:
-            return False, "正面ポーズ画像を指定してください。\n（Step4の出力画像を選択）"
-
-        # 正面以外の角度で三面図がない場合は警告
-        angle = self.angle_var.get()
-        outfit_sheet = self.outfit_sheet_entry.get().strip()
-        if angle != "正面" and not outfit_sheet:
-            return False, f"角度「{angle}」を選択していますが、衣装三面図が指定されていません。\n横・後ろの情報補完のため、三面図の指定を推奨します。"
+        pose_sheet = self.pose_sheet_entry.get().strip()
+        if not pose_sheet:
+            return False, "ポーズ三面図を指定してください。\n（Step4の出力画像を選択）"
 
         return True, ""

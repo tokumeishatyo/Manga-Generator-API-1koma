@@ -77,7 +77,7 @@ OUTPUT_TYPES = {
     "Step2: 素体三面図": "step2_body",
     "Step3: 衣装着用": "step3_outfit",
     # === ポーズ生成フェーズ ===
-    "Step4: ポーズ付与（正面）": "step4_pose",
+    "Step4: ポーズ三面図": "step4_pose",
     "Step5: 角度・ズーム変更": "step5_angle",
     # === エフェクト生成フェーズ ===
     "Step6a: オーラ追加": "step6a_aura",
@@ -114,7 +114,7 @@ STEP_LABELS = {
     "step1_face": "Step1: 顔三面図",
     "step2_body": "Step2: 素体三面図",
     "step3_outfit": "Step3: 衣装着用",
-    "step4_pose": "Step4: ポーズ付与（正面）",
+    "step4_pose": "Step4: ポーズ三面図",
     "step5_angle": "Step5: 角度・ズーム変更",
     "step6a_aura": "Step6a: オーラ追加",
     "step6b_attack": "Step6b: 攻撃エフェクト",

@@ -138,7 +138,7 @@ LIMB_FOOT = {
 
 
 class PoseWindow(BaseSettingsWindow):
-    """ポーズ付きキャラ設定ウィンドウ（Step4）- 正面限定"""
+    """ポーズ三面図設定ウィンドウ（Step4）- 正面/横/背面の三面図を生成"""
 
     def __init__(
         self,
@@ -158,9 +158,9 @@ class PoseWindow(BaseSettingsWindow):
         self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
-            title="Step4: ポーズ付きキャラ（正面）",
+            title="Step4: ポーズ三面図",
             width=750,
-            height=750,  # カメラワーク削除分、高さを縮小
+            height=750,
             callback=callback
         )
 
@@ -245,14 +245,14 @@ class PoseWindow(BaseSettingsWindow):
 
         ctk.CTkLabel(
             orient_frame,
-            text="向き・表情（正面固定）",
+            text="向き・表情",
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=(10, 5), sticky="w")
 
-        # 正面固定の説明
+        # 三面図の説明
         ctk.CTkLabel(
             orient_frame,
-            text="※ このステップでは正面のみ生成します。角度変更はStep5で行います。",
+            text="※ 正面・横・背面の三面図を生成します。Step5で任意の角度に変換できます。",
             font=("Arial", 11),
             text_color="gray"
         ).grid(row=1, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
@@ -409,8 +409,8 @@ class PoseWindow(BaseSettingsWindow):
         self.wind_menu.set("前からの風")
         self.wind_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
 
-        # カメラワークはStep5（角度変更）に移動
-        # 正面限定のため、camera_angle="正面", zoom="全身" 固定
+        # カメラワーク（任意角度）はStep5（角度変更）で設定
+        # このステップでは三面図（正面/横/背面）を生成
 
     def _browse_image(self):
         """画像参照ダイアログ"""
@@ -453,7 +453,7 @@ class PoseWindow(BaseSettingsWindow):
             'preset': self.preset_menu.get(),
             'image_path': self.image_entry.get().strip(),
             'identity_preservation': self.preservation_slider.get(),
-            'facing': '正面',  # 正面固定
+            'output_format': 'three_view',  # 三面図形式
             'eye_line': self.eye_line_menu.get(),
             'expression': self.expression_menu.get(),
             'expression_detail': self.expression_detail_entry.get().strip(),
@@ -468,8 +468,6 @@ class PoseWindow(BaseSettingsWindow):
             'include_effects': self.include_effects_var.get(),
             'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),
-            'camera_angle': '正面',  # 正面固定（角度変更はStep5で）
-            'zoom': '全身',  # 全身固定（ズーム変更はStep5で）
             'additional_prompt': self.current_additional_prompt
         }
 
