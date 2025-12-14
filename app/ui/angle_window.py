@@ -19,38 +19,38 @@ from ui.base_settings_window import BaseSettingsWindow
 
 
 # 角度設定
-# NOTE: "rotate"は画像回転と誤解されるため、"turn"や"facing"を使用
+# NOTE: "Camera moves to..."形式でカメラ位置を明示（Google推奨形式）
 VIEW_ANGLES = {
     "正面": {
-        "prompt": "Front view, character standing upright facing the camera directly",
+        "prompt": "Camera is positioned directly in front of the character, capturing the character in the exact pose. Body and face are perfectly forward-facing.",
         "description": "正面から見た状態"
     },
     "←左向き": {
-        "prompt": "Side profile view, character standing upright turned to face LEFT, showing the LEFT side of face (left ear visible, right ear hidden), nose pointing toward LEFT side of frame",
+        "prompt": "Camera moves to the character's LEFT side. The view is a profile from the left, showing the left side of face, arms, and legs.",
         "description": "左を向いた状態（横顔）"
     },
     "→右向き": {
-        "prompt": "Side profile view, character standing upright turned to face RIGHT, showing the RIGHT side of face (right ear visible, left ear hidden), nose pointing toward RIGHT side of frame",
+        "prompt": "Camera moves to the character's RIGHT side. The view is a profile from the right, showing the right side of face, arms, and legs.",
         "description": "右を向いた状態（横顔）"
     },
     "↖左斜め前": {
-        "prompt": "Three-quarter view, character standing upright turned slightly LEFT (about 45 degrees), showing more of left cheek, looking toward upper-left of frame",
+        "prompt": "Camera is positioned at a 45-degree angle to the LEFT and front of the character, capturing the pose with a slight turn, showing three-quarter view from left.",
         "description": "左斜め45度から見た状態"
     },
     "↗右斜め前": {
-        "prompt": "Three-quarter view, character standing upright turned slightly RIGHT (about 45 degrees), showing more of right cheek, looking toward upper-right of frame",
+        "prompt": "Camera is positioned at a 45-degree angle to the RIGHT and front of the character, capturing the pose with a slight turn, showing three-quarter view from right.",
         "description": "右斜め45度から見た状態"
     },
     "背面": {
-        "prompt": "Back view, character standing upright facing AWAY from camera, showing back of head and body, rear view",
+        "prompt": "Camera moves completely behind the character. The view is from the back, showing the back of head and body, rear view.",
         "description": "後ろから見た状態"
     },
     "↑上から見下ろす": {
-        "prompt": "High angle shot, camera positioned ABOVE looking DOWN at standing character, top of head visible, bird's eye perspective",
+        "prompt": "Camera is positioned directly above the character, looking down. The view shows the top of head, shoulders, and full body from an overhead perspective.",
         "description": "上から見下ろした状態（俯瞰）"
     },
     "↓下から見上げる": {
-        "prompt": "Low angle shot, camera positioned BELOW looking UP at standing character, chin prominent, dramatic upward hero shot perspective",
+        "prompt": "Camera moves forward and down, looking up at the character from below. This low angle shot emphasizes legs and body, looking up at the face.",
         "description": "下から見上げた状態（煽り）"
     }
 }
