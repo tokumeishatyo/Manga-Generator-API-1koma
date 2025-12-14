@@ -1232,12 +1232,20 @@ title_overlay:
             reference_image_path = settings.get('reference_image_path', '')
             reference_desc = convert_age_expressions(settings.get('reference_description', ''))
             fit_mode = settings.get('fit_mode', 'base_priority')  # base_priority / outfit_priority / hybrid
+            include_headwear = settings.get('include_headwear', True)  # 頭部装飾を含めるか
 
             # フィットモードに応じた制約を生成
             if fit_mode == "outfit_priority":
                 # 衣装優先: 体型を参考画像に合わせる
                 fit_mode_label = "outfit_priority (衣装優先)"
-                body_constraints = """  body_adaptation:
+                # 頭部装飾の制約
+                if include_headwear:
+                    headwear_constraint = '    - "Include headwear (hats, helmets, etc.) from outfit_reference if present"'
+                    headwear_anti_rule = '  - "Include headwear from outfit_reference - hats, helmets, caps should be applied"'
+                else:
+                    headwear_constraint = '    - "EXCLUDE headwear (hats, helmets, caps, etc.) from outfit_reference"'
+                    headwear_anti_rule = '  - "Do NOT include any headwear from outfit_reference - no hats, helmets, or head accessories"'
+                body_constraints = f"""  body_adaptation:
     - "Adapt body proportions to match the outfit_reference image"
     - "Maintain the silhouette and shape of the outfit from reference"
     - "Keep protectors, padding, and bulky elements at their original size"
@@ -1250,28 +1258,34 @@ title_overlay:
     - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
     - "Do NOT copy the pose from outfit_reference image"
     - "Extract ONLY the clothing design, IGNORE the pose in reference"
+  headwear:
+{headwear_constraint}
   outfit_extraction:
     - "Extract ONLY the clothing/outfit from the outfit_reference image"
     - "KEEP the body proportions that fit the outfit from reference"
     - "Maintain the style, color, design, and SHAPE of the reference outfit"
-    - "Do NOT shrink or resize outfit to fit body_sheet body"""
-                anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image"
+    - "Do NOT shrink or resize outfit to fit body_sheet body\""""
+                anti_hallucination_rules = f"""  - "Do NOT use face from outfit_reference image"
   - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT shrink or compress outfit elements (like protectors)"
   - "ALLOW body proportions to change to match outfit reference"
   - "Do NOT add accessories not visible in outfit_reference"
   - "Do NOT change hair style or color from body_sheet"
-  - "Apply the outfit with its ORIGINAL proportions from reference image"""
+  - "Apply the outfit with its ORIGINAL proportions from reference image"
+{headwear_anti_rule}"""
             elif fit_mode == "hybrid":
-                # ハイブリッド: 顔は素体、体型は衣装に合わせる
-                fit_mode_label = "hybrid (ハイブリッド: 顔は素体、体型は衣装)"
+                # ハイブリッド: 顔・髪・頭部装飾すべて素体から、体型は衣装に合わせる
+                fit_mode_label = "hybrid (ハイブリッド: 頭部全体は素体、体型は衣装)"
                 body_constraints = """  hybrid_mode:
-    - "Face ONLY from body_sheet, body proportions from outfit_reference"
-    - "This creates a hybrid: original face on a body that fits the outfit"
-  face_preservation:
-    - "MUST use exact face from input body_sheet"
+    - "HEAD (face, hair, headwear) ONLY from body_sheet"
+    - "Body proportions from outfit_reference"
+    - "This creates a hybrid: original head on a body that fits the outfit"
+  head_preservation:
+    - "MUST use ENTIRE HEAD from input body_sheet (face + hair + any accessories)"
     - "Do NOT alter facial features, expression, or proportions"
     - "Maintain exact hair style and color from body_sheet reference"
+    - "Do NOT apply any headwear (hats, helmets, etc.) from outfit_reference"
+    - "Head should look exactly like body_sheet - NO changes from reference"
   pose_preservation:
     - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
     - "Do NOT copy the pose from outfit_reference image"
@@ -1281,20 +1295,30 @@ title_overlay:
     - "Keep protectors, padding, and bulky elements at their original size"
     - "Body shape should fit the outfit naturally"
   outfit_extraction:
-    - "Extract ONLY the clothing/outfit from the outfit_reference image"
+    - "Extract ONLY the clothing/outfit (body parts only) from the outfit_reference image"
+    - "EXCLUDE any headwear (hats, helmets, caps) from outfit_reference"
     - "KEEP the body proportions that fit the outfit from reference"
     - "Maintain the style, color, design, and SHAPE of the reference outfit"""
                 anti_hallucination_rules = """  - "Do NOT use face from outfit_reference image - ONLY use body_sheet face"
+  - "Do NOT use hair style from outfit_reference - ONLY use body_sheet hair"
+  - "Do NOT apply headwear (hats, helmets, caps) from outfit_reference - head must match body_sheet exactly"
   - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT shrink or compress outfit elements (like protectors)"
   - "ALLOW body proportions to change to match outfit reference"
   - "Do NOT add accessories not visible in outfit_reference"
-  - "Do NOT change hair style or color from body_sheet"
-  - "Apply the outfit with its ORIGINAL proportions from reference image"""
+  - "Apply the outfit with its ORIGINAL proportions from reference image"
+  - "HEAD must be IDENTICAL to body_sheet - no changes from reference allowed"""
             else:
                 # base_priority（素体優先）: 現状の動作（デフォルト）
                 fit_mode_label = "base_priority (素体優先)"
-                body_constraints = """  face_preservation:
+                # 頭部装飾の制約
+                if include_headwear:
+                    headwear_constraint = '    - "Include headwear (hats, helmets, etc.) from outfit_reference if present"'
+                    headwear_anti_rule = '  - "Include headwear from outfit_reference - hats, helmets, caps should be applied"'
+                else:
+                    headwear_constraint = '    - "EXCLUDE headwear (hats, helmets, caps, etc.) from outfit_reference"'
+                    headwear_anti_rule = '  - "Do NOT include any headwear from outfit_reference - no hats, helmets, or head accessories"'
+                body_constraints = f"""  face_preservation:
     - "MUST use exact face from input body_sheet"
     - "Do NOT alter facial features, expression, or proportions"
     - "Maintain exact hair style and color from body_sheet reference"
@@ -1306,17 +1330,20 @@ title_overlay:
     - "MUST use the POSE from body_sheet (attention pose / kiwotsuke)"
     - "Do NOT copy the pose from outfit_reference image"
     - "Extract ONLY the clothing design, IGNORE the pose in reference"
+  headwear:
+{headwear_constraint}
   outfit_extraction:
     - "Extract ONLY the clothing/outfit from the outfit_reference image"
     - "Do NOT copy the face or body from outfit_reference"
     - "Adapt the outfit to fit the body_sheet character's body shape"
-    - "Maintain the style, color, and design of the reference outfit"""
-                anti_hallucination_rules = """  - "Do NOT use face or body from outfit_reference image"
+    - "Maintain the style, color, and design of the reference outfit\""""
+                anti_hallucination_rules = f"""  - "Do NOT use face or body from outfit_reference image"
   - "Do NOT copy the POSE from outfit_reference - use body_sheet pose only"
   - "Do NOT alter body proportions from body_sheet"
   - "Do NOT add accessories not visible in outfit_reference"
   - "Do NOT change hair style or color from body_sheet"
-  - "Apply ONLY the outfit visible in outfit_reference image"""
+  - "Apply ONLY the outfit visible in outfit_reference image"
+{headwear_anti_rule}"""
 
             yaml_content = f"""# Step 3: Outfit Application from Reference Image (参考画像から衣装着用)
 # Purpose: Professional character design reference for commercial use

@@ -233,21 +233,24 @@ class OutfitWindow(BaseSettingsWindow):
             fit_mode_frame,
             text="素体優先",
             variable=self.fit_mode_var,
-            value="base_priority"
+            value="base_priority",
+            command=self._on_fit_mode_change
         ).pack(side="left", padx=(0, 15))
 
         ctk.CTkRadioButton(
             fit_mode_frame,
             text="衣装優先",
             variable=self.fit_mode_var,
-            value="outfit_priority"
+            value="outfit_priority",
+            command=self._on_fit_mode_change
         ).pack(side="left", padx=(0, 15))
 
         ctk.CTkRadioButton(
             fit_mode_frame,
             text="ハイブリッド",
             variable=self.fit_mode_var,
-            value="hybrid"
+            value="hybrid",
+            command=self._on_fit_mode_change
         ).pack(side="left")
 
         # フィットモード説明
@@ -259,13 +262,31 @@ class OutfitWindow(BaseSettingsWindow):
         )
         fit_mode_desc.grid(row=4, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
 
+        # === 頭部装飾オプション ===
+        self.include_headwear_var = tk.BooleanVar(value=True)
+        self.headwear_checkbox = ctk.CTkCheckBox(
+            self.reference_frame,
+            text="頭部装飾（帽子・ヘルメット等）を含める",
+            variable=self.include_headwear_var
+        )
+        self.headwear_checkbox.grid(row=5, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+
+        # 頭部装飾オプション説明
+        self.headwear_desc = ctk.CTkLabel(
+            self.reference_frame,
+            text="※ ハイブリッドモードでは頭部全体（髪型含む）が素体から取られるため、このオプションは無効です",
+            font=("Arial", 10),
+            text_color="gray"
+        )
+        self.headwear_desc.grid(row=6, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+
         # 注意書き
         ctk.CTkLabel(
             self.reference_frame,
             text="※ 参考画像の著作権はユーザー責任です",
             font=("Arial", 10),
             text_color="orange"
-        ).grid(row=5, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+        ).grid(row=7, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
 
         # 初期状態では参考画像フレームを無効化
         self._set_frame_state(self.reference_frame, "disabled")
@@ -373,6 +394,17 @@ class OutfitWindow(BaseSettingsWindow):
         self.shape_menu.configure(values=list(shapes.keys()))
         self.shape_menu.set("おまかせ")
 
+    def _on_fit_mode_change(self):
+        """フィットモード変更時の処理"""
+        fit_mode = self.fit_mode_var.get()
+        if fit_mode == "hybrid":
+            # ハイブリッドモードでは頭部全体が素体から取られるため、頭部装飾オプションは無効
+            self.headwear_checkbox.configure(state="disabled")
+            self.include_headwear_var.set(False)
+        else:
+            # 素体優先/衣装優先では頭部装飾オプションを有効化
+            self.headwear_checkbox.configure(state="normal")
+
     def collect_data(self) -> dict:
         """UIから設定データを収集"""
         desc = self.description_textbox.get("1.0", tk.END).strip()
@@ -405,6 +437,7 @@ class OutfitWindow(BaseSettingsWindow):
             data['reference_image_path'] = self.reference_image_entry.get().strip()
             data['reference_description'] = ref_desc
             data['fit_mode'] = self.fit_mode_var.get()  # base_priority / outfit_priority / hybrid
+            data['include_headwear'] = self.include_headwear_var.get()  # 頭部装飾を含めるか
 
         return data
 
