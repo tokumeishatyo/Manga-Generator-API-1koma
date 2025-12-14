@@ -67,20 +67,22 @@ DUOTONE_COLORS = {
 
 # 出力タイプ定義（完全ステップワークフロー）
 # Step 1-3: キャラクター生成フェーズ
-# Step 4: ポーズ生成フェーズ
-# Step 5: エフェクト生成フェーズ
-# Step 6-8: 最終合成フェーズ / 特化プリセット
+# Step 4: ポーズ生成（正面）
+# Step 5: 角度・ズーム変更
+# Step 6: エフェクト生成フェーズ
+# Step 7以降: 最終合成フェーズ / 特化プリセット
 OUTPUT_TYPES = {
     # === キャラクター生成フェーズ ===
     "Step1: 顔三面図": "step1_face",
     "Step2: 素体三面図": "step2_body",
     "Step3: 衣装着用": "step3_outfit",
     # === ポーズ生成フェーズ ===
-    "Step4: ポーズ付与": "step4_pose",
+    "Step4: ポーズ付与（正面）": "step4_pose",
+    "Step5: 角度・ズーム変更": "step5_angle",
     # === エフェクト生成フェーズ ===
-    "Step5a: オーラ追加": "step5a_aura",
-    "Step5b: 攻撃エフェクト": "step5b_attack",
-    "Step5c: 覚醒変形": "step5c_transform",
+    "Step6a: オーラ追加": "step6a_aura",
+    "Step6b: 攻撃エフェクト": "step6b_attack",
+    "Step6c: 覚醒変形": "step6c_transform",
     # === 最終合成・特化プリセット ===
     "合成: シンプル": "compose_simple",
     "合成: 力の解放": "compose_power",
@@ -101,9 +103,10 @@ STEP_ORDER = [
     "step2_body",
     "step3_outfit",
     "step4_pose",
-    "step5a_aura",
-    "step5b_attack",
-    "step5c_transform",
+    "step5_angle",
+    "step6a_aura",
+    "step6b_attack",
+    "step6c_transform",
 ]
 
 # ステップの表示名
@@ -111,10 +114,11 @@ STEP_LABELS = {
     "step1_face": "Step1: 顔三面図",
     "step2_body": "Step2: 素体三面図",
     "step3_outfit": "Step3: 衣装着用",
-    "step4_pose": "Step4: ポーズ付与",
-    "step5a_aura": "Step5a: オーラ追加",
-    "step5b_attack": "Step5b: 攻撃エフェクト",
-    "step5c_transform": "Step5c: 覚醒変形",
+    "step4_pose": "Step4: ポーズ付与（正面）",
+    "step5_angle": "Step5: 角度・ズーム変更",
+    "step6a_aura": "Step6a: オーラ追加",
+    "step6b_attack": "Step6b: 攻撃エフェクト",
+    "step6c_transform": "Step6c: 覚醒変形",
 }
 
 # 各ステップの必須入力（前ステップの出力）
@@ -123,9 +127,10 @@ STEP_REQUIREMENTS = {
     "step2_body": "step1_face",  # 顔三面図が必要
     "step3_outfit": "step2_body",  # 素体三面図が必要
     "step4_pose": "step3_outfit",  # 衣装着用三面図が必要
-    "step5a_aura": "step4_pose",  # ポーズ付きキャラが必要
-    "step5b_attack": "step4_pose",  # ポーズ付きキャラが必要（オーラなしでもOK）
-    "step5c_transform": "step4_pose",  # ポーズ付きキャラが必要
+    "step5_angle": "step4_pose",  # 正面ポーズ画像 + 衣装三面図が必要
+    "step6a_aura": "step5_angle",  # 角度変更後のキャラが必要（またはstep4から直接）
+    "step6b_attack": "step5_angle",  # 角度変更後のキャラが必要
+    "step6c_transform": "step5_angle",  # 角度変更後のキャラが必要
 }
 
 # 装飾テキストスタイル定義

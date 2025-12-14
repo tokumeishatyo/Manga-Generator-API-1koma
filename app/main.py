@@ -49,6 +49,7 @@ from ui.decorative_text_window import DecorativeTextWindow
 from ui.four_panel_window import FourPanelWindow
 from ui.manga_composer_window import MangaComposerWindow
 from ui.style_transform_window import StyleTransformWindow
+from ui.angle_window import AngleWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -744,14 +745,20 @@ class MangaGeneratorApp(ctk.CTk):
                 body_sheet_path=body_sheet_path
             )
         # === ポーズ生成フェーズ ===
-        elif output_type == "Step4: ポーズ付与":
+        elif output_type == "Step4: ポーズ付与（正面）":
             PoseWindow(
                 self,
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
+        elif output_type == "Step5: 角度・ズーム変更":
+            AngleWindow(
+                self,
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings
+            )
         # === エフェクト生成フェーズ ===
-        elif output_type in ["Step5a: オーラ追加", "Step5b: 攻撃エフェクト", "Step5c: 覚醒変形"]:
+        elif output_type in ["Step6a: オーラ追加", "Step6b: 攻撃エフェクト", "Step6c: 覚醒変形"]:
             EffectWindow(
                 self,
                 callback=self._on_settings_complete,
@@ -891,12 +898,16 @@ class MangaGeneratorApp(ctk.CTk):
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             # === ポーズ生成フェーズ ===
-            elif output_type == "Step4: ポーズ付与":
+            elif output_type == "Step4: ポーズ付与（正面）":
                 yaml_content = self._generate_pose_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
+            elif output_type == "Step5: 角度・ズーム変更":
+                yaml_content = self._generate_angle_yaml(
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
             # === エフェクト生成フェーズ ===
-            elif output_type in ["Step5a: オーラ追加", "Step5b: 攻撃エフェクト", "Step5c: 覚醒変形"]:
+            elif output_type in ["Step6a: オーラ追加", "Step6b: 攻撃エフェクト", "Step6c: 覚醒変形"]:
                 yaml_content = self._generate_effect_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
@@ -1661,6 +1672,111 @@ style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+"""
+
+        # タイトルオーバーレイ（有効な場合のみ出力）
+        if include_title_in_image:
+            yaml_content += f"""
+title_overlay:
+  enabled: true
+  text: "{title}"
+  position: "top-left"
+"""
+        return yaml_content
+
+    def _generate_angle_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
+        """角度・ズーム変更用YAML生成（Step5）"""
+        settings = self.current_settings
+        from ui.angle_window import VIEW_ANGLES, ZOOM_LEVELS
+
+        front_pose_path = settings.get('front_pose_path', '')
+        outfit_sheet_path = settings.get('outfit_sheet_path', '')
+        angle = settings.get('angle', '正面')
+        angle_info = settings.get('angle_info', {})
+        zoom = settings.get('zoom', '全身')
+        zoom_info = settings.get('zoom_info', {})
+        transparent_bg = settings.get('transparent_bg', False)
+        additional_desc = convert_age_expressions(settings.get('additional_description', ''))
+
+        angle_prompt = angle_info.get('prompt', 'Front view')
+        zoom_prompt = zoom_info.get('prompt', 'Full body shot')
+
+        # 三面図参照セクション（正面以外の場合のみ強調）
+        reference_section = ""
+        if angle != "正面" and outfit_sheet_path:
+            reference_section = f"""
+# Reference Images for angle reconstruction
+reference_guidance:
+  outfit_sheet: "{os.path.basename(outfit_sheet_path)}"
+  usage: "Use the three-view sheet to accurately reconstruct side/back views"
+  constraints:
+    - "Side view clothing details should match the side view in outfit_sheet"
+    - "Back view should match the back view in outfit_sheet"
+    - "Maintain consistent character design across all angles"
+"""
+
+        yaml_content = f"""# Step 5: Angle & Zoom Change (角度・ズーム変更)
+# Purpose: Transform front pose to different camera angles and zoom levels
+# Input: Front pose image from Step4 + Outfit three-view sheet from Step3
+type: angle_transform
+title: "{title or 'Character Angle View'}"
+author: "{author}"
+
+# ====================================================
+# Input Images
+# ====================================================
+input:
+  front_pose_image: "{os.path.basename(front_pose_path) if front_pose_path else 'REQUIRED'}"
+  outfit_three_view_sheet: "{os.path.basename(outfit_sheet_path) if outfit_sheet_path else ''}"
+  purpose: "Reconstruct character from front pose to different angle using three-view as reference"
+{reference_section}
+# ====================================================
+# Camera Settings
+# ====================================================
+camera:
+  angle: "{angle}"
+  angle_prompt: "{angle_prompt}"
+  zoom: "{zoom}"
+  zoom_prompt: "{zoom_prompt}"
+
+# ====================================================
+# Output Settings
+# ====================================================
+output:
+  background: "{'transparent, fully clear alpha channel' if transparent_bg else 'pure white, clean background'}"
+  format: "single character image at specified angle and zoom"
+{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
+  output_style: "{OUTPUT_STYLES.get(output_style, '')}"
+  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  character_preservation:
+    - "MUST preserve exact character identity from front_pose_image"
+    - "Maintain face, hair, clothing design exactly as shown"
+    - "Keep pose (arm positions, leg positions) consistent with front pose"
+  angle_reconstruction:
+    - "Use outfit_three_view_sheet to reconstruct unseen parts"
+    - "Side/back clothing details must match the three-view reference"
+    - "Do NOT invent or hallucinate details not shown in references"
+  camera:
+    - "Apply camera angle: {angle_prompt}"
+    - "Apply zoom level: {zoom_prompt}"
+
+anti_hallucination:
+  - "Do NOT change character's face or expression"
+  - "Do NOT modify clothing design or colors"
+  - "Do NOT alter the pose from front_pose_image"
+  - "Use ONLY information from the two input images"
+  - "For unseen parts, refer ONLY to outfit_three_view_sheet"
 """
 
         # タイトルオーバーレイ（有効な場合のみ出力）

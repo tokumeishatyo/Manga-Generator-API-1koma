@@ -14,7 +14,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.base_settings_window import BaseSettingsWindow
-from constants import CHARACTER_FACING, CHARACTER_POSES
+from constants import CHARACTER_POSES  # CHARACTER_FACING は正面固定のため不要
 
 
 # ポーズプリセット（選択時に各設定を自動入力）
@@ -138,7 +138,7 @@ LIMB_FOOT = {
 
 
 class PoseWindow(BaseSettingsWindow):
-    """ポーズ付きキャラ設定ウィンドウ（Step4）"""
+    """ポーズ付きキャラ設定ウィンドウ（Step4）- 正面限定"""
 
     def __init__(
         self,
@@ -158,9 +158,9 @@ class PoseWindow(BaseSettingsWindow):
         self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
-            title="Step4: ポーズ付きキャラ設定",
+            title="Step4: ポーズ付きキャラ（正面）",
             width=750,
-            height=880,
+            height=750,  # カメラワーク削除分、高さを縮小
             callback=callback
         )
 
@@ -239,54 +239,52 @@ class PoseWindow(BaseSettingsWindow):
         self.preservation_slider.set(0.85)
         self.preservation_slider.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 
-        # === 向き・配置設定 ===
+        # === 向き・表情設定 ===
         orient_frame = ctk.CTkFrame(self.content_frame)
         orient_frame.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
 
         ctk.CTkLabel(
             orient_frame,
-            text="向き・配置",
+            text="向き・表情（正面固定）",
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=(10, 5), sticky="w")
 
-        # 向き
-        ctk.CTkLabel(orient_frame, text="向き:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.facing_menu = ctk.CTkOptionMenu(
+        # 正面固定の説明
+        ctk.CTkLabel(
             orient_frame,
-            values=list(CHARACTER_FACING.keys()),
-            width=120
-        )
-        self.facing_menu.set("→右向き")
-        self.facing_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+            text="※ このステップでは正面のみ生成します。角度変更はStep5で行います。",
+            font=("Arial", 11),
+            text_color="gray"
+        ).grid(row=1, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
 
         # 目線
-        ctk.CTkLabel(orient_frame, text="目線:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="目線:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.eye_line_menu = ctk.CTkOptionMenu(
             orient_frame,
-            values=["相手を見る", "前を見る", "上を見る", "下を見る"],
+            values=["前を見る", "上を見る", "下を見る"],
             width=120
         )
-        self.eye_line_menu.set("相手を見る")
-        self.eye_line_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
+        self.eye_line_menu.set("前を見る")
+        self.eye_line_menu.grid(row=2, column=1, padx=5, pady=5, sticky="w")
 
         # 表情
-        ctk.CTkLabel(orient_frame, text="表情:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
         self.expression_menu = ctk.CTkOptionMenu(
             orient_frame,
             values=list(EXPRESSIONS.keys()),
             width=120
         )
         self.expression_menu.set("無表情")
-        self.expression_menu.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        self.expression_menu.grid(row=2, column=3, padx=5, pady=5, sticky="w")
 
         # 表情補足（テキストボックス）
-        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
         self.expression_detail_entry = ctk.CTkEntry(
             orient_frame,
             placeholder_text="例：苦笑い、泣き笑い、ニヤリ",
-            width=150
+            width=280
         )
-        self.expression_detail_entry.grid(row=2, column=3, padx=5, pady=5, sticky="w")
+        self.expression_detail_entry.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="w")
 
         # === アクション設定 ===
         action_frame = ctk.CTkFrame(self.content_frame)
@@ -411,35 +409,8 @@ class PoseWindow(BaseSettingsWindow):
         self.wind_menu.set("前からの風")
         self.wind_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
 
-        # === カメラワーク ===
-        camera_frame = ctk.CTkFrame(self.content_frame)
-        camera_frame.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
-
-        ctk.CTkLabel(
-            camera_frame,
-            text="カメラワーク",
-            font=("Arial", 16, "bold")
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=(10, 5), sticky="w")
-
-        # カメラアングル
-        ctk.CTkLabel(camera_frame, text="アングル:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.camera_angle_menu = ctk.CTkOptionMenu(
-            camera_frame,
-            values=list(CAMERA_ANGLES.keys()),
-            width=150
-        )
-        self.camera_angle_menu.set("真横（格ゲー風）")
-        self.camera_angle_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-
-        # ズーム
-        ctk.CTkLabel(camera_frame, text="ズーム:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
-        self.zoom_menu = ctk.CTkOptionMenu(
-            camera_frame,
-            values=list(ZOOM_LEVELS.keys()),
-            width=120
-        )
-        self.zoom_menu.set("全身")
-        self.zoom_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
+        # カメラワークはStep5（角度変更）に移動
+        # 正面限定のため、camera_angle="正面", zoom="全身" 固定
 
     def _browse_image(self):
         """画像参照ダイアログ"""
@@ -471,8 +442,7 @@ class PoseWindow(BaseSettingsWindow):
             self.include_effects_var.set(preset["include_effects"])
         if "wind_effect" in preset:
             self.wind_menu.set(preset["wind_effect"])
-        if "camera_angle" in preset:
-            self.camera_angle_menu.set(preset["camera_angle"])
+        # camera_angle は正面固定のためスキップ（Step5で角度変更）
 
         # 追加プロンプトを保持
         self.current_additional_prompt = preset.get("additional_prompt", "")
@@ -483,7 +453,7 @@ class PoseWindow(BaseSettingsWindow):
             'preset': self.preset_menu.get(),
             'image_path': self.image_entry.get().strip(),
             'identity_preservation': self.preservation_slider.get(),
-            'facing': self.facing_menu.get(),
+            'facing': '正面',  # 正面固定
             'eye_line': self.eye_line_menu.get(),
             'expression': self.expression_menu.get(),
             'expression_detail': self.expression_detail_entry.get().strip(),
@@ -498,8 +468,8 @@ class PoseWindow(BaseSettingsWindow):
             'include_effects': self.include_effects_var.get(),
             'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),
-            'camera_angle': self.camera_angle_menu.get(),
-            'zoom': self.zoom_menu.get(),
+            'camera_angle': '正面',  # 正面固定（角度変更はStep5で）
+            'zoom': '全身',  # 全身固定（ズーム変更はStep5で）
             'additional_prompt': self.current_additional_prompt
         }
 
