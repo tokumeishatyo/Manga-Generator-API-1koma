@@ -1747,8 +1747,6 @@ title_overlay:
         if text_type == "技名テロップ":
             yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Decorative Text'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
@@ -1781,8 +1779,6 @@ style:
         elif text_type == "決め台詞":
             yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Decorative Text'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
@@ -1810,8 +1806,6 @@ style:
         elif text_type == "キャラ名プレート":
             yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Decorative Text'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
@@ -1845,8 +1839,6 @@ style:
                 # フルスペック: 名前+顔+セリフ
                 yaml_content = f"""# Message Window - Full (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Message Window'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
@@ -1882,8 +1874,6 @@ style:
                 # 顔アイコンのみ
                 yaml_content = f"""# Message Window - Face Only (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Face Icon'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
@@ -1912,8 +1902,6 @@ style:
                 # セリフのみ
                 yaml_content = f"""# Message Window - Text Only (ui_text_overlay.yaml準拠)
 type: text_ui_layer_definition
-title: "{title or 'Message Text'}"
-author: "{author}"
 
 ui_global_style:
   preset: "Anime Battle"
