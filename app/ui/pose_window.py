@@ -257,34 +257,42 @@ class PoseWindow(BaseSettingsWindow):
             text_color="gray"
         ).grid(row=1, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
 
+        # 左右整合性の制限警告
+        ctk.CTkLabel(
+            orient_frame,
+            text="⚠ 三面図の左右整合性（右手が全ビューで右手として描かれる等）は保証されません。",
+            font=("Arial", 11),
+            text_color="orange"
+        ).grid(row=2, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
+
         # 目線
-        ctk.CTkLabel(orient_frame, text="目線:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="目線:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
         self.eye_line_menu = ctk.CTkOptionMenu(
             orient_frame,
             values=["前を見る", "上を見る", "下を見る"],
             width=120
         )
         self.eye_line_menu.set("前を見る")
-        self.eye_line_menu.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        self.eye_line_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
         # 表情
-        ctk.CTkLabel(orient_frame, text="表情:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情:").grid(row=3, column=2, padx=10, pady=5, sticky="w")
         self.expression_menu = ctk.CTkOptionMenu(
             orient_frame,
             values=list(EXPRESSIONS.keys()),
             width=120
         )
         self.expression_menu.set("無表情")
-        self.expression_menu.grid(row=2, column=3, padx=5, pady=5, sticky="w")
+        self.expression_menu.grid(row=3, column=3, padx=5, pady=5, sticky="w")
 
         # 表情補足（テキストボックス）
-        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
         self.expression_detail_entry = ctk.CTkEntry(
             orient_frame,
             placeholder_text="例：苦笑い、泣き笑い、ニヤリ",
             width=280
         )
-        self.expression_detail_entry.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="w")
+        self.expression_detail_entry.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="w")
 
         # === アクション設定 ===
         action_frame = ctk.CTkFrame(self.content_frame)
