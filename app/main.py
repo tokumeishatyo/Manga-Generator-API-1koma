@@ -1540,14 +1540,19 @@ title_overlay:
         transparent_bg = settings.get('transparent_bg', False)
         wind = WIND_EFFECTS.get(settings.get('wind_effect', 'なし'), '')
         additional_prompt = settings.get('additional_prompt', '')
+        # ポーズキャプチャ設定
+        pose_capture_enabled = settings.get('pose_capture_enabled', False)
+        pose_reference_image = settings.get('pose_reference_image', '')
 
         # 表情プロンプト生成（補足があれば追加）
         expression_prompt = expression
         if expression_detail:
             expression_prompt = f"{expression}, {expression_detail}"
 
-        # プリセットコメント
-        preset_comment = f"# Preset: {preset}\n" if preset != "（プリセットなし）" else ""
+        # プリセットコメント（キャプチャモードでは表示しない）
+        preset_comment = ""
+        if not pose_capture_enabled and preset != "（プリセットなし）":
+            preset_comment = f"# Preset: {preset}\n"
 
         # 追加プロンプトセクション
         additional_section = ""
@@ -1564,6 +1569,38 @@ additional_details:
   wind_effect: "{wind}"
 """
 
+        # ポーズキャプチャモードの場合
+        if pose_capture_enabled and pose_reference_image:
+            pose_source_section = f"""# ====================================================
+# Pose Capture (ポーズキャプチャ)
+# ====================================================
+pose_capture:
+  enabled: true
+  reference_image: "{os.path.basename(pose_reference_image)}"
+  capture_target: "pose_only"
+  instruction: |
+    Capture ONLY the pose (body position, arm/leg positions, gestures) from the reference image.
+    Apply this pose to the character while preserving:
+    - Character's face and facial features from character_sheet
+    - Character's outfit and clothing from character_sheet
+    - Character's colors and design from character_sheet
+    Do NOT transfer any appearance elements from the reference image.
+
+pose:
+  source: "captured from reference image"
+  expression: "{expression_prompt}"
+  eye_line: "{eye_line}"
+  include_effects: {str(include_effects).lower()}{wind_section}"""
+        else:
+            pose_source_section = f"""# ====================================================
+# Pose Definition
+# ====================================================
+pose:
+  description: "{action_desc}"
+  expression: "{expression_prompt}"
+  eye_line: "{eye_line}"
+  include_effects: {str(include_effects).lower()}{wind_section}"""
+
         yaml_content = f"""# Step 4: Pose Image (ポーズ画像)
 # Purpose: Generate character in specified pose based on outfit sheet
 # Output: Single character image
@@ -1579,14 +1616,7 @@ input:
   identity_preservation: {identity}
   purpose: "Generate posed character from outfit sheet"
 
-# ====================================================
-# Pose Definition
-# ====================================================
-pose:
-  description: "{action_desc}"
-  expression: "{expression_prompt}"
-  eye_line: "{eye_line}"
-  include_effects: {str(include_effects).lower()}{wind_section}{additional_section}
+{pose_source_section}{additional_section}
 # ====================================================
 # Output Settings
 # ====================================================

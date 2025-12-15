@@ -113,14 +113,50 @@ class PoseWindow(BaseSettingsWindow):
             text_color="gray"
         ).grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
 
+        # プリセットとキャプチャの選択行
+        preset_row_frame = ctk.CTkFrame(preset_frame, fg_color="transparent")
+        preset_row_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+
         self.preset_menu = ctk.CTkOptionMenu(
-            preset_frame,
+            preset_row_frame,
             values=list(POSE_PRESETS.keys()),
             width=200,
             command=self._on_preset_change
         )
         self.preset_menu.set("（プリセットなし）")
-        self.preset_menu.grid(row=2, column=0, padx=10, pady=(0, 10), sticky="w")
+        self.preset_menu.grid(row=0, column=0, padx=(0, 20), sticky="w")
+
+        # ポーズキャプチャチェックボックス
+        self.pose_capture_var = tk.BooleanVar(value=False)
+        self.pose_capture_checkbox = ctk.CTkCheckBox(
+            preset_row_frame,
+            text="参考画像のポーズをキャプチャ",
+            variable=self.pose_capture_var,
+            command=self._on_pose_capture_toggle
+        )
+        self.pose_capture_checkbox.grid(row=0, column=1, sticky="w")
+
+        # ポーズ参考画像パス入力
+        capture_frame = ctk.CTkFrame(preset_frame, fg_color="transparent")
+        capture_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
+        capture_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(capture_frame, text="ポーズ参考画像:").grid(row=0, column=0, padx=(0, 5), sticky="w")
+        self.pose_ref_entry = ctk.CTkEntry(
+            capture_frame,
+            placeholder_text="ポーズを取り込みたい画像のパス",
+            state="disabled"
+        )
+        self.pose_ref_entry.grid(row=0, column=1, sticky="ew", padx=(0, 5))
+
+        self.pose_ref_browse_btn = ctk.CTkButton(
+            capture_frame,
+            text="参照",
+            width=60,
+            command=self._browse_pose_ref,
+            state="disabled"
+        )
+        self.pose_ref_browse_btn.grid(row=0, column=2)
 
         # プリセットの追加プロンプト保持用
         self.current_additional_prompt = ""
@@ -277,6 +313,31 @@ class PoseWindow(BaseSettingsWindow):
             self.image_entry.delete(0, tk.END)
             self.image_entry.insert(0, filename)
 
+    def _browse_pose_ref(self):
+        """ポーズ参考画像参照ダイアログ"""
+        filename = filedialog.askopenfilename(
+            filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.webp")]
+        )
+        if filename:
+            self.pose_ref_entry.delete(0, tk.END)
+            self.pose_ref_entry.insert(0, filename)
+
+    def _on_pose_capture_toggle(self):
+        """ポーズキャプチャのチェックボックス切り替え時の処理"""
+        if self.pose_capture_var.get():
+            # キャプチャモード: プリセット無効、参考画像入力有効
+            self.preset_menu.configure(state="disabled")
+            self.pose_ref_entry.configure(state="normal")
+            self.pose_ref_browse_btn.configure(state="normal")
+            # 動作説明をクリア（キャプチャモードでは参考画像がポーズを決める）
+            self.action_desc_entry.delete(0, tk.END)
+            self.current_additional_prompt = ""
+        else:
+            # プリセットモード: プリセット有効、参考画像入力無効
+            self.preset_menu.configure(state="normal")
+            self.pose_ref_entry.configure(state="disabled")
+            self.pose_ref_browse_btn.configure(state="disabled")
+
     def _on_preset_change(self, value):
         """プリセット選択時の処理"""
         preset = POSE_PRESETS.get(value)
@@ -310,11 +371,17 @@ class PoseWindow(BaseSettingsWindow):
             'include_effects': self.include_effects_var.get(),
             'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),
-            'additional_prompt': self.current_additional_prompt
+            'additional_prompt': self.current_additional_prompt,
+            # ポーズキャプチャ設定
+            'pose_capture_enabled': self.pose_capture_var.get(),
+            'pose_reference_image': self.pose_ref_entry.get().strip() if self.pose_capture_var.get() else ''
         }
 
     def validate(self) -> tuple[bool, str]:
         """入力検証"""
         if not self.image_entry.get().strip():
             return False, "キャラクター画像を指定してください。"
+        # ポーズキャプチャが有効な場合、参考画像が必須
+        if self.pose_capture_var.get() and not self.pose_ref_entry.get().strip():
+            return False, "ポーズキャプチャを使用する場合は、ポーズ参考画像を指定してください。"
         return True, ""
