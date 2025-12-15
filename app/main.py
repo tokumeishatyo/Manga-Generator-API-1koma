@@ -1739,8 +1739,10 @@ title_overlay:
         text_type = settings.get('text_type', '技名テロップ')
         text_content = settings.get('text', '')
         style = settings.get('style', {})
+        transparent_bg = settings.get('transparent_bg', True)  # デフォルトは透過
 
         type_key = TEXT_TYPES.get(text_type, 'special_move_title')
+        bg_value = "Transparent" if transparent_bg else "None (Generate with scene)"
 
         if text_type == "技名テロップ":
             yaml_content = f"""# Decorative Text (ui_text_overlay.yaml準拠)
@@ -1768,7 +1770,7 @@ special_move_title:
     drop_shadow: "{'Hard Drop' if style.get('shadow', True) else 'None'}"
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -1797,7 +1799,7 @@ impact_callout:
     distortion: "{DISTORTIONS.get(style.get('distortion', '飛び出し'), 'Zoom In')}"
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -1824,7 +1826,7 @@ name_tag:
     rotation: "{ROTATIONS.get(style.get('rotation', '少し左傾き'), '-5 degrees')}"
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -1869,7 +1871,7 @@ message_window:
       position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -1899,7 +1901,7 @@ message_window:
       style: "Standalone"
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
@@ -1932,7 +1934,7 @@ message_window:
       enabled: false
 
 output:
-  background: "Transparent"
+  background: "{bg_value}"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"

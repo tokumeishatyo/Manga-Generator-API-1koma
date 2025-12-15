@@ -186,7 +186,15 @@ class DecorativeTextWindow(BaseSettingsWindow):
             font=("Arial", 11),
             text_color="gray"
         )
-        self.type_description.pack(anchor="w", padx=10, pady=(0, 10))
+        self.type_description.pack(anchor="w", padx=10, pady=(0, 5))
+
+        # 背景透過チェックボックス（デフォルトON）
+        self.transparent_bg_var = tk.BooleanVar(value=True)
+        ctk.CTkCheckBox(
+            type_frame,
+            text="背景透過（合成用素材として出力）",
+            variable=self.transparent_bg_var
+        ).pack(anchor="w", padx=10, pady=(0, 10))
 
         # === テキスト入力 ===
         text_frame = ctk.CTkFrame(self.content_frame)
@@ -453,7 +461,8 @@ class DecorativeTextWindow(BaseSettingsWindow):
 
         data = {
             'text_type': text_type,
-            'text': text_content
+            'text': text_content,
+            'transparent_bg': self.transparent_bg_var.get()
         }
 
         if text_type == "技名テロップ":
