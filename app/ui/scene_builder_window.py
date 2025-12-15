@@ -337,6 +337,10 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.battle_left_name_entry = ctk.CTkEntry(left_char, placeholder_text="AYASE KOYOMI")
         self.battle_left_name_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
+        ctk.CTkLabel(left_char, text="特徴:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.battle_left_traits_entry = ctk.CTkEntry(left_char, placeholder_text="長い黒髪、身長高め")
+        self.battle_left_traits_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+
         # 右キャラ
         right_char = ctk.CTkFrame(char_frame, fg_color="transparent")
         right_char.pack(fill="x", padx=10, pady=5)
@@ -355,6 +359,10 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         ctk.CTkLabel(right_char, text="名前:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.battle_right_name_entry = ctk.CTkEntry(right_char, placeholder_text="SHINOMIYA RIN")
         self.battle_right_name_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        ctk.CTkLabel(right_char, text="特徴:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.battle_right_traits_entry = ctk.CTkEntry(right_char, placeholder_text="ツインテール金髪")
+        self.battle_right_traits_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
         # === 画面効果 ===
         effect_frame = ctk.CTkFrame(canvas)
@@ -483,6 +491,12 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_left_expr_entry = ctk.CTkEntry(left_expr_row, placeholder_text="笑顔", width=80)
         self.story_left_expr_entry.pack(side="left", padx=3)
 
+        left_traits_row = ctk.CTkFrame(left_char, fg_color="transparent")
+        left_traits_row.pack(fill="x", padx=5, pady=2)
+        ctk.CTkLabel(left_traits_row, text="特徴:").pack(side="left")
+        self.story_left_traits_entry = ctk.CTkEntry(left_traits_row, placeholder_text="長い黒髪、身長高め", width=130)
+        self.story_left_traits_entry.pack(side="left", padx=3)
+
         # 中央キャラ（任意）
         center_char = ctk.CTkFrame(char_row)
         center_char.grid(row=0, column=1, padx=2, sticky="nsew")
@@ -500,6 +514,12 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_center_expr_entry = ctk.CTkEntry(center_expr_row, placeholder_text="笑顔", width=80)
         self.story_center_expr_entry.pack(side="left", padx=3)
 
+        center_traits_row = ctk.CTkFrame(center_char, fg_color="transparent")
+        center_traits_row.pack(fill="x", padx=5, pady=2)
+        ctk.CTkLabel(center_traits_row, text="特徴:").pack(side="left")
+        self.story_center_traits_entry = ctk.CTkEntry(center_traits_row, placeholder_text="セミロング茶髪", width=130)
+        self.story_center_traits_entry.pack(side="left", padx=3)
+
         # 右キャラ
         right_char = ctk.CTkFrame(char_row)
         right_char.grid(row=0, column=2, padx=2, sticky="nsew")
@@ -516,6 +536,12 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         ctk.CTkLabel(right_expr_row, text="表情:").pack(side="left")
         self.story_right_expr_entry = ctk.CTkEntry(right_expr_row, placeholder_text="笑顔", width=80)
         self.story_right_expr_entry.pack(side="left", padx=5)
+
+        right_traits_row = ctk.CTkFrame(right_char, fg_color="transparent")
+        right_traits_row.pack(fill="x", padx=5, pady=2)
+        ctk.CTkLabel(right_traits_row, text="特徴:").pack(side="left")
+        self.story_right_traits_entry = ctk.CTkEntry(right_traits_row, placeholder_text="ショート、小柄", width=130)
+        self.story_right_traits_entry.pack(side="left", padx=3)
 
         # === ダイアログ設定 ===
         dialog_frame = ctk.CTkFrame(canvas)
@@ -813,13 +839,15 @@ collision_settings:
 left_character:
   source_image: "{self._get_filename(self.battle_left_char_entry.get().strip())}"
   scale: {self.battle_left_scale_entry.get().strip() or '1.0'}
-  force_facing: "Right"
+  force_facing: "Right"{f'''
+  physical_traits: "{self.battle_left_traits_entry.get().strip()}"''' if self.battle_left_traits_entry.get().strip() else ""}
 
 right_character:
   source_image: "{self._get_filename(self.battle_right_char_entry.get().strip())}"
   scale: {self.battle_right_scale_entry.get().strip() or '1.0'}
   force_facing: "Left"
-  flip_image: true
+  flip_image: true{f'''
+  physical_traits: "{self.battle_right_traits_entry.get().strip()}"''' if self.battle_right_traits_entry.get().strip() else ""}
 
 ui_overlay:
   enabled: {str(self.battle_ui_var.get()).lower()}
@@ -854,34 +882,40 @@ scene_settings:
         # キャラ1（左）
         left_img = self.story_left_char_entry.get().strip()
         if left_img:
+            left_traits = self.story_left_traits_entry.get().strip()
+            left_traits_line = f'\n  physical_traits: "{left_traits}"' if left_traits else ""
             characters_yaml += f"""
 character_1:
   source_image: "{self._get_filename(left_img)}"
   position: "Left"
   scale: 1.0
-  expression_override: "{self.story_left_expr_entry.get().strip() or 'Smiling'}"
+  expression_override: "{self.story_left_expr_entry.get().strip() or 'Smiling'}"{left_traits_line}
 """
 
         # キャラ2（中央）- 任意
         center_img = self.story_center_char_entry.get().strip()
         if center_img:
+            center_traits = self.story_center_traits_entry.get().strip()
+            center_traits_line = f'\n  physical_traits: "{center_traits}"' if center_traits else ""
             characters_yaml += f"""
 character_2:
   source_image: "{self._get_filename(center_img)}"
   position: "Center"
   scale: 1.0
-  expression_override: "{self.story_center_expr_entry.get().strip() or 'Smiling'}"
+  expression_override: "{self.story_center_expr_entry.get().strip() or 'Smiling'}"{center_traits_line}
 """
 
         # キャラ3（右）
         right_img = self.story_right_char_entry.get().strip()
         if right_img:
+            right_traits = self.story_right_traits_entry.get().strip()
+            right_traits_line = f'\n  physical_traits: "{right_traits}"' if right_traits else ""
             characters_yaml += f"""
 character_3:
   source_image: "{self._get_filename(right_img)}"
   position: "Right"
   scale: 1.0
-  expression_override: "{self.story_right_expr_entry.get().strip() or 'Smiling'}"
+  expression_override: "{self.story_right_expr_entry.get().strip() or 'Smiling'}"{right_traits_line}
 """
 
         # ダイアログセクション（3人対応）
