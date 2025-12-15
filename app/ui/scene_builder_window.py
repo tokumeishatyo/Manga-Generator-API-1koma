@@ -762,11 +762,13 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         for i, item in enumerate(self.text_overlay_data):
             image_path = self._get_filename(item.get('image', ''))
             position = item.get('position', 'Center')
+            size = item.get('size', '100%')
             layer_en = item.get('layer_en', 'Frontmost (Above Characters)')
 
             items_yaml += f"""
     - source_image: "{image_path}"
       position: "{position}"
+      scale: "{size}"
       layer: "{layer_en}"
       blend_mode: "Normal\""""
 

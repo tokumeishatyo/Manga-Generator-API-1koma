@@ -131,10 +131,11 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
             self._add_entry(
                 image_path=item.get('image', ''),
                 position=item.get('position', ''),
+                size=item.get('size', '100%'),
                 layer=item.get('layer', '最前面')
             )
 
-    def _add_entry(self, image_path: str = "", position: str = "", layer: str = "最前面"):
+    def _add_entry(self, image_path: str = "", position: str = "", size: str = "", layer: str = "最前面"):
         """エントリを追加"""
         if len(self.entries) >= MAX_OVERLAYS:
             return
@@ -180,11 +181,23 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         else:
             position_entry.insert(0, "Center")
 
+        # サイズ入力
+        size_entry = ctk.CTkEntry(
+            entry_frame,
+            placeholder_text="100%",
+            width=55
+        )
+        size_entry.pack(side="left", padx=2)
+        if size:
+            size_entry.insert(0, size)
+        else:
+            size_entry.insert(0, "100%")
+
         # レイヤー選択
         layer_menu = ctk.CTkOptionMenu(
             entry_frame,
             values=LAYER_ORDER,
-            width=110
+            width=100
         )
         layer_menu.set(layer if layer in LAYER_ORDER else "最前面")
         layer_menu.pack(side="left", padx=2)
@@ -194,6 +207,7 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
             'frame': entry_frame,
             'image_entry': img_entry,
             'position_entry': position_entry,
+            'size_entry': size_entry,
             'layer_menu': layer_menu
         }
         self.entries.append(entry_data)
@@ -249,12 +263,14 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         for entry in self.entries:
             image_path = entry['image_entry'].get().strip()
             position = entry['position_entry'].get().strip()
+            size = entry['size_entry'].get().strip() or "100%"
             layer = entry['layer_menu'].get()
 
             if image_path and position:
                 result.append({
                     'image': image_path,
                     'position': position,
+                    'size': size,
                     'layer': layer,
                     'layer_en': LAYER_OPTIONS.get(layer, "Frontmost (Above Characters)")
                 })
