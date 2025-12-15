@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from constants import (
     COMPOSITE_POSITIONS, COMPOSITE_SIZES, COMPOSITE_LAYOUTS, COMPOSITE_BATTLE_MODES
 )
-from ui.text_overlay_placement_window import TextOverlayPlacementWindow, TEXT_POSITIONS
+from ui.text_overlay_placement_window import TextOverlayPlacementWindow
 
 
 # シーン合成タイプ
@@ -761,19 +761,13 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         items_yaml = ""
         for i, item in enumerate(self.text_overlay_data):
             image_path = self._get_filename(item.get('image', ''))
-            position_en = item.get('position_en', 'Top Center')
+            position = item.get('position', 'Center')
+            layer_en = item.get('layer_en', 'Frontmost (Above Characters)')
 
-            # キャラ相対位置の場合はplacement_hintを追加
-            if "Near" in position_en and "Character" in position_en:
-                items_yaml += f"""
+            items_yaml += f"""
     - source_image: "{image_path}"
-      position: "{position_en}"
-      placement_hint: "Auto-adjust to avoid overlaps"
-      blend_mode: "Normal\""""
-            else:
-                items_yaml += f"""
-    - source_image: "{image_path}"
-      position: "{position_en}"
+      position: "{position}"
+      layer: "{layer_en}"
       blend_mode: "Normal\""""
 
         return f"""

@@ -12,38 +12,23 @@ from typing import Callable, Optional, List, Dict
 import os
 
 
-# 配置位置（絶対位置 9箇所 + キャラクター相対位置 2箇所）
-TEXT_POSITIONS_ABSOLUTE = {
-    "上部左": "Top Left",
-    "上部中央": "Top Center",
-    "上部右": "Top Right",
-    "中央左": "Center Left",
-    "中央": "Center",
-    "中央右": "Center Right",
-    "下部左": "Bottom Left",
-    "下部中央": "Bottom Center",
-    "下部右": "Bottom Right"
-}
-
-TEXT_POSITIONS_RELATIVE = {
-    "左キャラ付近（自動）": "Near Left Character",
-    "右キャラ付近（自動）": "Near Right Character"
-}
-
-# 全位置（UIで使用）
-TEXT_POSITIONS = {**TEXT_POSITIONS_ABSOLUTE, **TEXT_POSITIONS_RELATIVE}
-
-# ドロップダウン表示順（絶対位置→キャラ相対位置）
-POSITION_ORDER = [
-    # 絶対位置
-    "上部左", "上部中央", "上部右",
-    "中央左", "中央", "中央右",
-    "下部左", "下部中央", "下部右",
-    # キャラ相対位置
-    "左キャラ付近（自動）", "右キャラ付近（自動）"
+# 位置のプリセット（参考用）
+POSITION_PRESETS = [
+    "Top Left", "Top Center", "Top Right",
+    "Center Left", "Center", "Center Right",
+    "Bottom Left", "Bottom Center", "Bottom Right"
 ]
 
-MAX_OVERLAYS = 11  # 9 + 2
+# レイヤー設定
+LAYER_OPTIONS = {
+    "最前面": "Frontmost (Above Characters)",
+    "キャラの後ろ": "Behind Characters",
+    "背景の前": "Above Background Only"
+}
+
+LAYER_ORDER = ["最前面", "キャラの後ろ", "背景の前"]
+
+MAX_OVERLAYS = 10
 
 
 class TextOverlayPlacementWindow(ctk.CTkToplevel):
@@ -84,7 +69,7 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             main_frame,
-            text="最大11箇所（絶対位置9 + キャラ付近2）。同じ位置には配置できません。",
+            text="位置は自由入力（例: Top Center, Bottom Right, Near Character 1）",
             font=("Arial", 11),
             text_color="gray"
         ).pack(anchor="w", pady=(0, 10))
@@ -145,10 +130,11 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         for item in self.initial_data:
             self._add_entry(
                 image_path=item.get('image', ''),
-                position=item.get('position', '')
+                position=item.get('position', ''),
+                layer=item.get('layer', '最前面')
             )
 
-    def _add_entry(self, image_path: str = "", position: str = ""):
+    def _add_entry(self, image_path: str = "", position: str = "", layer: str = "最前面"):
         """エントリを追加"""
         if len(self.entries) >= MAX_OVERLAYS:
             return
@@ -168,7 +154,7 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         img_entry = ctk.CTkEntry(
             entry_frame,
             placeholder_text="画像パス",
-            width=200
+            width=180
         )
         img_entry.pack(side="left", padx=2)
         if image_path:
@@ -178,34 +164,41 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         ctk.CTkButton(
             entry_frame,
             text="参照",
-            width=50,
+            width=45,
             command=lambda e=img_entry: self._browse_image(e)
         ).pack(side="left", padx=2)
 
-        # 位置選択
-        available_positions = self._get_available_positions(exclude_current=None)
-        position_menu = ctk.CTkOptionMenu(
+        # 位置入力（テキストボックス）
+        position_entry = ctk.CTkEntry(
             entry_frame,
-            values=available_positions if available_positions else ["（空きなし）"],
-            width=120,
-            command=lambda v: self._on_position_change()
+            placeholder_text="Center",
+            width=100
         )
-        if position and position in TEXT_POSITIONS:
-            position_menu.set(position)
-        elif available_positions:
-            position_menu.set(available_positions[0])
-        position_menu.pack(side="left", padx=5)
+        position_entry.pack(side="left", padx=2)
+        if position:
+            position_entry.insert(0, position)
+        else:
+            position_entry.insert(0, "Center")
+
+        # レイヤー選択
+        layer_menu = ctk.CTkOptionMenu(
+            entry_frame,
+            values=LAYER_ORDER,
+            width=110
+        )
+        layer_menu.set(layer if layer in LAYER_ORDER else "最前面")
+        layer_menu.pack(side="left", padx=2)
 
         # エントリ情報を保存
         entry_data = {
             'frame': entry_frame,
             'image_entry': img_entry,
-            'position_menu': position_menu
+            'position_entry': position_entry,
+            'layer_menu': layer_menu
         }
         self.entries.append(entry_data)
 
         self._update_ui_state()
-        self._on_position_change()
 
     def _remove_last_entry(self):
         """最後のエントリを削除"""
@@ -216,52 +209,6 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         entry['frame'].destroy()
 
         self._update_ui_state()
-        self._on_position_change()
-
-    def _get_available_positions(self, exclude_current: Optional[str] = None) -> List[str]:
-        """利用可能な位置のリストを取得（POSITION_ORDER順）"""
-        used_positions = set()
-        for entry in self.entries:
-            pos = entry['position_menu'].get()
-            if pos and pos != "（空きなし）" and pos != exclude_current:
-                used_positions.add(pos)
-
-        available = [p for p in POSITION_ORDER if p not in used_positions]
-        return available
-
-    def _on_position_change(self):
-        """位置選択が変更された時、他のドロップダウンを更新"""
-        # 各エントリの現在の選択を取得
-        current_selections = {}
-        for i, entry in enumerate(self.entries):
-            pos = entry['position_menu'].get()
-            if pos and pos != "（空きなし）":
-                current_selections[i] = pos
-
-        # 各エントリのドロップダウンを更新
-        for i, entry in enumerate(self.entries):
-            current_pos = current_selections.get(i, "")
-
-            # この項目以外で使われている位置を取得
-            other_used = set()
-            for j, pos in current_selections.items():
-                if j != i:
-                    other_used.add(pos)
-
-            # 利用可能な位置（自分の現在選択 + 他で使われていない位置）
-            available = [p for p in POSITION_ORDER if p not in other_used]
-
-            # ドロップダウンの値を更新
-            if available:
-                entry['position_menu'].configure(values=available)
-                # 現在の選択が有効なら維持、無効なら最初の利用可能な位置を選択
-                if current_pos in available:
-                    entry['position_menu'].set(current_pos)
-                else:
-                    entry['position_menu'].set(available[0])
-            else:
-                entry['position_menu'].configure(values=["（空きなし）"])
-                entry['position_menu'].set("（空きなし）")
 
     def _update_ui_state(self):
         """UI状態を更新"""
@@ -301,13 +248,15 @@ class TextOverlayPlacementWindow(ctk.CTkToplevel):
         result = []
         for entry in self.entries:
             image_path = entry['image_entry'].get().strip()
-            position = entry['position_menu'].get()
+            position = entry['position_entry'].get().strip()
+            layer = entry['layer_menu'].get()
 
-            if image_path and position and position != "（空きなし）":
+            if image_path and position:
                 result.append({
                     'image': image_path,
                     'position': position,
-                    'position_en': TEXT_POSITIONS.get(position, position)
+                    'layer': layer,
+                    'layer_en': LAYER_OPTIONS.get(layer, "Frontmost (Above Characters)")
                 })
 
         return result
