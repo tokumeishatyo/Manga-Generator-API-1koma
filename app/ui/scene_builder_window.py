@@ -170,6 +170,26 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         elif value == "ボスレイド":
             self.boss_frame.pack(fill="both", expand=True)
 
+    def _on_story_bg_type_change(self):
+        """ストーリー背景タイプ変更"""
+        bg_type = self.story_bg_type_var.get()
+        if bg_type == "file":
+            self.story_bg_prompt_frame.pack_forget()
+            self.story_bg_file_frame.pack(fill="x", padx=10, pady=5)
+        else:
+            self.story_bg_file_frame.pack_forget()
+            self.story_bg_prompt_frame.pack(fill="x", padx=10, pady=5)
+
+    def _on_battle_bg_type_change(self):
+        """バトル背景タイプ変更"""
+        bg_type = self.battle_bg_type_var.get()
+        if bg_type == "file":
+            self.battle_bg_prompt_frame.pack_forget()
+            self.battle_bg_file_frame.pack(fill="x", padx=10, pady=5)
+        else:
+            self.battle_bg_file_frame.pack_forget()
+            self.battle_bg_prompt_frame.pack(fill="x", padx=10, pady=5)
+
     # ========== バトルシーン設定 ==========
 
     def _build_battle_settings(self, parent):
@@ -183,19 +203,48 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(bg_frame, text="背景設定", font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
 
-        bg_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
-        bg_row.pack(fill="x", padx=10, pady=5)
-        bg_row.grid_columnconfigure(1, weight=1)
+        # 背景タイプ選択（ファイル指定 / 情景説明）
+        bg_type_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        bg_type_row.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(bg_row, text="背景画像:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.battle_bg_entry = ctk.CTkEntry(bg_row, placeholder_text="背景画像パス")
+        self.battle_bg_type_var = tk.StringVar(value="file")
+        ctk.CTkRadioButton(
+            bg_type_row, text="ファイル指定", variable=self.battle_bg_type_var,
+            value="file", command=self._on_battle_bg_type_change
+        ).pack(side="left", padx=(0, 15))
+        ctk.CTkRadioButton(
+            bg_type_row, text="情景説明で生成", variable=self.battle_bg_type_var,
+            value="prompt", command=self._on_battle_bg_type_change
+        ).pack(side="left")
+
+        # ファイル指定用フレーム
+        self.battle_bg_file_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        self.battle_bg_file_frame.pack(fill="x", padx=10, pady=5)
+        self.battle_bg_file_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(self.battle_bg_file_frame, text="背景画像:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.battle_bg_entry = ctk.CTkEntry(self.battle_bg_file_frame, placeholder_text="背景画像パス")
         self.battle_bg_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ctk.CTkButton(bg_row, text="参照", width=60, command=lambda: self._browse_image(self.battle_bg_entry)).grid(row=0, column=2, padx=5)
+        ctk.CTkButton(self.battle_bg_file_frame, text="参照", width=60, command=lambda: self._browse_image(self.battle_bg_entry)).grid(row=0, column=2, padx=5)
 
-        ctk.CTkLabel(bg_row, text="暗さ:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.battle_dimming_slider = ctk.CTkSlider(bg_row, from_=0, to=1, number_of_steps=10)
+        # 情景説明用フレーム（初期非表示）
+        self.battle_bg_prompt_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        self.battle_bg_prompt_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(self.battle_bg_prompt_frame, text="情景説明:").grid(row=0, column=0, padx=5, pady=5, sticky="nw")
+        self.battle_bg_prompt_entry = ctk.CTkTextbox(self.battle_bg_prompt_frame, height=60)
+        self.battle_bg_prompt_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.battle_bg_prompt_entry.insert("1.0", "荒廃した都市の廃墟、炎が燃え盛る背景")
+
+        # 共通設定（暗さ）
+        bg_common_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        bg_common_row.pack(fill="x", padx=10, pady=5)
+        bg_common_row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(bg_common_row, text="暗さ:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.battle_dimming_slider = ctk.CTkSlider(bg_common_row, from_=0, to=1, number_of_steps=10)
         self.battle_dimming_slider.set(0.5)
-        self.battle_dimming_slider.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        self.battle_dimming_slider.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         # === カットイン演出設定（左右横並び） ===
         cutin_frame = ctk.CTkFrame(canvas)
@@ -337,24 +386,53 @@ class SceneBuilderWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(bg_frame, text="背景設定", font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
 
-        bg_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
-        bg_row.pack(fill="x", padx=10, pady=5)
-        bg_row.grid_columnconfigure(1, weight=1)
+        # 背景タイプ選択（ファイル指定 / 情景説明）
+        bg_type_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        bg_type_row.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(bg_row, text="背景画像:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.story_bg_entry = ctk.CTkEntry(bg_row, placeholder_text="背景画像パス")
+        self.story_bg_type_var = tk.StringVar(value="file")
+        ctk.CTkRadioButton(
+            bg_type_row, text="ファイル指定", variable=self.story_bg_type_var,
+            value="file", command=self._on_story_bg_type_change
+        ).pack(side="left", padx=(0, 15))
+        ctk.CTkRadioButton(
+            bg_type_row, text="情景説明で生成", variable=self.story_bg_type_var,
+            value="prompt", command=self._on_story_bg_type_change
+        ).pack(side="left")
+
+        # ファイル指定用フレーム
+        self.story_bg_file_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        self.story_bg_file_frame.pack(fill="x", padx=10, pady=5)
+        self.story_bg_file_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(self.story_bg_file_frame, text="背景画像:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.story_bg_entry = ctk.CTkEntry(self.story_bg_file_frame, placeholder_text="背景画像パス")
         self.story_bg_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        ctk.CTkButton(bg_row, text="参照", width=60, command=lambda: self._browse_image(self.story_bg_entry)).grid(row=0, column=2, padx=5)
+        ctk.CTkButton(self.story_bg_file_frame, text="参照", width=60, command=lambda: self._browse_image(self.story_bg_entry)).grid(row=0, column=2, padx=5)
 
-        ctk.CTkLabel(bg_row, text="ぼかし:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.story_blur_slider = ctk.CTkSlider(bg_row, from_=0, to=100, number_of_steps=20)
+        # 情景説明用フレーム（初期非表示）
+        self.story_bg_prompt_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        self.story_bg_prompt_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(self.story_bg_prompt_frame, text="情景説明:").grid(row=0, column=0, padx=5, pady=5, sticky="nw")
+        self.story_bg_prompt_entry = ctk.CTkTextbox(self.story_bg_prompt_frame, height=60)
+        self.story_bg_prompt_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.story_bg_prompt_entry.insert("1.0", "ゴージャスなパーティ会場、シャンデリアが輝く広いホール")
+
+        # 共通設定（ぼかし・雰囲気）
+        bg_common_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        bg_common_row.pack(fill="x", padx=10, pady=5)
+        bg_common_row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(bg_common_row, text="ぼかし:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.story_blur_slider = ctk.CTkSlider(bg_common_row, from_=0, to=100, number_of_steps=20)
         self.story_blur_slider.set(10)
-        self.story_blur_slider.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        self.story_blur_slider.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        ctk.CTkLabel(bg_row, text="雰囲気:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.story_mood_menu = ctk.CTkOptionMenu(bg_row, values=list(LIGHTING_MOODS.keys()), width=150)
+        ctk.CTkLabel(bg_common_row, text="雰囲気:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.story_mood_menu = ctk.CTkOptionMenu(bg_common_row, values=list(LIGHTING_MOODS.keys()), width=150)
         self.story_mood_menu.set("朝の光")
-        self.story_mood_menu.grid(row=2, column=1, padx=5, pady=5, sticky="w")
+        self.story_mood_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
         # === 配置設定 ===
         layout_frame = ctk.CTkFrame(canvas)
@@ -375,50 +453,68 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_distance_menu.set("親しい")
         self.story_distance_menu.pack(side="left", padx=5)
 
-        # === キャラクター配置（左右横並び） ===
+        # === キャラクター配置（3人まで対応） ===
         char_frame = ctk.CTkFrame(canvas)
         char_frame.pack(fill="x", padx=5, pady=5)
 
-        ctk.CTkLabel(char_frame, text="キャラクター配置", font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkLabel(char_frame, text="キャラクター配置（最大3人）", font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
 
-        # 左右のキャラを横並びに
+        # 3人のキャラを横並びに
         char_row = ctk.CTkFrame(char_frame, fg_color="transparent")
         char_row.pack(fill="x", padx=10, pady=5)
         char_row.grid_columnconfigure(0, weight=1)
         char_row.grid_columnconfigure(1, weight=1)
+        char_row.grid_columnconfigure(2, weight=1)
 
         # 左キャラ
         left_char = ctk.CTkFrame(char_row)
-        left_char.grid(row=0, column=0, padx=(0, 5), sticky="nsew")
+        left_char.grid(row=0, column=0, padx=2, sticky="nsew")
 
-        ctk.CTkLabel(left_char, text="左キャラ", font=("Arial", 12, "bold")).pack(anchor="w", padx=5, pady=2)
+        ctk.CTkLabel(left_char, text="キャラ1（左）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
         left_img_row = ctk.CTkFrame(left_char, fg_color="transparent")
         left_img_row.pack(fill="x", padx=5, pady=2)
-        self.story_left_char_entry = ctk.CTkEntry(left_img_row, placeholder_text="画像パス", width=150)
-        self.story_left_char_entry.pack(side="left", padx=(0, 5))
-        ctk.CTkButton(left_img_row, text="参照", width=50, command=lambda: self._browse_image(self.story_left_char_entry)).pack(side="left")
+        self.story_left_char_entry = ctk.CTkEntry(left_img_row, placeholder_text="画像", width=120)
+        self.story_left_char_entry.pack(side="left", padx=(0, 3))
+        ctk.CTkButton(left_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_left_char_entry)).pack(side="left")
 
         left_expr_row = ctk.CTkFrame(left_char, fg_color="transparent")
         left_expr_row.pack(fill="x", padx=5, pady=2)
         ctk.CTkLabel(left_expr_row, text="表情:").pack(side="left")
-        self.story_left_expr_entry = ctk.CTkEntry(left_expr_row, placeholder_text="Smiling", width=120)
-        self.story_left_expr_entry.pack(side="left", padx=5)
+        self.story_left_expr_entry = ctk.CTkEntry(left_expr_row, placeholder_text="笑顔", width=80)
+        self.story_left_expr_entry.pack(side="left", padx=3)
+
+        # 中央キャラ（任意）
+        center_char = ctk.CTkFrame(char_row)
+        center_char.grid(row=0, column=1, padx=2, sticky="nsew")
+
+        ctk.CTkLabel(center_char, text="キャラ2（中央・任意）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
+        center_img_row = ctk.CTkFrame(center_char, fg_color="transparent")
+        center_img_row.pack(fill="x", padx=5, pady=2)
+        self.story_center_char_entry = ctk.CTkEntry(center_img_row, placeholder_text="画像", width=120)
+        self.story_center_char_entry.pack(side="left", padx=(0, 3))
+        ctk.CTkButton(center_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_center_char_entry)).pack(side="left")
+
+        center_expr_row = ctk.CTkFrame(center_char, fg_color="transparent")
+        center_expr_row.pack(fill="x", padx=5, pady=2)
+        ctk.CTkLabel(center_expr_row, text="表情:").pack(side="left")
+        self.story_center_expr_entry = ctk.CTkEntry(center_expr_row, placeholder_text="笑顔", width=80)
+        self.story_center_expr_entry.pack(side="left", padx=3)
 
         # 右キャラ
         right_char = ctk.CTkFrame(char_row)
-        right_char.grid(row=0, column=1, padx=(5, 0), sticky="nsew")
+        right_char.grid(row=0, column=2, padx=2, sticky="nsew")
 
-        ctk.CTkLabel(right_char, text="右キャラ", font=("Arial", 12, "bold")).pack(anchor="w", padx=5, pady=2)
+        ctk.CTkLabel(right_char, text="キャラ3（右）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
         right_img_row = ctk.CTkFrame(right_char, fg_color="transparent")
         right_img_row.pack(fill="x", padx=5, pady=2)
-        self.story_right_char_entry = ctk.CTkEntry(right_img_row, placeholder_text="画像パス", width=150)
-        self.story_right_char_entry.pack(side="left", padx=(0, 5))
-        ctk.CTkButton(right_img_row, text="参照", width=50, command=lambda: self._browse_image(self.story_right_char_entry)).pack(side="left")
+        self.story_right_char_entry = ctk.CTkEntry(right_img_row, placeholder_text="画像", width=120)
+        self.story_right_char_entry.pack(side="left", padx=(0, 3))
+        ctk.CTkButton(right_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_right_char_entry)).pack(side="left")
 
         right_expr_row = ctk.CTkFrame(right_char, fg_color="transparent")
         right_expr_row.pack(fill="x", padx=5, pady=2)
         ctk.CTkLabel(right_expr_row, text="表情:").pack(side="left")
-        self.story_right_expr_entry = ctk.CTkEntry(right_expr_row, placeholder_text="Smiling", width=120)
+        self.story_right_expr_entry = ctk.CTkEntry(right_expr_row, placeholder_text="笑顔", width=80)
         self.story_right_expr_entry.pack(side="left", padx=5)
 
         # === ダイアログ設定 ===
@@ -434,15 +530,33 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_narration_entry = ctk.CTkEntry(narr_row, placeholder_text="今日から新学期が始まる", width=300)
         self.story_narration_entry.pack(side="left", fill="x", expand=True)
 
-        # セリフ（左右横並び）
+        # セリフ（3人分）
         speech_row = ctk.CTkFrame(dialog_frame, fg_color="transparent")
         speech_row.pack(fill="x", padx=10, pady=2)
-        ctk.CTkLabel(speech_row, text="左セリフ:").pack(side="left", padx=(0, 2))
-        self.story_left_speech_entry = ctk.CTkEntry(speech_row, placeholder_text="おはよう！", width=150)
-        self.story_left_speech_entry.pack(side="left", padx=(0, 15))
-        ctk.CTkLabel(speech_row, text="右セリフ:").pack(side="left", padx=(0, 2))
-        self.story_right_speech_entry = ctk.CTkEntry(speech_row, placeholder_text="おはよう", width=150)
-        self.story_right_speech_entry.pack(side="left")
+        speech_row.grid_columnconfigure(0, weight=1)
+        speech_row.grid_columnconfigure(1, weight=1)
+        speech_row.grid_columnconfigure(2, weight=1)
+
+        # キャラ1セリフ
+        speech1_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
+        speech1_frame.grid(row=0, column=0, padx=2, sticky="ew")
+        ctk.CTkLabel(speech1_frame, text="キャラ1:").pack(side="left")
+        self.story_left_speech_entry = ctk.CTkEntry(speech1_frame, placeholder_text="おはよう！", width=100)
+        self.story_left_speech_entry.pack(side="left", padx=2)
+
+        # キャラ2セリフ
+        speech2_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
+        speech2_frame.grid(row=0, column=1, padx=2, sticky="ew")
+        ctk.CTkLabel(speech2_frame, text="キャラ2:").pack(side="left")
+        self.story_center_speech_entry = ctk.CTkEntry(speech2_frame, placeholder_text="（任意）", width=100)
+        self.story_center_speech_entry.pack(side="left", padx=2)
+
+        # キャラ3セリフ
+        speech3_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
+        speech3_frame.grid(row=0, column=2, padx=2, sticky="ew")
+        ctk.CTkLabel(speech3_frame, text="キャラ3:").pack(side="left")
+        self.story_right_speech_entry = ctk.CTkEntry(speech3_frame, placeholder_text="おはよう", width=100)
+        self.story_right_speech_entry.pack(side="left", padx=2)
 
     # ========== ボスレイド設定 ==========
 
@@ -662,12 +776,22 @@ decorative_text_overlays:
 
     def _generate_battle_yaml(self):
         """バトルシーンYAML生成"""
+        # 背景設定
+        if self.battle_bg_type_var.get() == "file":
+            bg_section = f"""background:
+  source_image: "{self._get_filename(self.battle_bg_entry.get().strip())}"
+  dimming: {self.battle_dimming_slider.get():.1f}"""
+        else:
+            bg_prompt = self.battle_bg_prompt_entry.get("1.0", "end-1c").strip()
+            bg_section = f"""background:
+  generate_from_prompt: true
+  scene_description: "{bg_prompt}"
+  dimming: {self.battle_dimming_slider.get():.1f}"""
+
         return f"""# Battle Scene Composition (scene_composite.yaml準拠)
 type: final_scene_composition_dual_cutin
 
-background:
-  source_image: "{self._get_filename(self.battle_bg_entry.get().strip())}"
-  dimming: {self.battle_dimming_slider.get():.1f}
+{bg_section}
 
 cutin_effects:
   left_effect:
@@ -710,41 +834,94 @@ scene_settings:
 
     def _generate_story_yaml(self):
         """ストーリーシーンYAML生成"""
+        # 背景設定
+        if self.story_bg_type_var.get() == "file":
+            bg_section = f"""background:
+  source_image: "{self._get_filename(self.story_bg_entry.get().strip())}"
+  blur_amount: {int(self.story_blur_slider.get())}
+  lighting_mood: "{LIGHTING_MOODS.get(self.story_mood_menu.get(), 'Morning Sunlight')}\""""
+        else:
+            bg_prompt = self.story_bg_prompt_entry.get("1.0", "end-1c").strip()
+            bg_section = f"""background:
+  generate_from_prompt: true
+  scene_description: "{bg_prompt}"
+  blur_amount: {int(self.story_blur_slider.get())}
+  lighting_mood: "{LIGHTING_MOODS.get(self.story_mood_menu.get(), 'Morning Sunlight')}\""""
+
+        # キャラクターセクション（3人対応）
+        characters_yaml = ""
+
+        # キャラ1（左）
+        left_img = self.story_left_char_entry.get().strip()
+        if left_img:
+            characters_yaml += f"""
+character_1:
+  source_image: "{self._get_filename(left_img)}"
+  position: "Left"
+  scale: 1.0
+  expression_override: "{self.story_left_expr_entry.get().strip() or 'Smiling'}"
+"""
+
+        # キャラ2（中央）- 任意
+        center_img = self.story_center_char_entry.get().strip()
+        if center_img:
+            characters_yaml += f"""
+character_2:
+  source_image: "{self._get_filename(center_img)}"
+  position: "Center"
+  scale: 1.0
+  expression_override: "{self.story_center_expr_entry.get().strip() or 'Smiling'}"
+"""
+
+        # キャラ3（右）
+        right_img = self.story_right_char_entry.get().strip()
+        if right_img:
+            characters_yaml += f"""
+character_3:
+  source_image: "{self._get_filename(right_img)}"
+  position: "Right"
+  scale: 1.0
+  expression_override: "{self.story_right_expr_entry.get().strip() or 'Smiling'}"
+"""
+
+        # ダイアログセクション（3人対応）
+        dialogues_yaml = ""
+        left_speech = self.story_left_speech_entry.get().strip()
+        center_speech = self.story_center_speech_entry.get().strip()
+        right_speech = self.story_right_speech_entry.get().strip()
+
+        if left_speech:
+            dialogues_yaml += f"""
+    - speaker: "Character 1 (Left)"
+      text: "{left_speech}"
+      shape: "Round (Normal)\""""
+        if center_speech:
+            dialogues_yaml += f"""
+    - speaker: "Character 2 (Center)"
+      text: "{center_speech}"
+      shape: "Round (Normal)\""""
+        if right_speech:
+            dialogues_yaml += f"""
+    - speaker: "Character 3 (Right)"
+      text: "{right_speech}"
+      shape: "Round (Normal)\""""
+
         return f"""# Story Scene Composition (story_scene_composite.yaml準拠)
 type: story_scene_composition
 
-background:
-  source_image: "{self._get_filename(self.story_bg_entry.get().strip())}"
-  blur_amount: {int(self.story_blur_slider.get())}
-  lighting_mood: "{LIGHTING_MOODS.get(self.story_mood_menu.get(), 'Morning Sunlight')}"
+{bg_section}
 
 scene_interaction:
   layout_type: "{STORY_LAYOUTS.get(self.story_layout_menu.get(), 'Side by Side (Walking)')}"
   distance: "{STORY_DISTANCE.get(self.story_distance_menu.get(), 'Close Friends')}"
-
-left_character:
-  source_image: "{self._get_filename(self.story_left_char_entry.get().strip())}"
-  scale: 1.0
-  expression_override: "{self.story_left_expr_entry.get().strip() or 'Smiling'}"
-
-right_character:
-  source_image: "{self._get_filename(self.story_right_char_entry.get().strip())}"
-  scale: 1.0
-  expression_override: "{self.story_right_expr_entry.get().strip() or 'Smiling'}"
-
+{characters_yaml}
 comic_overlay:
   enabled: true
   style: "Slice of Life / Visual Novel"
   narration_box:
     text: "{self.story_narration_entry.get().strip()}"
     position: "Top Left"
-  dialogues:
-    - speaker: "Left Character"
-      text: "{self.story_left_speech_entry.get().strip()}"
-      shape: "Round (Normal)"
-    - speaker: "Right Character"
-      text: "{self.story_right_speech_entry.get().strip()}"
-      shape: "Round (Normal)"
+  dialogues:{dialogues_yaml}
 
 post_processing:
   filter: "Soft Anime Look"
