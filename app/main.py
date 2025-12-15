@@ -1808,7 +1808,7 @@ style:
 type: text_ui_layer_definition
 
 ui_global_style:
-  preset: "Anime Battle"
+  preset: "Character Name Plate"
   font_language: "Japanese"
 
 name_tag:
@@ -1818,6 +1818,11 @@ name_tag:
   style:
     type: "{NAMETAG_TYPES.get(style.get('type', 'ギザギザステッカー'), 'Jagged Sticker')}"
     rotation: "{ROTATIONS.get(style.get('rotation', '少し左傾き'), '-5 degrees')}"
+
+constraints:
+  - "Generate ONLY the name plate/tag element"
+  - "Do NOT add any game UI elements (health bars, meters, VS logos)"
+  - "Do NOT add any fighting game or battle interface elements"
 
 output:
   background: "{bg_value}"
