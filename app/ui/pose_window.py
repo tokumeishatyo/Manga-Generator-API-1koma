@@ -14,79 +14,41 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ui.base_settings_window import BaseSettingsWindow
-from constants import CHARACTER_POSES  # CHARACTER_FACING は正面固定のため不要
 
 
-# ポーズプリセット（選択時に各設定を自動入力）
-# ※description はGoogle Gemini謹製のプロンプト（character_pose.yaml準拠）
+# ポーズプリセット（選択時に動作説明を自動入力）
 POSE_PRESETS = {
     "（プリセットなし）": None,
     "波動拳（かめはめ波）": {
-        "category": "攻撃（魔法）",
-        "pose": "攻撃",
         "description": "Thrusting both palms forward at waist level, knees slightly bent, focusing energy between hands",
-        "dynamism": "誇張",
-        "include_effects": False,  # 合成用にキャラだけ欲しい場合はFalse推奨
+        "include_effects": False,
         "wind_effect": "前からの風",
-        "camera_angle": "真横（格ゲー風）",
         "additional_prompt": "energy blast stance, power stance"
     },
     "スペシウム光線": {
-        "category": "攻撃（魔法）",
-        "pose": "攻撃",
         "description": "Crossing arms in a plus sign shape (+) in front of chest, right hand vertical, left hand horizontal",
-        "dynamism": "標準",
         "include_effects": False,
         "wind_effect": "前からの風",
-        "camera_angle": "ダイナミック（煽り）",
         "additional_prompt": "cross beam pose, heroic stance"
     },
     "ライダーキック": {
-        "category": "攻撃（打撃）",
-        "pose": "ジャンプ",
         "description": "Mid-air dynamic flying kick, one leg extended forward, body angled downward, floating in the air",
-        "dynamism": "誇張",
         "include_effects": False,
         "wind_effect": "前からの風",
-        "camera_angle": "ダイナミック（煽り）",
         "additional_prompt": "aerial attack, no shadow on ground to emphasize floating"
     },
     "指先ビーム": {
-        "category": "攻撃（魔法）",
-        "pose": "攻撃",
         "description": "Pointing index finger forward, arm fully extended, other fingers closed, cool and composed expression",
-        "dynamism": "標準",
         "include_effects": False,
         "wind_effect": "なし",
-        "camera_angle": "斜め前",
         "additional_prompt": "precision attack, finger gun pose"
     },
     "坐禅（瞑想）": {
-        "category": "待機",
-        "pose": "瞑想",
         "description": "Sitting cross-legged in lotus position, hands resting on knees, eyes closed, meditative posture",
-        "dynamism": "控えめ",
         "include_effects": False,
         "wind_effect": "なし",
-        "camera_angle": "正面",
         "additional_prompt": "meditation, zazen, static still pose"
     }
-}
-
-# ポーズ用追加定数
-ACTION_CATEGORIES = {
-    "攻撃（打撃）": "Melee Attack",
-    "攻撃（魔法）": "Magic Attack",
-    "攻撃（射撃）": "Ranged Attack",
-    "防御": "Defensive",
-    "移動": "Movement",
-    "待機": "Idle/Ready"
-}
-
-DYNAMISM_LEVELS = {
-    "控えめ": "Low (Subtle)",
-    "標準": "Medium (Normal)",
-    "誇張": "High (Exaggerated)"
 }
 
 WIND_EFFECTS = {
@@ -94,23 +56,6 @@ WIND_EFFECTS = {
     "前からの風": "Strong Wind from Front",
     "後ろからの風": "Wind from Behind",
     "横からの風": "Side Wind"
-}
-
-CAMERA_ANGLES = {
-    "真横（格ゲー風）": "Side View (Fighting Game)",
-    "斜め前": "3/4 View",
-    "正面": "Front View",
-    "ダイナミック（煽り）": "Low Angle / Dynamic"
-}
-
-ZOOM_LEVELS = {
-    "全身": "Full Body",
-    "上半身": "Upper Body, waist up",
-    "バストアップ": "Medium Close Up, chest and head visible, cutting off above the waist",
-    "胸から上": "Chest up shot, head and chest visible",
-    "胴体中ほどから上": "Shot from mid-torso up, framing from navel area to head",
-    "みぞおちから上": "Shot from solar plexus up, framing from solar plexus to top of head",
-    "顔アップ": "Close Up, face only, facial features detail"
 }
 
 EXPRESSIONS = {
@@ -121,24 +66,9 @@ EXPRESSIONS = {
     "恥じらい": "shy expression, blushing, embarrassed face"
 }
 
-# 使用する手足
-LIMB_HAND = {
-    "指定なし": "",
-    "右手": "using right hand",
-    "左手": "using left hand",
-    "両手": "using both hands"
-}
-
-LIMB_FOOT = {
-    "指定なし": "",
-    "右足": "using right foot, right leg extended",
-    "左足": "using left foot, left leg extended",
-    "両足": "using both feet"
-}
-
 
 class PoseWindow(BaseSettingsWindow):
-    """ポーズ三面図設定ウィンドウ（Step4）- 正面/横/背面の三面図を生成"""
+    """ポーズ設定ウィンドウ（Step4）- ポーズ付きキャラクター画像を1枚生成"""
 
     def __init__(
         self,
@@ -158,9 +88,9 @@ class PoseWindow(BaseSettingsWindow):
         self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
-            title="Step4: ポーズ三面図",
-            width=750,
-            height=750,
+            title="Step4: ポーズ",
+            width=700,
+            height=550,
             callback=callback
         )
 
@@ -178,7 +108,7 @@ class PoseWindow(BaseSettingsWindow):
 
         ctk.CTkLabel(
             preset_frame,
-            text="よく使うポーズを選択すると設定が自動入力されます",
+            text="よく使うポーズを選択すると動作説明が自動入力されます",
             font=("Arial", 11),
             text_color="gray"
         ).grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
@@ -249,137 +179,58 @@ class PoseWindow(BaseSettingsWindow):
             font=("Arial", 16, "bold")
         ).grid(row=0, column=0, columnspan=4, padx=10, pady=(10, 5), sticky="w")
 
-        # 三面図の説明
-        ctk.CTkLabel(
-            orient_frame,
-            text="※ 正面・横・背面の三面図を生成します。Step5で任意の角度に変換できます。",
-            font=("Arial", 11),
-            text_color="gray"
-        ).grid(row=1, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
-
-        # 左右整合性の制限警告
-        ctk.CTkLabel(
-            orient_frame,
-            text="⚠ 三面図の左右整合性（右手が全ビューで右手として描かれる等）は保証されません。",
-            font=("Arial", 11),
-            text_color="orange"
-        ).grid(row=2, column=0, columnspan=4, padx=10, pady=(0, 5), sticky="w")
-
         # 目線
-        ctk.CTkLabel(orient_frame, text="目線:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="目線:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
         self.eye_line_menu = ctk.CTkOptionMenu(
             orient_frame,
             values=["前を見る", "上を見る", "下を見る"],
             width=120
         )
         self.eye_line_menu.set("前を見る")
-        self.eye_line_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+        self.eye_line_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
         # 表情
-        ctk.CTkLabel(orient_frame, text="表情:").grid(row=3, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
         self.expression_menu = ctk.CTkOptionMenu(
             orient_frame,
             values=list(EXPRESSIONS.keys()),
             width=120
         )
         self.expression_menu.set("無表情")
-        self.expression_menu.grid(row=3, column=3, padx=5, pady=5, sticky="w")
+        self.expression_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
 
         # 表情補足（テキストボックス）
-        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(orient_frame, text="表情補足:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.expression_detail_entry = ctk.CTkEntry(
             orient_frame,
             placeholder_text="例：苦笑い、泣き笑い、ニヤリ",
             width=280
         )
-        self.expression_detail_entry.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="w")
+        self.expression_detail_entry.grid(row=2, column=1, columnspan=3, padx=5, pady=5, sticky="w")
 
-        # === アクション設定 ===
+        # === 動作説明 ===
         action_frame = ctk.CTkFrame(self.content_frame)
         action_frame.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
         action_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
             action_frame,
-            text="アクション設定",
+            text="動作説明",
             font=("Arial", 16, "bold")
-        ).grid(row=0, column=0, columnspan=4, padx=10, pady=(10, 5), sticky="w")
+        ).grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
 
-        # カテゴリ
-        ctk.CTkLabel(action_frame, text="カテゴリ:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.category_menu = ctk.CTkOptionMenu(
+        ctk.CTkLabel(
             action_frame,
-            values=list(ACTION_CATEGORIES.keys()),
-            width=130
-        )
-        self.category_menu.set("攻撃（魔法）")
-        self.category_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+            text="ポーズや動作を自由に記述してください（日本語/英語どちらでも可）",
+            font=("Arial", 11),
+            text_color="gray"
+        ).grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 5), sticky="w")
 
-        # ポーズ
-        ctk.CTkLabel(action_frame, text="ポーズ:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
-        self.pose_menu = ctk.CTkOptionMenu(
-            action_frame,
-            values=list(CHARACTER_POSES.keys()),
-            width=130
-        )
-        self.pose_menu.set("攻撃")
-        self.pose_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
-
-        # 動作の詳細説明
-        ctk.CTkLabel(action_frame, text="動作説明:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
         self.action_desc_entry = ctk.CTkEntry(
             action_frame,
-            placeholder_text="例：魔法の杖を前方に突き出す、詠唱ポーズ"
+            placeholder_text="例：椅子に座ってコーヒーを飲む、手を振る、考え込むポーズ"
         )
-        self.action_desc_entry.grid(row=2, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
-
-        # 躍動感
-        ctk.CTkLabel(action_frame, text="躍動感:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
-        self.dynamism_menu = ctk.CTkOptionMenu(
-            action_frame,
-            values=list(DYNAMISM_LEVELS.keys()),
-            width=120
-        )
-        self.dynamism_menu.set("誇張")
-        self.dynamism_menu.grid(row=3, column=1, padx=5, pady=5, sticky="w")
-
-        # 使用する手
-        ctk.CTkLabel(action_frame, text="使用する手:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
-        self.hand_menu = ctk.CTkOptionMenu(
-            action_frame,
-            values=list(LIMB_HAND.keys()),
-            width=100
-        )
-        self.hand_menu.set("指定なし")
-        self.hand_menu.grid(row=4, column=1, padx=5, pady=5, sticky="w")
-
-        # 手の詳細
-        ctk.CTkLabel(action_frame, text="手の詳細:").grid(row=4, column=2, padx=10, pady=5, sticky="w")
-        self.hand_detail_entry = ctk.CTkEntry(
-            action_frame,
-            placeholder_text="例：右手が上 / right hand on top",
-            width=200
-        )
-        self.hand_detail_entry.grid(row=4, column=3, padx=5, pady=5, sticky="w")
-
-        # 使用する足
-        ctk.CTkLabel(action_frame, text="使用する足:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
-        self.foot_menu = ctk.CTkOptionMenu(
-            action_frame,
-            values=list(LIMB_FOOT.keys()),
-            width=100
-        )
-        self.foot_menu.set("指定なし")
-        self.foot_menu.grid(row=5, column=1, padx=5, pady=5, sticky="w")
-
-        # 足の詳細
-        ctk.CTkLabel(action_frame, text="足の詳細:").grid(row=5, column=2, padx=10, pady=5, sticky="w")
-        self.foot_detail_entry = ctk.CTkEntry(
-            action_frame,
-            placeholder_text="例：左足が前 / left foot forward",
-            width=200
-        )
-        self.foot_detail_entry.grid(row=5, column=3, padx=5, pady=5, sticky="w")
+        self.action_desc_entry.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
 
         # === ビジュアル効果 ===
         visual_frame = ctk.CTkFrame(self.content_frame)
@@ -408,17 +259,14 @@ class PoseWindow(BaseSettingsWindow):
         ).grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
 
         # 風の影響
-        ctk.CTkLabel(visual_frame, text="風の影響:").grid(row=2, column=2, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(visual_frame, text="風の影響:").grid(row=1, column=2, padx=10, pady=5, sticky="w")
         self.wind_menu = ctk.CTkOptionMenu(
             visual_frame,
             values=list(WIND_EFFECTS.keys()),
             width=130
         )
-        self.wind_menu.set("前からの風")
+        self.wind_menu.set("なし")
         self.wind_menu.grid(row=1, column=3, padx=5, pady=5, sticky="w")
-
-        # カメラワーク（任意角度）はStep5（角度変更）で設定
-        # このステップでは三面図（正面/横/背面）を生成
 
     def _browse_image(self):
         """画像参照ダイアログ"""
@@ -436,21 +284,14 @@ class PoseWindow(BaseSettingsWindow):
             self.current_additional_prompt = ""
             return
 
-        # 各設定を自動入力
-        if "category" in preset:
-            self.category_menu.set(preset["category"])
-        if "pose" in preset:
-            self.pose_menu.set(preset["pose"])
+        # 動作説明を自動入力
         if "description" in preset:
             self.action_desc_entry.delete(0, tk.END)
             self.action_desc_entry.insert(0, preset["description"])
-        if "dynamism" in preset:
-            self.dynamism_menu.set(preset["dynamism"])
         if "include_effects" in preset:
             self.include_effects_var.set(preset["include_effects"])
         if "wind_effect" in preset:
             self.wind_menu.set(preset["wind_effect"])
-        # camera_angle は正面固定のためスキップ（Step5で角度変更）
 
         # 追加プロンプトを保持
         self.current_additional_prompt = preset.get("additional_prompt", "")
@@ -461,18 +302,11 @@ class PoseWindow(BaseSettingsWindow):
             'preset': self.preset_menu.get(),
             'image_path': self.image_entry.get().strip(),
             'identity_preservation': self.preservation_slider.get(),
-            'output_format': 'three_view',  # 三面図形式
+            'output_format': 'single',  # 1枚出力
             'eye_line': self.eye_line_menu.get(),
             'expression': self.expression_menu.get(),
             'expression_detail': self.expression_detail_entry.get().strip(),
-            'action_category': self.category_menu.get(),
-            'pose': self.pose_menu.get(),
             'action_description': self.action_desc_entry.get().strip(),
-            'dynamism': self.dynamism_menu.get(),
-            'hand': self.hand_menu.get(),
-            'hand_detail': self.hand_detail_entry.get().strip(),
-            'foot': self.foot_menu.get(),
-            'foot_detail': self.foot_detail_entry.get().strip(),
             'include_effects': self.include_effects_var.get(),
             'transparent_bg': self.transparent_bg_var.get(),
             'wind_effect': self.wind_menu.get(),

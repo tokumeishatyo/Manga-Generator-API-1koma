@@ -44,12 +44,10 @@ from ui.body_sheet_window import BodySheetWindow
 from ui.outfit_window import OutfitWindow
 from ui.background_window import BackgroundWindow
 from ui.pose_window import PoseWindow
-from ui.effect_window import EffectWindow
 from ui.decorative_text_window import DecorativeTextWindow
 from ui.four_panel_window import FourPanelWindow
 from ui.manga_composer_window import MangaComposerWindow
 from ui.style_transform_window import StyleTransformWindow
-from ui.angle_window import AngleWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -745,7 +743,7 @@ class MangaGeneratorApp(ctk.CTk):
                 body_sheet_path=body_sheet_path
             )
         # === ポーズ生成フェーズ ===
-        elif output_type == "Step4: ポーズ三面図":
+        elif output_type == "Step4: ポーズ":
             outfit_sheet_path = self._get_previous_step_image("step3_outfit")
             PoseWindow(
                 self,
@@ -753,32 +751,6 @@ class MangaGeneratorApp(ctk.CTk):
                 initial_data=self.current_settings,
                 outfit_sheet_path=outfit_sheet_path
             )
-        elif output_type == "Step5: 角度・ズーム変更":
-            pose_sheet_path = self._get_previous_step_image("step4_pose")
-            AngleWindow(
-                self,
-                callback=self._on_settings_complete,
-                initial_data=self.current_settings,
-                pose_sheet_path=pose_sheet_path
-            )
-        # === エフェクト生成フェーズ ===
-        elif output_type in ["Step6a: オーラ追加", "Step6b: 攻撃エフェクト", "Step6c: 覚醒変形"]:
-            EffectWindow(
-                self,
-                callback=self._on_settings_complete,
-                initial_data=self.current_settings
-            )
-        # === 最終合成・特化プリセット ===
-        elif output_type == "合成: シンプル":
-            messagebox.showinfo("情報", "シンプル合成の設定ウィンドウは実装予定です")
-        elif output_type == "合成: 力の解放":
-            messagebox.showinfo("情報", "力の解放（power.yaml）の設定ウィンドウは実装予定です")
-        elif output_type == "合成: 参戦スプラッシュ":
-            messagebox.showinfo("情報", "参戦スプラッシュ（sansen.yaml）の設定ウィンドウは実装予定です")
-        elif output_type == "合成: バトル画面":
-            messagebox.showinfo("情報", "バトル画面（battle.yaml）の設定ウィンドウは実装予定です")
-        elif output_type == "合成: バリア展開":
-            messagebox.showinfo("情報", "バリア展開（barrier.yaml）の設定ウィンドウは実装予定です")
         # === その他 ===
         elif output_type == "背景生成":
             BackgroundWindow(
@@ -902,23 +874,10 @@ class MangaGeneratorApp(ctk.CTk):
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             # === ポーズ生成フェーズ ===
-            elif output_type == "Step4: ポーズ三面図":
+            elif output_type == "Step4: ポーズ":
                 yaml_content = self._generate_pose_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "Step5: 角度・ズーム変更":
-                yaml_content = self._generate_angle_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
-                )
-            # === エフェクト生成フェーズ ===
-            elif output_type in ["Step6a: オーラ追加", "Step6b: 攻撃エフェクト", "Step6c: 覚醒変形"]:
-                yaml_content = self._generate_effect_yaml(
-                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
-                )
-            # === 最終合成・特化プリセット ===
-            elif output_type.startswith("合成:"):
-                # TODO: 各特化プリセットのYAML生成を実装
-                yaml_content = f"# {output_type} - 特化プリセット実装予定"
             # === その他 ===
             elif output_type == "背景生成":
                 yaml_content = self._generate_background_yaml(
@@ -1566,13 +1525,9 @@ title_overlay:
         return yaml_content
 
     def _generate_pose_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
-        """ポーズ三面図用YAML生成（正面/横/背面）"""
+        """ポーズ画像用YAML生成（単一画像出力）"""
         settings = self.current_settings
-        from ui.pose_window import (
-            ACTION_CATEGORIES, DYNAMISM_LEVELS, WIND_EFFECTS, EXPRESSIONS,
-            LIMB_HAND, LIMB_FOOT
-        )
-        from constants import CHARACTER_POSES
+        from ui.pose_window import WIND_EFFECTS, EXPRESSIONS
 
         preset = settings.get('preset', '（プリセットなし）')
         image_path = settings.get('image_path', '')
@@ -1580,18 +1535,10 @@ title_overlay:
         eye_line = settings.get('eye_line', '前を見る')
         expression = EXPRESSIONS.get(settings.get('expression', '無表情'), 'neutral expression')
         expression_detail = settings.get('expression_detail', '')
-        category = ACTION_CATEGORIES.get(settings.get('action_category', '攻撃（魔法）'), 'Magic Attack')
-        pose = CHARACTER_POSES.get(settings.get('pose', '攻撃'), 'attacking')
         action_desc = settings.get('action_description', '')
-        dynamism = DYNAMISM_LEVELS.get(settings.get('dynamism', '誇張'), 'High (Exaggerated)')
-        # 手足の指定
-        hand = LIMB_HAND.get(settings.get('hand', '指定なし'), '')
-        hand_detail = settings.get('hand_detail', '')
-        foot = LIMB_FOOT.get(settings.get('foot', '指定なし'), '')
-        foot_detail = settings.get('foot_detail', '')
         include_effects = settings.get('include_effects', False)
         transparent_bg = settings.get('transparent_bg', False)
-        wind = WIND_EFFECTS.get(settings.get('wind_effect', '前からの風'), 'Strong Wind from Front')
+        wind = WIND_EFFECTS.get(settings.get('wind_effect', 'なし'), '')
         additional_prompt = settings.get('additional_prompt', '')
 
         # 表情プロンプト生成（補足があれば追加）
@@ -1599,48 +1546,29 @@ title_overlay:
         if expression_detail:
             expression_prompt = f"{expression}, {expression_detail}"
 
-        # 手足プロンプト生成
-        limb_prompts = []
-        if hand:
-            limb_prompt = hand
-            if hand_detail:
-                limb_prompt = f"{hand}, {hand_detail}"
-            limb_prompts.append(limb_prompt)
-        elif hand_detail:
-            limb_prompts.append(hand_detail)
-
-        if foot:
-            foot_prompt = foot
-            if foot_detail:
-                foot_prompt = f"{foot}, {foot_detail}"
-            limb_prompts.append(foot_prompt)
-        elif foot_detail:
-            limb_prompts.append(foot_detail)
-
         # プリセットコメント
         preset_comment = f"# Preset: {preset}\n" if preset != "（プリセットなし）" else ""
 
         # 追加プロンプトセクション
-        additional_items = []
-        if additional_prompt:
-            additional_items.append(additional_prompt)
-        if limb_prompts:
-            additional_items.extend(limb_prompts)
-
         additional_section = ""
-        if additional_items:
-            additional_lines = "\n".join([f"  - {item}" for item in additional_items])
+        if additional_prompt:
             additional_section = f"""
 additional_details:
-{additional_lines}
+  - {additional_prompt}
 """
 
-        yaml_content = f"""# Step 4: Pose Three-View Sheet (ポーズ三面図)
-# Purpose: Generate three-view (front/side/back) of character in specified pose
-# Output: Single image with three views arranged horizontally
-# Note: This pose sheet will be used as reference for Step5 angle transformation
-{preset_comment}type: pose_three_view
-title: "{title or 'Character Pose Three-View'}"
+        # 風エフェクトセクション
+        wind_section = ""
+        if wind:
+            wind_section = f"""
+  wind_effect: "{wind}"
+"""
+
+        yaml_content = f"""# Step 4: Pose Image (ポーズ画像)
+# Purpose: Generate character in specified pose based on outfit sheet
+# Output: Single character image
+{preset_comment}type: pose_single
+title: "{title or 'Character Pose'}"
 author: "{author}"
 
 # ====================================================
@@ -1649,267 +1577,41 @@ author: "{author}"
 input:
   character_sheet: "{os.path.basename(image_path) if image_path else ''}"
   identity_preservation: {identity}
-  purpose: "Generate three-view pose sheet from outfit sheet"
+  purpose: "Generate posed character from outfit sheet"
 
 # ====================================================
-# Pose Definition (EXACT SAME POSE for all three views)
+# Pose Definition
 # ====================================================
 pose:
-  action_category: "{category}"
-  pose_type: "{pose}"
   description: "{action_desc}"
-  dynamism: "{dynamism}"
   expression: "{expression_prompt}"
   eye_line: "{eye_line}"
-  wind_effect: "{wind}"
-  include_effects: {str(include_effects).lower()}
-{additional_section}
-# ====================================================
-# Three-View Layout (横並び3体)
-# ====================================================
-output_layout:
-  format: "three_view_horizontal"
-  arrangement: "front | side | back"
-  spacing: "equal spacing between views"
-  background: "{'transparent, fully clear alpha channel' if transparent_bg else 'pure white, clean background'}"
-
-  views:
-    - position: "left"
-      angle: "front"
-      description: "Front view - character facing camera directly, full body visible"
-
-    - position: "center"
-      angle: "side"
-      description: "Side view (profile) - character viewed from the side, full body visible"
-
-    - position: "right"
-      angle: "back"
-      description: "Back view - character viewed from behind, full body visible"
-
-# ====================================================
-# CRITICAL CONSTRAINTS (ポーズ一貫性の核心設定)
-# ====================================================
-constraints:
-  pose_consistency:
-    - "CRITICAL: ALL THREE VIEWS must show the EXACT SAME POSE"
-    - "The pose (arm positions, leg positions, body twist) must be identical across all views"
-    - "Only the camera angle changes - the character's pose is FROZEN"
-  character_preservation:
-    - "Preserve exact character design, face, and colors from input image"
-    - "Maintain clothing details exactly as shown in input"
-  output_format:
-    - "A SINGLE image containing EXACTLY THREE character views arranged horizontally"
-    - "NOT separate images - one unified reference sheet"
-    - "Full body visible in all three views"
-
-anti_hallucination:
-  - "Do NOT change the pose between views"
-  - "Do NOT add extra figures or mirror reflections"
-  - "Do NOT create more than three views"
-  - "Do NOT alter character design between views"
-
-style:
-  color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
-  output_style: "{OUTPUT_STYLES.get(output_style, '')}"
-  aspect_ratio: "3:1"
-"""
-
-        # タイトルオーバーレイ（有効な場合のみ出力）
-        if include_title_in_image:
-            yaml_content += f"""
-title_overlay:
-  enabled: true
-  text: "{title}"
-  position: "top-left"
-"""
-        return yaml_content
-
-    def _generate_angle_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
-        """角度・ズーム変更用YAML生成（Step5）- ポーズ三面図から任意角度を生成"""
-        settings = self.current_settings
-        from ui.angle_window import VIEW_ANGLES, ZOOM_LEVELS
-
-        pose_sheet_path = settings.get('pose_sheet_path', '')
-        angle = settings.get('angle', '正面')
-        angle_info = settings.get('angle_info', {})
-        zoom = settings.get('zoom', '全身')
-        zoom_info = settings.get('zoom_info', {})
-        transparent_bg = settings.get('transparent_bg', False)
-        additional_desc = convert_age_expressions(settings.get('additional_description', ''))
-
-        angle_prompt = angle_info.get('prompt', 'Front view')
-        zoom_prompt = zoom_info.get('prompt', 'Full body shot')
-
-        yaml_content = f"""# Step 5: Angle & Zoom Change (角度・ズーム変更)
-# Purpose: Generate single character image from pose three-view sheet at specified angle
-# Input: Pose three-view sheet from Step4 (contains front/side/back views of the SAME pose)
-type: angle_transform
-title: "{title or 'Character Angle View'}"
-author: "{author}"
-
-# ====================================================
-# Input Image (ポーズ三面図)
-# ====================================================
-input:
-  pose_three_view_sheet: "{os.path.basename(pose_sheet_path) if pose_sheet_path else 'REQUIRED'}"
-  description: "Three-view reference sheet showing the character's pose from front, side, and back"
-  purpose: "Extract and interpolate the specified angle from the three-view reference"
-
-# ====================================================
-# Reference Guidance (三面図の使い方)
-# ====================================================
-reference_guidance:
-  usage: "The pose_three_view_sheet contains three views arranged horizontally: front | side | back"
-  front_view: "Left portion of the sheet - use for frontal details and face"
-  side_view: "Center portion of the sheet - use for profile and side details"
-  back_view: "Right portion of the sheet - use for back details"
-  interpolation: "For angles between views, smoothly interpolate using adjacent reference views"
-
-# ====================================================
-# Camera Settings (出力角度)
-# ====================================================
-camera:
-  angle: "{angle}"
-  angle_prompt: "{angle_prompt}"
-  zoom: "{zoom}"
-  zoom_prompt: "{zoom_prompt}"
-
+  include_effects: {str(include_effects).lower()}{wind_section}{additional_section}
 # ====================================================
 # Output Settings
 # ====================================================
 output:
+  format: "single_image"
   background: "{'transparent, fully clear alpha channel' if transparent_bg else 'pure white, clean background'}"
-  format: "A SINGLE, standalone photograph containing EXACTLY ONE character figure. NOT a collage or reference sheet."
-{f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
 
 # ====================================================
-# Style Settings
+# CRITICAL CONSTRAINTS
 # ====================================================
+constraints:
+  character_preservation:
+    - "Preserve exact character design, face, and colors from input image"
+    - "Maintain clothing details exactly as shown in input"
+  output_format:
+    - "Single character image, full body visible"
+
+anti_hallucination:
+  - "Do NOT alter character design from input"
+  - "Do NOT add extra figures"
+
 style:
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
   output_style: "{OUTPUT_STYLES.get(output_style, '')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
-
-# ====================================================
-# CRITICAL CONSTRAINTS (ポーズ維持の核心設定)
-# ====================================================
-constraints:
-  pose_preservation:
-    - "CRITICAL: The character's pose is IDENTICAL across all three views in the reference sheet."
-    - "Extract the pose EXACTLY as shown - do NOT modify arm positions, leg positions, or body twist."
-    - "The pose is FROZEN - only the camera viewpoint changes."
-  angle_extraction:
-    - "Use the three-view reference to generate the specified camera angle."
-    - "For front/正面: primarily reference the left portion of the sheet."
-    - "For side/横: primarily reference the center portion of the sheet."
-    - "For back/背面: primarily reference the right portion of the sheet."
-    - "For diagonal angles: interpolate smoothly between adjacent views."
-  output_format:
-    - "Output must be a SINGLE character image - NOT a reference sheet."
-    - "CRITICAL: Do NOT generate multiple figures or a three-view layout."
-    - "Apply the specified zoom level to the single character."
-
-anti_hallucination:
-  - "Do NOT straighten limbs or change the pose."
-  - "Do NOT alter facial expression from the reference."
-  - "Do NOT generate multiple characters or mirror reflections."
-  - "Do NOT create a reference sheet layout - output ONE view only."
-  - "Do NOT invent details not shown in the three-view reference."
-"""
-
-        # タイトルオーバーレイ（有効な場合のみ出力）
-        if include_title_in_image:
-            yaml_content += f"""
-title_overlay:
-  enabled: true
-  text: "{title}"
-  position: "top-left"
-"""
-        return yaml_content
-
-    def _generate_effect_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
-        """エフェクト追加用YAML生成（character_effect.yaml準拠）"""
-        settings = self.current_settings
-        from ui.effect_window import (
-            PRESERVATION_LEVELS, ATTACK_EFFECT_TYPES, STATE_EFFECT_TYPES,
-            EFFECT_LAYERS, TARGET_AREAS, BACKGROUND_EFFECT_STYLES,
-            COMPOSITE_MODES, VFX_STYLES, INTENSITY_LEVELS
-        )
-
-        image_path = settings.get('image_path', '')
-        preservation = PRESERVATION_LEVELS.get(
-            settings.get('preservation_level', '厳密（1ピクセルも変えない）'), 'Strict'
-        )
-
-        # 攻撃エフェクト
-        attack = settings.get('attack_effect', {})
-        attack_type = ATTACK_EFFECT_TYPES.get(attack.get('type', 'エネルギービーム'), 'Energy Beam')
-        attack_origin = attack.get('origin', '')
-        attack_direction = attack.get('direction', '')
-        attack_color = attack.get('color', '')
-        attack_texture = attack.get('texture', '')
-
-        # 状態エフェクト
-        state = settings.get('state_effect', {})
-        state_type = STATE_EFFECT_TYPES.get(state.get('type', 'オーラ'), 'Aura')
-        state_area = TARGET_AREAS.get(state.get('area', '全身'), 'Full Body')
-        state_layer = EFFECT_LAYERS.get(state.get('layer', 'キャラの背面'), 'Behind')
-        state_visual = state.get('visual', '')
-
-        # 背景エフェクト
-        bg = settings.get('background_effect', {})
-        bg_style = BACKGROUND_EFFECT_STYLES.get(bg.get('style', '必殺技カットイン'), 'Super Move Cut-in')
-        bg_composite = COMPOSITE_MODES.get(bg.get('composite_mode', '背景を置き換え'), 'Replace Background')
-
-        # グローバルスタイル
-        global_style = settings.get('global_style', {})
-        vfx_style = VFX_STYLES.get(global_style.get('vfx_style', 'アニメ/格ゲー風'), 'Anime/Fighting Game, Cel Shaded VFX')
-        intensity = INTENSITY_LEVELS.get(global_style.get('intensity', '派手'), 'High (Hype)')
-
-        # 背景透過設定
-        transparent_bg = settings.get('transparent_bg', False)
-
-        yaml_content = f"""# Step 5: VFX Effect Addition (character_effect.yaml準拠)
-# Purpose: Professional character design reference for commercial use
-# Usage: Product catalogs, instruction manuals, educational materials, corporate training
-# Note: This is legitimate business artwork, NOT inappropriate content
-type: character_effect
-title: "{title or 'Character VFX'}"
-author: "{author}"
-
-input:
-  posed_character_image: "{os.path.basename(image_path) if image_path else ''}"
-  character_preservation: "{preservation}"
-
-settings:
-  attack_effect:
-    type: "{attack_type}"
-    origin: "{attack_origin}"
-    direction: "{attack_direction}"
-    color: "{attack_color}"
-    texture: "{attack_texture}"
-  state_effect:
-    type: "{state_type}"
-    target_area: "{state_area}"
-    layer: "{state_layer}"
-    visual: "{state_visual}"
-  background_effect:
-    style: "{bg_style}"
-    composite_mode: "{bg_composite}"
-  global_style:
-    vfx_style: "{vfx_style}"
-    intensity: "{intensity}"
-
-constraints:
-  - DO NOT modify the character at all - preserve every pixel
-  - Effects should enhance the character action
-  - Maintain visual coherence with character style
-  - {"FULLY TRANSPARENT background - completely clear, NO gradient, NO semi-transparency, alpha=0 for all background pixels" if transparent_bg else "Background as specified in background_effect settings"}
-
-style:
-  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
-  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
-  aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+  aspect_ratio: "{aspect_ratio}"
 """
 
         # タイトルオーバーレイ（有効な場合のみ出力）
