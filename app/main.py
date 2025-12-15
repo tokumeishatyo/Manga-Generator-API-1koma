@@ -2045,13 +2045,15 @@ title_overlay:
         transform_type_en = settings.get('transform_type_en', 'chibi')
         additional_desc = convert_age_expressions(settings.get('additional_description', ''))
 
+        # 全タイプ共通の背景透過設定
+        transparent_bg = settings.get('transparent_bg', True)
+
         if transform_type == "ちびキャラ化":
             chibi_settings = settings.get('chibi_settings', {})
             style_name = chibi_settings.get('style', 'スタンダード（2頭身）')
             style_info = chibi_settings.get('style_info', CHIBI_STYLES.get(style_name, {}))
             preserve_outfit = chibi_settings.get('preserve_outfit', True)
             preserve_pose = chibi_settings.get('preserve_pose', True)
-            preserve_effect = chibi_settings.get('preserve_effect', True)
 
             # 保持する要素のリスト作成
             preserve_list = []
@@ -2059,13 +2061,11 @@ title_overlay:
                 preserve_list.append("outfit and clothing")
             if preserve_pose:
                 preserve_list.append("pose and action")
-            if preserve_effect:
-                preserve_list.append("effects and aura (if present)")
             preserve_str = ", ".join(preserve_list) if preserve_list else "basic appearance"
 
             yaml_content = f"""# Style Transform: Chibi Conversion (スタイル変換: ちびキャラ化)
 # Transform realistic/normal character to chibi (super-deformed) style
-# The source image can be from any stage (base/outfit/pose/effect)
+# The source image can be from any stage (base/outfit/pose)
 type: style_transform_chibi
 title: "{title or 'Chibi Character'}"
 author: "{author}"
@@ -2075,7 +2075,7 @@ author: "{author}"
 # ====================================================
 input:
   source_image: "{os.path.basename(source_image_path) if source_image_path else 'REQUIRED'}"
-  source_stage: "any (base body / with outfit / with pose / with effects)"
+  source_stage: "any (base body / with outfit / with pose)"
 
 # ====================================================
 # Transform Settings
@@ -2094,7 +2094,6 @@ preserve:
   face_features: "Maintain character's face identity (eyes, hair color, expression)"
   outfit_details: {"true" if preserve_outfit else "false"}
   pose_action: {"true" if preserve_pose else "false"}
-  effects: {"true" if preserve_effect else "false"}
 {f'  additional_notes: "{additional_desc}"' if additional_desc else ''}
 
 # ====================================================
@@ -2103,7 +2102,7 @@ preserve:
 output:
   style: "chibi / super-deformed"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
-  background: "transparent or simple"
+  background: "{'transparent' if transparent_bg else 'simple solid color'}"
   quality: "clean linework, cute proportions"
 
 # ====================================================
@@ -2122,6 +2121,7 @@ constraints:
   style_consistency:
     - "Use consistent chibi proportions throughout"
     - "Clean, cute linework suitable for chibi style"
+    - "{'Transparent background for easy compositing' if transparent_bg else 'Simple background'}"
 
 anti_hallucination:
   - "Do NOT change character's identity (face, hair color)"
@@ -2137,11 +2137,11 @@ anti_hallucination:
             sprite_size = pixel_settings.get('sprite_size', '64x64')
             sprite_size_prompt = pixel_settings.get('sprite_size_prompt', SPRITE_SIZES.get(sprite_size, ''))
             preserve_colors = pixel_settings.get('preserve_colors', True)
-            transparent_bg = pixel_settings.get('transparent_bg', True)
+            # transparent_bg は上位レベルから取得済み
 
             yaml_content = f"""# Style Transform: Pixel Art Conversion (スタイル変換: ドットキャラ化)
 # Transform character to pixel art / sprite style
-# The source image can be from any stage (base/outfit/pose/effect)
+# The source image can be from any stage (base/outfit/pose)
 type: style_transform_pixel
 title: "{title or 'Pixel Character'}"
 author: "{author}"
@@ -2151,7 +2151,7 @@ author: "{author}"
 # ====================================================
 input:
   source_image: "{os.path.basename(source_image_path) if source_image_path else 'REQUIRED'}"
-  source_stage: "any (base body / with outfit / with pose / with effects)"
+  source_stage: "any (base body / with outfit / with pose)"
 
 # ====================================================
 # Transform Settings

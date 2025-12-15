@@ -2,7 +2,7 @@
 """
 スタイル変換ウィンドウ
 リアルキャラ画像をちびキャラ化・ドットキャラ化する
-- 任意の段階（素体/衣装/ポーズ/エフェクト）の画像を変換可能
+- 任意の段階（素体/衣装/ポーズ）の画像を変換可能
 """
 
 import tkinter as tk
@@ -146,7 +146,7 @@ class StyleTransformWindow(BaseSettingsWindow):
         # 説明
         ctk.CTkLabel(
             input_frame,
-            text="※ 素体/衣装/ポーズ/エフェクト付きなど、どの段階の画像でも変換可能",
+            text="※ 素体/衣装/ポーズなど、どの段階の画像でも変換可能",
             font=("Arial", 10),
             text_color="gray"
         ).grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w")
@@ -212,14 +212,7 @@ class StyleTransformWindow(BaseSettingsWindow):
             self.chibi_frame,
             text="ポーズを保持",
             variable=self.chibi_preserve_pose_var
-        ).grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky="w")
-
-        self.chibi_preserve_effect_var = tk.BooleanVar(value=True)
-        ctk.CTkCheckBox(
-            self.chibi_frame,
-            text="エフェクトを保持（ある場合）",
-            variable=self.chibi_preserve_effect_var
-        ).grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w")
+        ).grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w")
 
         # === ドットキャラ設定フレーム ===
         self.pixel_frame = ctk.CTkFrame(self.content_frame)
@@ -256,21 +249,32 @@ class StyleTransformWindow(BaseSettingsWindow):
             self.pixel_frame,
             text="元のカラーパレットを参照",
             variable=self.pixel_preserve_colors_var
-        ).grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky="w")
-
-        self.pixel_transparent_bg_var = tk.BooleanVar(value=True)
-        ctk.CTkCheckBox(
-            self.pixel_frame,
-            text="背景透過",
-            variable=self.pixel_transparent_bg_var
-        ).grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w")
+        ).grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w")
 
         # 初期状態でドットキャラフレームを無効化
         self._set_frame_state(self.pixel_frame, "disabled")
 
+        # === 出力設定（全タイプ共通） ===
+        output_frame = ctk.CTkFrame(self.content_frame)
+        output_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
+
+        ctk.CTkLabel(
+            output_frame,
+            text="出力設定",
+            font=("Arial", 14, "bold")
+        ).grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
+
+        # 背景透過（デフォルトON）
+        self.transparent_bg_var = tk.BooleanVar(value=True)
+        ctk.CTkCheckBox(
+            output_frame,
+            text="背景透過（合成用素材として出力）",
+            variable=self.transparent_bg_var
+        ).grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w")
+
         # === 追加説明 ===
         detail_frame = ctk.CTkFrame(self.content_frame)
-        detail_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
+        detail_frame.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
         detail_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
@@ -286,7 +290,7 @@ class StyleTransformWindow(BaseSettingsWindow):
 
         # === 説明 ===
         info_frame = ctk.CTkFrame(self.content_frame)
-        info_frame.grid(row=5, column=0, sticky="ew", padx=5, pady=5)
+        info_frame.grid(row=6, column=0, sticky="ew", padx=5, pady=5)
 
         ctk.CTkLabel(
             info_frame,
@@ -297,7 +301,7 @@ class StyleTransformWindow(BaseSettingsWindow):
         info_text = """• キャラクターの顔・衣装・ポーズは可能な限り保持されます
 • ちびキャラ化: 頭身が低くなり、かわいいデフォルメになります
 • ドットキャラ化: ピクセルアート風に変換されます
-• 元画像のクオリティが高いほど、変換結果も良くなります"""
+• 背景透過ONで合成用素材として出力できます"""
 
         ctk.CTkLabel(
             info_frame,
@@ -350,7 +354,8 @@ class StyleTransformWindow(BaseSettingsWindow):
             'source_image_path': self.source_image_entry.get().strip(),
             'transform_type': transform_type,
             'transform_type_en': TRANSFORM_STYLES.get(transform_type, 'chibi'),
-            'additional_description': desc
+            'additional_description': desc,
+            'transparent_bg': self.transparent_bg_var.get()  # 全タイプ共通
         }
 
         if transform_type == "ちびキャラ化":
@@ -359,8 +364,7 @@ class StyleTransformWindow(BaseSettingsWindow):
                 'style': chibi_style,
                 'style_info': CHIBI_STYLES.get(chibi_style, {}),
                 'preserve_outfit': self.chibi_preserve_outfit_var.get(),
-                'preserve_pose': self.chibi_preserve_pose_var.get(),
-                'preserve_effect': self.chibi_preserve_effect_var.get()
+                'preserve_pose': self.chibi_preserve_pose_var.get()
             }
         else:
             pixel_style = self.pixel_style_menu.get()
@@ -370,8 +374,7 @@ class StyleTransformWindow(BaseSettingsWindow):
                 'style_info': PIXEL_STYLES.get(pixel_style, {}),
                 'sprite_size': sprite_size,
                 'sprite_size_prompt': SPRITE_SIZES.get(sprite_size, ''),
-                'preserve_colors': self.pixel_preserve_colors_var.get(),
-                'transparent_bg': self.pixel_transparent_bg_var.get()
+                'preserve_colors': self.pixel_preserve_colors_var.get()
             }
 
         return data
