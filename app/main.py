@@ -1839,6 +1839,13 @@ style:
             mode_key = MSGWIN_MODES.get(mode, 'full')
             speaker_name = settings.get('speaker_name', '')
             face_position = style.get('face_icon_position', '左内側')
+            face_icon_image = style.get('face_icon_image', '')
+
+            # 顔アイコン画像の指定
+            if face_icon_image:
+                face_source = f"Reference: {os.path.basename(face_icon_image)} (use head/neck portion as face icon)"
+            else:
+                face_source = "Auto (generate based on speaker name)"
 
             if mode_key == "full":
                 # フルスペック: 名前+顔+セリフ
@@ -1846,7 +1853,7 @@ style:
 type: text_ui_layer_definition
 
 ui_global_style:
-  preset: "Anime Battle"
+  preset: "Message Window"
   font_language: "Japanese"
 
 message_window:
@@ -1864,8 +1871,9 @@ message_window:
 
     face_icon:
       enabled: true
-      source_image: "Auto(Left Character)"
+      source_image: "{face_source}"
       position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
+      crop_area: "Head and neck only (from top of head to base of neck)"
 
 output:
   background: "{bg_value}"
@@ -1881,7 +1889,7 @@ style:
 type: text_ui_layer_definition
 
 ui_global_style:
-  preset: "Anime Battle"
+  preset: "Face Icon"
   font_language: "Japanese"
 
 message_window:
@@ -1891,9 +1899,10 @@ message_window:
   design:
     face_icon:
       enabled: true
-      source_image: "Auto(Left Character)"
+      source_image: "{face_source}"
       position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
       style: "Standalone"
+      crop_area: "Head and neck only (from top of head to base of neck)"
 
 output:
   background: "{bg_value}"
@@ -1909,7 +1918,7 @@ style:
 type: text_ui_layer_definition
 
 ui_global_style:
-  preset: "Anime Battle"
+  preset: "Message Window"
   font_language: "Japanese"
 
 message_window:

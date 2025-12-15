@@ -7,6 +7,7 @@ ui_text_overlay.yaml準拠
 
 import tkinter as tk
 import customtkinter as ctk
+from tkinter import filedialog
 from typing import Callable, Optional
 import sys
 import os
@@ -409,24 +410,54 @@ class DecorativeTextWindow(BaseSettingsWindow):
         self.msgwin_face_pos_menu.set("左内側")
         self.msgwin_face_pos_menu.pack(side="left")
 
+        # 顔アイコン画像選択（フルスペック・顔のみ時）
+        self.msgwin_face_img_row = ctk.CTkFrame(self.msgwin_frame, fg_color="transparent")
+        self.msgwin_face_img_row.pack(fill="x", padx=10, pady=5)
+
+        ctk.CTkLabel(self.msgwin_face_img_row, text="顔アイコン画像:").pack(side="left", padx=(0, 5))
+        self.msgwin_face_img_entry = ctk.CTkEntry(
+            self.msgwin_face_img_row,
+            placeholder_text="（任意）衣装/ポーズ画像から顔を使用",
+            width=250
+        )
+        self.msgwin_face_img_entry.pack(side="left", padx=(0, 5))
+        ctk.CTkButton(
+            self.msgwin_face_img_row,
+            text="参照",
+            width=60,
+            command=self._browse_face_icon_image
+        ).pack(side="left")
+
     def _on_msgwin_mode_change(self, value):
         """メッセージウィンドウモード変更時"""
         # 全行を一旦非表示
         self.msgwin_name_row.pack_forget()
         self.msgwin_design_row.pack_forget()
         self.msgwin_face_row.pack_forget()
+        self.msgwin_face_img_row.pack_forget()
 
         if value == "フルスペック（名前+顔+セリフ）":
             # 全て表示
             self.msgwin_name_row.pack(fill="x", padx=10, pady=5)
             self.msgwin_design_row.pack(fill="x", padx=10, pady=5)
             self.msgwin_face_row.pack(fill="x", padx=10, pady=5)
+            self.msgwin_face_img_row.pack(fill="x", padx=10, pady=5)
         elif value == "顔アイコンのみ":
             # 顔設定のみ
             self.msgwin_face_row.pack(fill="x", padx=10, pady=5)
+            self.msgwin_face_img_row.pack(fill="x", padx=10, pady=5)
         elif value == "セリフのみ":
             # デザイン設定のみ
             self.msgwin_design_row.pack(fill="x", padx=10, pady=5)
+
+    def _browse_face_icon_image(self):
+        """顔アイコン画像参照ダイアログ"""
+        filename = filedialog.askopenfilename(
+            filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.webp")]
+        )
+        if filename:
+            self.msgwin_face_img_entry.delete(0, tk.END)
+            self.msgwin_face_img_entry.insert(0, filename)
 
     def _on_type_change(self, value):
         """テキストタイプ変更時"""
@@ -494,7 +525,8 @@ class DecorativeTextWindow(BaseSettingsWindow):
                 'preset': self.msgwin_style_menu.get(),
                 'frame_type': self.msgwin_frame_menu.get(),
                 'opacity': round(self.msgwin_opacity_slider.get(), 2),
-                'face_icon_position': self.msgwin_face_pos_menu.get()
+                'face_icon_position': self.msgwin_face_pos_menu.get(),
+                'face_icon_image': self.msgwin_face_img_entry.get().strip()
             }
 
         return data
