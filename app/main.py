@@ -48,6 +48,7 @@ from ui.decorative_text_window import DecorativeTextWindow
 from ui.four_panel_window import FourPanelWindow
 from ui.manga_composer_window import MangaComposerWindow
 from ui.style_transform_window import StyleTransformWindow
+from ui.bg_remover_window import BgRemoverWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -327,7 +328,18 @@ class MangaGeneratorApp(ctk.CTk):
             hover_color="#5A3D89",
             command=self._open_manga_composer
         )
-        self.manga_composer_button.pack(fill="x", padx=10, pady=(0, 10))
+        self.manga_composer_button.pack(fill="x", padx=10, pady=(0, 5))
+
+        # 画像ツールボタン
+        self.image_tools_button = ctk.CTkButton(
+            button_frame,
+            text="画像ツール（背景透過）",
+            height=35,
+            fg_color="#4A7C59",
+            hover_color="#3A6C49",
+            command=self._open_bg_remover
+        )
+        self.image_tools_button.pack(fill="x", padx=10, pady=(0, 10))
 
     def _build_middle_column(self):
         """中列を構築（API設定）"""
@@ -2527,6 +2539,12 @@ title_overlay:
     def _open_manga_composer(self):
         """漫画ページコンポーザーを開く"""
         MangaComposerWindow(self)
+
+    # === Image Tools ===
+
+    def _open_bg_remover(self):
+        """背景透過ツールを開く"""
+        BgRemoverWindow(self)
 
 
 def main():
