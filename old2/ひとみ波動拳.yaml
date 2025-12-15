@@ -1,0 +1,41 @@
+# Step 4: Character Pose Generation (character_pose.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# Preset: 波動拳（かめはめ波）
+type: character_pose
+title: "ひとみ波動拳"
+author: "Unknown"
+
+input:
+  character_image: "彩瀬ひとみドレス.png"
+  identity_preservation: 0.85
+
+settings:
+  orientation:
+    body_direction: "right"
+    eye_line: "相手を見る"
+  action:
+    category: "Magic Attack"
+    pose_type: "attacking, offensive pose"
+    description: "Thrusting both palms forward at waist level, knees slightly bent, focusing energy between hands"
+    dynamism: "High (Exaggerated)"
+  visuals:
+    include_effects: false
+    wind_effect: "Strong Wind from Front"
+  camera:
+    angle: "Side View (Fighting Game)"
+    zoom: "Full Body"
+
+additional_details:
+  - energy blast stance, power stance
+
+constraints:
+  - Preserve character design and colors from input image
+  - No background (transparent or simple backdrop)
+  - Clean silhouette for compositing
+
+style:
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "1:1"

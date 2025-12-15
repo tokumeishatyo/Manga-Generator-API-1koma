@@ -1,0 +1,42 @@
+# Face Character Reference Sheet (character_basic.yaml準拠)
+type: character_design
+title: "中森ゆうこ"
+author: "Unknown"
+
+output_type: "face character reference sheet"
+
+# IMPORTANT: Face Reference Sheet Instructions
+headshot_specification:
+  type: "Character design base body (sotai) headshot for reference sheet"
+  coverage: "From top of head to base of neck (around collarbone level)"
+  clothing: "NONE - Do not include any clothing or accessories"
+  accessories: "NONE - No jewelry, headwear, or decorations"
+  state: "Clean base body state only"
+  background: "Pure white background"
+  purpose: "This is professional character design reference material"
+
+character:
+  name: "中森ゆうこ"
+  description: "金髪に近い茶髪の女子高生。ギャル系"
+  outfit: "NONE - bare skin only, no clothing"
+  expression: "neutral expression"
+
+character_style:
+  style: "日本のアニメスタイル, 2Dセルシェーディング"
+  proportions: "Normal head-to-body ratio (6-7 heads)"
+  style_description: "High quality anime illustration"
+
+views: "front view, side view, 3/4 view"
+
+constraints:
+  - Maintain consistent design across all views
+  - White or simple background for clarity
+  - Clean linework suitable for reference
+  - This is a HEAD/FACE ONLY reference - show from top of head to neck/collarbone
+  - Do NOT draw any clothing, accessories, or decorations
+  - Keep the character in clean base body state
+
+style:
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "1:1"

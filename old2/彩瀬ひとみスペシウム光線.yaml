@@ -1,0 +1,41 @@
+# Step 4: Character Pose Generation (character_pose.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# Preset: スペシウム光線
+type: character_pose
+title: "彩瀬ひとみスペシウム光線"
+author: "Unknown"
+
+input:
+  character_image: "彩瀬ひとみ着替え.png"
+  identity_preservation: 0.85
+
+settings:
+  orientation:
+    body_direction: "facing front, looking at camera"
+    eye_line: "前を見る"
+  action:
+    category: "Magic Attack"
+    pose_type: "attacking, offensive pose"
+    description: "Crossing arms in a plus sign shape (+) in front of chest, right hand vertical, left hand horizontal"
+    dynamism: "Medium (Normal)"
+  visuals:
+    include_effects: false
+    wind_effect: "Strong Wind from Front"
+  camera:
+    angle: "Low Angle / Dynamic"
+    zoom: "Upper Body"
+
+additional_details:
+  - cross beam pose, heroic stance
+
+constraints:
+  - Preserve character design and colors from input image
+  - FULLY TRANSPARENT background - completely clear, NO gradient, NO semi-transparency, alpha=0 for all background pixels
+  - Clean silhouette for compositing
+
+style:
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "1:1"

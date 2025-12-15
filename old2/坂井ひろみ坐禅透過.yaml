@@ -1,0 +1,41 @@
+# Step 4: Character Pose Generation (character_pose.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# Preset: 坐禅（瞑想）
+type: character_pose
+title: "坂井ひろみ坐禅透過"
+author: "Unknown"
+
+input:
+  character_image: "坂井ひろみ全身衣装.png"
+  identity_preservation: 0.85
+
+settings:
+  orientation:
+    body_direction: "right"
+    eye_line: "前を見る"
+  action:
+    category: "Idle/Ready"
+    pose_type: "battle ready, fighting stance"
+    description: "Sitting cross-legged in lotus position, hands resting on knees, eyes closed, meditative posture"
+    dynamism: "Low (Subtle)"
+  visuals:
+    include_effects: false
+    wind_effect: ""
+  camera:
+    angle: "Front View"
+    zoom: "Full Body"
+
+additional_details:
+  - meditation, zazen, static still pose
+
+constraints:
+  - Preserve character design and colors from input image
+  - TRANSPARENT background (alpha channel, no background color)
+  - Clean silhouette for compositing
+
+style:
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "1:1"

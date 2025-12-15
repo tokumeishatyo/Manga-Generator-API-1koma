@@ -1,0 +1,77 @@
+# Step 2: Body Reference Sheet (素体三面図)
+# Purpose: Generate full body reference from face sheet
+type: body_reference_sheet
+title: "坂井ひろみ"
+author: "Unknown"
+
+# ====================================================
+# Input: Face Sheet from Step 1
+# ====================================================
+input:
+  face_sheet: "坂井ひろみ.png"
+  preserve_face: true
+  preserve_face_details: "exact match required - do not alter facial features"
+
+# ====================================================
+# Body Configuration
+# ====================================================
+body:
+  type: "スリム体型"
+  description: "slender body, thin build, long limbs"
+  height: "tall"
+  build: "slender"
+  gender: "neutral"
+
+
+# ====================================================
+# Render Type
+# ====================================================
+render:
+  type: "素体（レオタード）"
+  style: "wearing plain gray leotard, simple bodysuit, minimal details, reference mannequin"
+  clothing: "NONE - this is a base body reference"
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, arms slightly away from body"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "日本のアニメスタイル, 2Dセルシェーディング"
+  proportions: "Normal head-to-body ratio (6-7 heads)"
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "16:9"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input face_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from reference"
+  body_generation:
+    - "Generate body matching the specified body type"
+    - "Do NOT add any clothing or accessories"
+    - "Maintain anatomically correct proportions"
+  consistency:
+    - "All three views must show the same character"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT add clothing that was not specified"
+  - "Do NOT change the face from the reference"
+  - "Do NOT add accessories or decorations"
+  - "Do NOT change body proportions from specified type"

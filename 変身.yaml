@@ -1,0 +1,60 @@
+# Step 4: Pose Image (ポーズ画像)
+# Purpose: Generate character in specified pose based on outfit sheet
+# Output: Single character image
+type: pose_single
+title: "変身"
+author: "Unknown"
+
+# ====================================================
+# Input Image
+# ====================================================
+input:
+  character_sheet: "坂井ひろみ衣装優先.png"
+  identity_preservation: 0.85
+  purpose: "Generate posed character from outfit sheet"
+
+# ====================================================
+# Pose Capture (ポーズキャプチャ)
+# ====================================================
+pose_capture:
+  enabled: true
+  reference_image: "一文字.jpeg"
+  capture_target: "pose_only"
+  instruction: |
+    Capture ONLY the pose (body position, arm/leg positions, gestures) from the reference image.
+    Apply this pose to the character while preserving:
+    - Character's face and facial features from character_sheet
+    - Character's outfit and clothing from character_sheet
+    - Character's colors and design from character_sheet
+    Do NOT transfer any appearance elements from the reference image.
+
+pose:
+  source: "captured from reference image"
+  expression: "neutral expression, calm face, no emotion"
+  eye_line: "前を見る"
+  include_effects: false
+# ====================================================
+# Output Settings
+# ====================================================
+output:
+  format: "single_image"
+  background: "pure white, clean background"
+
+# ====================================================
+# CRITICAL CONSTRAINTS
+# ====================================================
+constraints:
+  character_preservation:
+    - "Preserve exact character design, face, and colors from input image"
+    - "Maintain clothing details exactly as shown in input"
+  output_format:
+    - "Single character image, full body visible"
+
+anti_hallucination:
+  - "Do NOT alter character design from input"
+  - "Do NOT add extra figures"
+
+style:
+  color_mode: "fullcolor"
+  output_style: ""
+  aspect_ratio: "1:1（正方形）"

@@ -1,0 +1,110 @@
+subject: >
+  Create a dynamic battle-scene layout featuring:
+  (1) an SD-style 16-bit pixel-art battle sprite based on Reference A,
+  (2) a close-up cut-in portrait from Reference A placed within an
+      energy-defined diagonal highlight area,
+  (3) a pixel-art face icon for the dialogue window.
+  All representations must depict the same character.
+
+composition: >
+  16:9 cinematic battle layout with:
+  - left side: a diagonal energy-defined cut-in area,
+  - right side: an SD pixel sprite,
+  - top: technique-name window,
+  - bottom: dialogue window with face icon.
+
+  **Orientation rules:**
+    • The SD pixel sprite must face left.
+    • The SD sprite must match the pose, gesture, silhouette,
+      and body posture shown in Reference A, translated into pixel art.
+    • The cut-in portrait preserves its original facing direction
+      from Reference A exactly (no correction or reinterpretation).
+    • Do NOT tilt, rotate, flip, mirror, or redirect the portrait.
+    • Do NOT adjust gaze or head direction toward the center.
+
+  **Energy-defined diagonal cut-in (CRITICAL):**
+    • The cut-in area is defined entirely by ENERGY EFFECTS.
+    • Do NOT draw geometric borders or frames.
+      (No rectangles, no polygons, no trapezoids, no border lines.)
+    • Use glowing energy, lightning, streaks, beams, or aura
+      to clearly separate the cut-in from the background.
+    • Create a diagonal slicing boundary angled ~15–20 degrees.
+    • Only the energy boundary is angled.
+    • The portrait from Reference A must remain upright and unaltered.
+    • Inside the cut-in area, use energy effects only.
+
+  **SD pixel sprite:**
+    • Positioned on the right.
+    • 16-bit retro pixel-style rendering.
+    • Must replicate the pose of Reference A (body angle, arm/leg positions).
+    • Left-facing orientation enforced.
+    • Background inferred from the setting of Reference A.
+    • No global speed lines.
+
+  **Technique-name window:**
+    • Top-center overlay (approx. 60% width, 10% height).
+
+  **Dialogue window:**
+    • Bottom overlay (approx. 90% width, 18% height).
+    • Pixel-art face icon (~12% width) on the left.
+    • Japanese text on the right.
+
+action: >
+  The SD sprite performs a left-facing pre-attack pose matching
+  the stance from Reference A.
+  The diagonal energy-defined cut-in displays a close-up portrait
+  of the same character with energetic visual effects.
+
+location: >
+  SD-side background approximated from Reference A.
+  Cut-in region uses only abstract energy effects.
+
+style: >
+  - SD sprite: 16-bit retro pixel-art.
+  - Cut-in: portrait from Reference A with no stylistic changes.
+  - Energy-defined diagonal visual separation.
+  - Futuristic UI windows with blue, metallic, cyan accents.
+  - No full-screen speed lines.
+
+camera_lighting: >
+  Pixel-style shading on the SD sprite.
+  Strong rim-glow along the diagonal energy boundary.
+  Do not modify the portrait’s lighting or anatomy.
+
+colors: >
+  Portrait colors preserved completely from Reference A.
+  Energy effects: bright electric tones (yellow, blue, white, etc).
+  UI colors: blue, metallic grey, cyan.
+
+text:
+  attack_name: "ここに技名を入力"
+  dialogue: "ここにセリフを入力"
+
+edit_instructions: >
+  Use the portrait from Reference A exactly as provided.
+  Preserve its original pose, facing direction, expression, and lighting.
+  Do NOT rotate, flip, or adjust the portrait.
+  Crop to a close-up of the face or face+shoulders.
+
+  Construct a diagonal cut-in region using ONLY energy effects.
+  No geometric frames or polygonal shapes.
+  The diagonal energy boundary must appear at 15–20 degrees.
+  Insert the upright portrait into this energy-defined area.
+
+  Create the SD pixel sprite:
+    - must match the pose, gesture, and orientation of Reference A,
+      converted faithfully into 16-bit pixel art,
+      facing left.
+  Create the pixel-art face icon.
+
+  Assemble with technique-name window and dialogue window.
+  No enemies and no full-screen speed lines.
+
+references:
+  A: Character reference image
+  B: Optional UI reference images
+
+extras: >
+  Add energy glow along the diagonal boundary.
+  Layer hierarchy:
+    SD background → energy-cut-in → SD sprite → UI → text.

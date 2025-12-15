@@ -1,0 +1,395 @@
+==========================================
+1コマ漫画生成アプリ ビルド開始
+==========================================
+[1/5] 仮想環境を作成...
+      既存の.venvを削除中...
+[2/5] 依存関係をインストール...
+Files removed: 104 (18.2 MB)
+Collecting customtkinter (from -r app/requirements.txt (line 1))
+  Downloading customtkinter-5.2.2-py3-none-any.whl.metadata (677 bytes)
+Collecting PyYAML (from -r app/requirements.txt (line 2))
+  Downloading pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl.metadata (2.4 kB)
+Collecting pyperclip (from -r app/requirements.txt (line 3))
+  Downloading pyperclip-1.11.0-py3-none-any.whl.metadata (2.4 kB)
+Collecting Pillow (from -r app/requirements.txt (line 4))
+  Downloading pillow-12.0.0-cp314-cp314-macosx_11_0_arm64.whl.metadata (8.8 kB)
+Collecting google-genai (from -r app/requirements.txt (line 5))
+  Downloading google_genai-1.55.0-py3-none-any.whl.metadata (47 kB)
+Collecting rembg (from -r app/requirements.txt (line 6))
+  Downloading rembg-2.0.69-py3-none-any.whl.metadata (17 kB)
+Collecting darkdetect (from customtkinter->-r app/requirements.txt (line 1))
+  Downloading darkdetect-0.8.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting packaging (from customtkinter->-r app/requirements.txt (line 1))
+  Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting anyio<5.0.0,>=4.8.0 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading anyio-4.12.0-py3-none-any.whl.metadata (4.3 kB)
+Collecting google-auth<3.0.0,>=2.14.1 (from google-auth[requests]<3.0.0,>=2.14.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading google_auth-2.43.0-py2.py3-none-any.whl.metadata (6.6 kB)
+Collecting httpx<1.0.0,>=0.28.1 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting pydantic<3.0.0,>=2.9.0 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Collecting requests<3.0.0,>=2.28.1 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting tenacity<9.2.0,>=8.2.3 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading tenacity-9.1.2-py3-none-any.whl.metadata (1.2 kB)
+Collecting websockets<15.1.0,>=13.0.0 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading websockets-15.0.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting typing-extensions<5.0.0,>=4.11.0 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting distro<2,>=1.7.0 (from google-genai->-r app/requirements.txt (line 5))
+  Downloading distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+Collecting sniffio (from google-genai->-r app/requirements.txt (line 5))
+  Downloading sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting idna>=2.8 (from anyio<5.0.0,>=4.8.0->google-genai->-r app/requirements.txt (line 5))
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting cachetools<7.0,>=2.0.0 (from google-auth<3.0.0,>=2.14.1->google-auth[requests]<3.0.0,>=2.14.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading cachetools-6.2.3-py3-none-any.whl.metadata (5.6 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-auth[requests]<3.0.0,>=2.14.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting rsa<5,>=3.1.4 (from google-auth<3.0.0,>=2.14.1->google-auth[requests]<3.0.0,>=2.14.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Collecting certifi (from httpx<1.0.0,>=0.28.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading certifi-2025.11.12-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx<1.0.0,>=0.28.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0.0,>=0.28.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting annotated-types>=0.6.0 (from pydantic<3.0.0,>=2.9.0->google-genai->-r app/requirements.txt (line 5))
+  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.41.5 (from pydantic<3.0.0,>=2.9.0->google-genai->-r app/requirements.txt (line 5))
+  Downloading pydantic_core-2.41.5-cp314-cp314-macosx_11_0_arm64.whl.metadata (7.3 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic<3.0.0,>=2.9.0->google-genai->-r app/requirements.txt (line 5))
+  Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Collecting charset_normalizer<4,>=2 (from requests<3.0.0,>=2.28.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading charset_normalizer-3.4.4-cp314-cp314-macosx_10_13_universal2.whl.metadata (37 kB)
+Collecting urllib3<3,>=1.21.1 (from requests<3.0.0,>=2.28.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading urllib3-2.6.2-py3-none-any.whl.metadata (6.6 kB)
+Collecting pyasn1>=0.1.3 (from rsa<5,>=3.1.4->google-auth<3.0.0,>=2.14.1->google-auth[requests]<3.0.0,>=2.14.1->google-genai->-r app/requirements.txt (line 5))
+  Downloading pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+Collecting jsonschema (from rembg->-r app/requirements.txt (line 6))
+  Downloading jsonschema-4.25.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting numpy (from rembg->-r app/requirements.txt (line 6))
+  Downloading numpy-2.3.5-cp314-cp314-macosx_14_0_arm64.whl.metadata (62 kB)
+Collecting opencv-python-headless (from rembg->-r app/requirements.txt (line 6))
+  Downloading opencv_python_headless-4.12.0.88-cp37-abi3-macosx_13_0_arm64.whl.metadata (19 kB)
+Collecting pooch (from rembg->-r app/requirements.txt (line 6))
+  Downloading pooch-1.8.2-py3-none-any.whl.metadata (10 kB)
+Collecting pymatting (from rembg->-r app/requirements.txt (line 6))
+  Downloading pymatting-1.1.14-py3-none-any.whl.metadata (7.7 kB)
+Collecting scikit-image (from rembg->-r app/requirements.txt (line 6))
+  Downloading scikit_image-0.25.2.tar.gz (22.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 22.7/22.7 MB 235.2 MB/s  0:00:00
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Installing backend dependencies ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting scipy (from rembg->-r app/requirements.txt (line 6))
+  Downloading scipy-1.16.3-cp314-cp314-macosx_14_0_arm64.whl.metadata (62 kB)
+Collecting tqdm (from rembg->-r app/requirements.txt (line 6))
+  Downloading tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Collecting attrs>=22.2.0 (from jsonschema->rembg->-r app/requirements.txt (line 6))
+  Downloading attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema->rembg->-r app/requirements.txt (line 6))
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema->rembg->-r app/requirements.txt (line 6))
+  Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.7.1 (from jsonschema->rembg->-r app/requirements.txt (line 6))
+  Downloading rpds_py-0.30.0-cp314-cp314-macosx_11_0_arm64.whl.metadata (4.1 kB)
+Collecting numpy (from rembg->-r app/requirements.txt (line 6))
+  Downloading numpy-2.2.6.tar.gz (20.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.3/20.3 MB 316.1 MB/s  0:00:00
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Installing backend dependencies ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting platformdirs>=2.5.0 (from pooch->rembg->-r app/requirements.txt (line 6))
+  Downloading platformdirs-4.5.1-py3-none-any.whl.metadata (12 kB)
+Collecting numba!=0.49.0 (from pymatting->rembg->-r app/requirements.txt (line 6))
+  Downloading numba-0.63.1-cp314-cp314-macosx_12_0_arm64.whl.metadata (2.9 kB)
+Collecting llvmlite<0.47,>=0.46.0dev0 (from numba!=0.49.0->pymatting->rembg->-r app/requirements.txt (line 6))
+  Downloading llvmlite-0.46.0-cp314-cp314-macosx_12_0_arm64.whl.metadata (5.0 kB)
+Collecting networkx>=3.0 (from scikit-image->rembg->-r app/requirements.txt (line 6))
+  Downloading networkx-3.6-py3-none-any.whl.metadata (6.8 kB)
+Collecting imageio!=2.35.0,>=2.33 (from scikit-image->rembg->-r app/requirements.txt (line 6))
+  Downloading imageio-2.37.2-py3-none-any.whl.metadata (9.7 kB)
+Collecting tifffile>=2022.8.12 (from scikit-image->rembg->-r app/requirements.txt (line 6))
+  Downloading tifffile-2025.12.12-py3-none-any.whl.metadata (31 kB)
+Collecting lazy-loader>=0.4 (from scikit-image->rembg->-r app/requirements.txt (line 6))
+  Downloading lazy_loader-0.4-py3-none-any.whl.metadata (7.6 kB)
+Downloading customtkinter-5.2.2-py3-none-any.whl (296 kB)
+Downloading pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl (173 kB)
+Downloading pyperclip-1.11.0-py3-none-any.whl (11 kB)
+Downloading pillow-12.0.0-cp314-cp314-macosx_11_0_arm64.whl (4.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 269.5 MB/s  0:00:00
+Downloading google_genai-1.55.0-py3-none-any.whl (703 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 703.4/703.4 kB 776.7 MB/s  0:00:00
+Downloading anyio-4.12.0-py3-none-any.whl (113 kB)
+Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+Downloading google_auth-2.43.0-py2.py3-none-any.whl (223 kB)
+Downloading cachetools-6.2.3-py3-none-any.whl (11 kB)
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+Downloading pydantic_core-2.41.5-cp314-cp314-macosx_11_0_arm64.whl (1.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.9/1.9 MB 257.8 MB/s  0:00:00
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+Downloading charset_normalizer-3.4.4-cp314-cp314-macosx_10_13_universal2.whl (207 kB)
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading tenacity-9.1.2-py3-none-any.whl (28 kB)
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Downloading urllib3-2.6.2-py3-none-any.whl (131 kB)
+Downloading websockets-15.0.1-py3-none-any.whl (169 kB)
+Downloading rembg-2.0.69-py3-none-any.whl (43 kB)
+Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Downloading certifi-2025.11.12-py3-none-any.whl (159 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Downloading darkdetect-0.8.0-py3-none-any.whl (9.0 kB)
+Downloading jsonschema-4.25.1-py3-none-any.whl (90 kB)
+Downloading attrs-25.4.0-py3-none-any.whl (67 kB)
+Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+Downloading rpds_py-0.30.0-cp314-cp314-macosx_11_0_arm64.whl (353 kB)
+Downloading opencv_python_headless-4.12.0.88-cp37-abi3-macosx_13_0_arm64.whl (37.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.9/37.9 MB 271.4 MB/s  0:00:00
+Downloading packaging-25.0-py3-none-any.whl (66 kB)
+Downloading pooch-1.8.2-py3-none-any.whl (64 kB)
+Downloading platformdirs-4.5.1-py3-none-any.whl (18 kB)
+Downloading pymatting-1.1.14-py3-none-any.whl (54 kB)
+Downloading numba-0.63.1-cp314-cp314-macosx_12_0_arm64.whl (2.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.7/2.7 MB 339.4 MB/s  0:00:00
+Downloading llvmlite-0.46.0-cp314-cp314-macosx_12_0_arm64.whl (37.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 37.2/37.2 MB 245.4 MB/s  0:00:00
+Downloading scipy-1.16.3-cp314-cp314-macosx_14_0_arm64.whl (20.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 20.9/20.9 MB 224.9 MB/s  0:00:00
+Downloading imageio-2.37.2-py3-none-any.whl (317 kB)
+Downloading lazy_loader-0.4-py3-none-any.whl (12 kB)
+Downloading networkx-3.6-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 380.0 MB/s  0:00:00
+Downloading tifffile-2025.12.12-py3-none-any.whl (232 kB)
+Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
+Building wheels for collected packages: numpy, scikit-image
+  Building wheel for numpy (pyproject.toml) ... done
+  Created wheel for numpy: filename=numpy-2.2.6-cp314-cp314-macosx_26_0_arm64.whl size=5072884 sha256=2fe972c83985707448820fb790581a6f493866d0d37adc947edf6b261237efb5
+  Stored in directory: /private/var/folders/dm/2zfgt1mj1qs554mt__x6thc80000gn/T/pip-ephem-wheel-cache-lvlspe_v/wheels/83/be/bb/986b1bdc6955e697e6c56b03ef4aa1d67eb2c9fbeaf8e2804f
+  Building wheel for scikit-image (pyproject.toml) ... done
+  Created wheel for scikit-image: filename=scikit_image-0.25.2-cp314-cp314-macosx_26_0_arm64.whl size=12338951 sha256=6ace106d7c91c251eeb65ceeb022ce1df9ec29092704692403a1433156a33024
+  Stored in directory: /private/var/folders/dm/2zfgt1mj1qs554mt__x6thc80000gn/T/pip-ephem-wheel-cache-lvlspe_v/wheels/02/cf/05/f9c81e5cc839305d5114e3871face478bbfac2a81797462f20
+Successfully built numpy scikit-image
+Installing collected packages: pyperclip, websockets, urllib3, typing-extensions, tqdm, tenacity, sniffio, rpds-py, PyYAML, pyasn1, platformdirs, Pillow, packaging, numpy, networkx, llvmlite, idna, h11, distro, darkdetect, charset_normalizer, certifi, cachetools, attrs, annotated-types, typing-inspection, tifffile, scipy, rsa, requests, referencing, pydantic-core, pyasn1-modules, opencv-python-headless, numba, lazy-loader, imageio, httpcore, customtkinter, anyio, scikit-image, pymatting, pydantic, pooch, jsonschema-specifications, httpx, google-auth, jsonschema, rembg, google-genai
+Successfully installed Pillow-12.0.0 PyYAML-6.0.3 annotated-types-0.7.0 anyio-4.12.0 attrs-25.4.0 cachetools-6.2.3 certifi-2025.11.12 charset_normalizer-3.4.4 customtkinter-5.2.2 darkdetect-0.8.0 distro-1.9.0 google-auth-2.43.0 google-genai-1.55.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 imageio-2.37.2 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 lazy-loader-0.4 llvmlite-0.46.0 networkx-3.6 numba-0.63.1 numpy-2.2.6 opencv-python-headless-4.12.0.88 packaging-25.0 platformdirs-4.5.1 pooch-1.8.2 pyasn1-0.6.1 pyasn1-modules-0.4.2 pydantic-2.12.5 pydantic-core-2.41.5 pymatting-1.1.14 pyperclip-1.11.0 referencing-0.37.0 rembg-2.0.69 requests-2.32.5 rpds-py-0.30.0 rsa-4.9.1 scikit-image-0.25.2 scipy-1.16.3 sniffio-1.3.1 tenacity-9.1.2 tifffile-2025.12.12 tqdm-4.67.1 typing-extensions-4.15.0 typing-inspection-0.4.2 urllib3-2.6.2 websockets-15.0.1
+
+=== インストール確認 ===
+Name: rembg
+Version: 2.0.69
+Summary: Remove image background
+Home-page: https://github.com/danielgatis/rembg
+Author: Daniel Gatis
+Author-email: danielgatis@gmail.com
+License: 
+Location: /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages
+Requires: jsonschema, numpy, opencv-python-headless, pillow, pooch, pymatting, scikit-image, scipy, tqdm
+Required-by: 
+WARNING: Package(s) not found: onnxruntime
+警告: onnxruntimeがインストールされていません
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import rembg; print('rembg import OK')
+    ^^^^^^^^^^^^
+  File "/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/rembg/__init__.py", line 5, in <module>
+    from .bg import remove
+  File "/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/rembg/bg.py", line 7, in <module>
+    import onnxruntime as ort
+ModuleNotFoundError: No module named 'onnxruntime'
+警告: rembgのインポートに失敗
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import onnxruntime; print('onnxruntime import OK')
+    ^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'onnxruntime'
+警告: onnxruntimeのインポートに失敗
+========================
+
+[2/5] PyInstallerをインストール...
+Collecting pyinstaller
+  Downloading pyinstaller-6.17.0-py3-none-macosx_10_13_universal2.whl.metadata (8.5 kB)
+Collecting altgraph (from pyinstaller)
+  Downloading altgraph-0.17.5-py2.py3-none-any.whl.metadata (7.5 kB)
+Collecting macholib>=1.8 (from pyinstaller)
+  Downloading macholib-1.16.4-py2.py3-none-any.whl.metadata (12 kB)
+Requirement already satisfied: packaging>=22.0 in ./.venv/lib/python3.14/site-packages (from pyinstaller) (25.0)
+Collecting pyinstaller-hooks-contrib>=2025.9 (from pyinstaller)
+  Downloading pyinstaller_hooks_contrib-2025.10-py3-none-any.whl.metadata (16 kB)
+Collecting setuptools>=42.0.0 (from pyinstaller)
+  Using cached setuptools-80.9.0-py3-none-any.whl.metadata (6.6 kB)
+Downloading pyinstaller-6.17.0-py3-none-macosx_10_13_universal2.whl (1.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 46.7 MB/s  0:00:00
+Downloading macholib-1.16.4-py2.py3-none-any.whl (38 kB)
+Downloading altgraph-0.17.5-py2.py3-none-any.whl (21 kB)
+Downloading pyinstaller_hooks_contrib-2025.10-py3-none-any.whl (447 kB)
+Using cached setuptools-80.9.0-py3-none-any.whl (1.2 MB)
+Installing collected packages: altgraph, setuptools, macholib, pyinstaller-hooks-contrib, pyinstaller
+Successfully installed altgraph-0.17.5 macholib-1.16.4 pyinstaller-6.17.0 pyinstaller-hooks-contrib-2025.10 setuptools-80.9.0
+[3/5] 以前のビルドをクリーンアップ...
+[4/5] アプリをビルド中...
+1044 INFO: PyInstaller: 6.17.0, contrib hooks: 2025.10
+1044 INFO: Python: 3.14.1
+1052 INFO: Platform: macOS-26.1-arm64-arm-64bit-Mach-O
+1052 INFO: Python environment: /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv
+1086 INFO: Module search paths (PYTHONPATH):
+['/opt/homebrew/Cellar/python@3.14/3.14.1/Frameworks/Python.framework/Versions/3.14/lib/python314.zip',
+ '/opt/homebrew/Cellar/python@3.14/3.14.1/Frameworks/Python.framework/Versions/3.14/lib/python3.14',
+ '/opt/homebrew/Cellar/python@3.14/3.14.1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/lib-dynload',
+ '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages',
+ '/opt/homebrew/opt/python-tk@3.14/libexec',
+ '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/app',
+ '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma']
+1224 INFO: Appending 'datas' from .spec
+1224 INFO: checking Analysis
+1224 INFO: Building Analysis because Analysis-00.toc is non existent
+1224 INFO: Looking for Python shared library...
+1227 INFO: Using Python shared library: /opt/homebrew/Cellar/python@3.14/3.14.1/Frameworks/Python.framework/Versions/3.14/Python
+1227 INFO: Running Analysis Analysis-00.toc
+1227 INFO: Target bytecode optimization level: 0
+1227 INFO: Initializing module dependency graph...
+1227 INFO: Initializing module graph hook caches...
+1232 INFO: Analyzing modules for base_library.zip ...
+2025 INFO: Processing standard module hook 'hook-encodings.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+2221 INFO: Processing standard module hook 'hook-pickle.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+2642 INFO: Processing standard module hook 'hook-difflib.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+2651 INFO: Processing standard module hook 'hook-heapq.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4454 INFO: Caching module dependency graph...
+4472 INFO: Analyzing /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/app/main.py
+4520 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_find_module_path'
+4520 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+4690 INFO: Processing standard module hook 'hook-_tkinter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4721 INFO: Processing standard module hook 'hook-customtkinter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+4770 INFO: Processing standard module hook 'hook-platform.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4796 INFO: Processing standard module hook 'hook-xml.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4843 INFO: Processing standard module hook 'hook-sysconfig.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4854 INFO: Processing standard module hook 'hook-_osx_support.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4857 INFO: Processing standard module hook 'hook-_ctypes.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+4893 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+4893 INFO: SetuptoolsInfo: initializing cached setuptools info...
+7080 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+7297 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+7942 INFO: Processing standard module hook 'hook-PIL.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+8030 INFO: Processing standard module hook 'hook-PIL.Image.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+8182 INFO: Processing standard module hook 'hook-numpy.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+10145 INFO: Processing standard module hook 'hook-charset_normalizer.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+10572 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+10735 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+11193 INFO: Processing standard module hook 'hook-pydantic.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/utils/hooks/__init__.py:665: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  __import__(name)
+11915 INFO: Processing standard module hook 'hook-zoneinfo.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+12705 INFO: Processing standard module hook 'hook-anyio.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+13487 INFO: Processing standard module hook 'hook-certifi.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+15068 INFO: Processing standard module hook 'hook-urllib3.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+15147 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15147 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.backports'!
+15152 INFO: Processing standard module hook 'hook-setuptools.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+15161 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15183 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15183 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.jaraco'!
+15190 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15190 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.more_itertools'!
+15462 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+15463 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15634 INFO: Processing pre-safe-import-module hook 'hook-importlib_metadata.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15634 INFO: Setuptools: 'importlib_metadata' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.importlib_metadata'!
+15655 INFO: Processing standard module hook 'hook-setuptools._vendor.importlib_metadata.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+15655 INFO: Processing pre-safe-import-module hook 'hook-zipp.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15656 INFO: Setuptools: 'zipp' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.zipp'!
+15909 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+15909 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.tomli'!
+16316 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+16316 INFO: Setuptools: 'wheel' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.wheel'!
+16942 INFO: Processing standard module hook 'hook-websockets.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+18046 INFO: Processing standard module hook 'hook-cv2.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+27323 INFO: Processing standard module hook 'hook-numba.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+27338 INFO: Processing standard module hook 'hook-llvmlite.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+30901 INFO: Processing pre-safe-import-module hook 'hook-win32com.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/pre_safe_import_module'
+31841 INFO: Processing standard module hook 'hook-scipy.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+32935 INFO: Processing standard module hook 'hook-scipy.linalg.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+33045 INFO: Processing standard module hook 'hook-scipy.special._ufuncs.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+33983 INFO: Processing standard module hook 'hook-scipy.spatial._ckdtree.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+34286 INFO: Processing standard module hook 'hook-scipy.spatial.transform.rotation.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+35072 INFO: Processing standard module hook 'hook-scipy.stats._stats.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+35471 INFO: Processing standard module hook 'hook-scipy.sparse.csgraph.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+36157 INFO: Processing standard module hook 'hook-scipy.special._ellip_harm_2.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+36596 INFO: Processing pre-safe-import-module hook 'hook-platformdirs.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/pre_safe_import_module'
+36604 INFO: Processing standard module hook 'hook-platformdirs.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+36747 INFO: Processing standard module hook 'hook-jsonschema.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+36935 INFO: Processing standard module hook 'hook-jsonschema_specifications.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+36987 INFO: Analyzing hidden import 'PIL._tkinter_finder'
+36988 INFO: Processing module hooks (post-graph stage)...
+37457 WARNING: Hidden import "scipy.special._cdflib" not found!
+37457 INFO: Processing standard module hook 'hook-_tkinter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+37740 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks'
+37843 INFO: Performing binary vs. data reclassification (393 entries)
+37903 INFO: Looking for ctypes DLLs
+37913 WARNING: Ignoring AppKit.framework/AppKit imported from /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/darkdetect/_mac_detect.py - only basenames are supported with ctypes imports!
+38124 INFO: Analyzing run-time hooks ...
+38130 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks'
+38131 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks'
+38133 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks'
+38134 INFO: Including run-time hook 'pyi_rth_setuptools.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks'
+38135 INFO: Including run-time hook 'pyi_rth__tkinter.py' from '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/hooks/rthooks'
+38158 INFO: Creating base_library.zip...
+38169 INFO: Looking for dynamic libraries
+38538 WARNING: Library not found: could not resolve '@rpath/libomp.dylib', dependency of '/Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/numba/np/ufunc/omppool.cpython-314-darwin.so'.
+38564 INFO: Warnings written to /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/build/manga_generator/warn-manga_generator.txt
+38631 INFO: Graph cross-reference written to /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/build/manga_generator/xref-manga_generator.html
+38859 INFO: checking PYZ
+38859 INFO: Building PYZ because PYZ-00.toc is non existent
+38859 INFO: Building PYZ (ZlibArchive) /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/build/manga_generator/PYZ-00.pyz
+40116 INFO: Building PYZ (ZlibArchive) /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/build/manga_generator/PYZ-00.pyz completed successfully.
+40141 INFO: EXE target arch: arm64
+40141 INFO: Code signing identity: None
+40142 INFO: checking PKG
+40142 INFO: Building PKG because PKG-00.toc is non existent
+40142 INFO: Building PKG (CArchive) MangaGenerator.pkg
+40174 INFO: Building PKG (CArchive) MangaGenerator.pkg completed successfully.
+40175 INFO: Bootloader /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/.venv/lib/python3.14/site-packages/PyInstaller/bootloader/Darwin-64bit/runw
+40175 INFO: checking EXE
+40175 INFO: Building EXE because EXE-00.toc is non existent
+40175 INFO: Building EXE from EXE-00.toc
+40175 INFO: Copying bootloader EXE to /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/build/manga_generator/MangaGenerator
+40175 INFO: Converting EXE to target arch (arm64)
+40194 INFO: Removing signature(s) from EXE
+40207 INFO: Modifying Mach-O image UUID(s) in EXE
+40217 INFO: Appending PKG archive to EXE
+40222 INFO: Fixing EXE headers for code signing
+40224 INFO: Re-signing the EXE
+40257 INFO: Building EXE from EXE-00.toc completed successfully.
+40262 INFO: checking COLLECT
+40262 INFO: Building COLLECT because COLLECT-00.toc is non existent
+40262 INFO: Building COLLECT COLLECT-00.toc
+43141 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+43151 INFO: checking BUNDLE
+43151 INFO: Building BUNDLE because BUNDLE-00.toc is non existent
+43151 INFO: Building BUNDLE BUNDLE-00.toc
+46209 INFO: Signing the BUNDLE...
+46508 INFO: Building BUNDLE BUNDLE-00.toc completed successfully.
+46516 INFO: Build complete! The results are available in: /Users/kawasaki/Develop/ClaudeGemini/nanobanana1koma/dist
+[5/5] 完了処理...
+
+==========================================
+ビルド完了!
+==========================================
+
+アプリの場所:
+  dist/1コマ漫画生成.app
+
+アプリケーションフォルダにコピーするには:
+  cp -r "dist/1コマ漫画生成.app" /Applications/
+
+Dockに追加するには:
+  アプリを右クリック → オプション → Dockに追加
+

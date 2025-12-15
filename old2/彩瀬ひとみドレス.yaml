@@ -1,0 +1,78 @@
+# Step 3: Outfit Application (衣装着用)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+type: outfit_reference_sheet
+title: "彩瀬ひとみドレス"
+author: "Unknown"
+
+# ====================================================
+# Input: Body Sheet from Step 2
+# ====================================================
+input:
+  body_sheet: "彩瀬ひとみ.png"
+  preserve_body: true
+  preserve_face: true
+  preserve_details: "exact match required - do not alter face or body shape"
+
+# ====================================================
+# Outfit Configuration
+# ====================================================
+outfit:
+  category: "ドレス/フォーマル"
+  shape: "イブニングドレス"
+  color: "紫"
+  pattern: "レース"
+  style_impression: "ゴージャス"
+  prompt: "purple, lace, evening gown, gorgeous, glamorous"
+  additional_notes: "高嶺の花をイメージ"
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, same as body sheet"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "日本のアニメスタイル, 2Dセルシェーディング"
+  proportions: "Normal head-to-body ratio (6-7 heads)"
+  color_mode: "fullcolor"
+  output_style: ""
+  aspect_ratio: "16:9"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from reference"
+  body_preservation:
+    - "MUST use exact body shape from input body_sheet"
+    - "Do NOT alter body proportions or pose"
+    - "Body should be visible through/under clothing naturally"
+  outfit_application:
+    - "Apply specified outfit to the body"
+    - "Maintain clothing consistency across all three views"
+    - "Show realistic fabric draping and fit"
+  consistency:
+    - "All three views must show the same character in same outfit"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT change the face from the body sheet reference"
+  - "Do NOT alter body proportions"
+  - "Do NOT add accessories not specified in outfit"
+  - "Do NOT change hair style or color"
+  - "Apply ONLY the specified outfit"

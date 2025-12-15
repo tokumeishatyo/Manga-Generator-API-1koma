@@ -1,0 +1,42 @@
+# Step 4: Character Pose Generation (character_pose.yaml準拠)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# Preset: 坐禅（瞑想）
+type: character_pose
+title: "彩瀬まゆみ泣き瞑想"
+author: "Unknown"
+
+input:
+  character_image: "彩瀬まゆみスポーツ.png"
+  identity_preservation: 0.85
+
+settings:
+  orientation:
+    body_direction: "facing left at 3/4 angle, three-quarter view"
+    eye_line: "前を見る"
+    expression: "crying, tearful expression, sad face with tears, 涙を流しながら目を閉じる"
+  action:
+    category: "Idle/Ready"
+    pose_type: "meditating, meditation pose, zen sitting, lotus position"
+    description: "Sitting cross-legged in lotus position, hands resting on knees, eyes closed, meditative posture"
+    dynamism: "Low (Subtle)"
+  visuals:
+    include_effects: false
+    wind_effect: ""
+  camera:
+    angle: "Low Angle / Dynamic"
+    zoom: "Shot from solar plexus up, framing from solar plexus to top of head"
+
+additional_details:
+  - meditation, zazen, static still pose
+
+constraints:
+  - Preserve character design and colors from input image
+  - Plain WHITE background only, solid white color
+  - Clean silhouette for compositing
+
+style:
+  color_mode: "('fullcolor', '')"
+  output_style: "anime"
+  aspect_ratio: "1:1"

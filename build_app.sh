@@ -48,40 +48,15 @@ if ! command -v pyinstaller &> /dev/null; then
 fi
 
 # 以前のビルドをクリーンアップ
-echo "[3/6] 以前のビルドをクリーンアップ..."
+echo "[3/5] 以前のビルドをクリーンアップ..."
 rm -rf build dist
 
-# Swiftツールをビルド（オプション）
-echo "[4/6] Swiftツールをビルド..."
-if [ -d "tools/BgRemover" ]; then
-    cd tools/BgRemover
-    if command -v swiftc &> /dev/null; then
-        echo "      BgRemoverをコンパイル中..."
-        swiftc -O -o BgRemover BgRemover.swift \
-            -framework Foundation \
-            -framework AppKit \
-            -framework Vision \
-            -framework CoreImage \
-            2>/dev/null && echo "      BgRemover ビルド完了" || echo "      警告: BgRemoverのビルドをスキップ"
-    else
-        echo "      警告: swiftcが見つかりません。BgRemoverをスキップ。"
-    fi
-    cd "$SCRIPT_DIR"
-else
-    echo "      警告: tools/BgRemoverが見つかりません"
-fi
-
 # ビルド実行
-echo "[5/6] アプリをビルド中..."
+echo "[4/5] アプリをビルド中..."
 pyinstaller manga_generator.spec --noconfirm
 
-# Swiftツールをdistにコピー
-echo "[6/6] 完了処理..."
-if [ -f "tools/BgRemover/BgRemover" ]; then
-    mkdir -p dist/tools/BgRemover
-    cp tools/BgRemover/BgRemover dist/tools/BgRemover/
-    echo "      BgRemoverをdistにコピーしました"
-fi
+# 完了
+echo "[5/5] 完了処理..."
 
 # 完了メッセージ
 echo ""

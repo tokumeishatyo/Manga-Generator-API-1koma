@@ -1,0 +1,71 @@
+# Step 5: Angle & Zoom Change (角度・ズーム変更)
+# Purpose: Transform front pose to different camera angles and zoom levels
+# Input: Front pose image from Step4 + Outfit three-view sheet from Step3
+type: angle_transform
+title: "まゆみ右反転"
+author: "Unknown"
+
+# ====================================================
+# Input Images
+# ====================================================
+input:
+  front_pose_image: "まゆみ波動拳.png"
+  outfit_three_view_sheet: "彩瀬まゆみスポーツ.png"
+  purpose: "Reconstruct character from front pose to different angle using three-view as reference"
+
+# Reference Images for angle reconstruction
+reference_guidance:
+  outfit_sheet: "彩瀬まゆみスポーツ.png"
+  usage: "Use the three-view sheet to accurately reconstruct side/back views"
+  constraints:
+    - "Side view clothing details should match the side view in outfit_sheet"
+    - "Back view should match the back view in outfit_sheet"
+    - "Maintain consistent character design across all angles"
+
+# ====================================================
+# Camera Settings
+# ====================================================
+camera:
+  angle: "→右向き"
+  angle_prompt: "Right side view, profile facing right"
+  zoom: "全身"
+  zoom_prompt: "Full body shot, entire figure visible from head to toe"
+
+# ====================================================
+# Output Settings
+# ====================================================
+output:
+  background: "pure white, clean background"
+  format: "single character image at specified angle and zoom"
+
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  color_mode: "fullcolor"
+  output_style: ""
+  aspect_ratio: "1:1"
+
+# ====================================================
+# Constraints (Critical)
+# ====================================================
+constraints:
+  character_preservation:
+    - "MUST preserve exact character identity from front_pose_image"
+    - "Maintain face, hair, clothing design exactly as shown"
+    - "Keep pose (arm positions, leg positions) consistent with front pose"
+  angle_reconstruction:
+    - "Use outfit_three_view_sheet to reconstruct unseen parts"
+    - "Side/back clothing details must match the three-view reference"
+    - "Do NOT invent or hallucinate details not shown in references"
+  camera:
+    - "Apply camera angle: Right side view, profile facing right"
+    - "Apply zoom level: Full body shot, entire figure visible from head to toe"
+
+anti_hallucination:
+  - "Do NOT change character's face or expression"
+  - "Do NOT modify clothing design or colors"
+  - "Do NOT alter the pose from front_pose_image"
+  - "Use ONLY information from the two input images"
+  - "For unseen parts, refer ONLY to outfit_three_view_sheet"

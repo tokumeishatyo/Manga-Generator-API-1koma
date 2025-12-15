@@ -1,0 +1,97 @@
+三面図の生成における「3D空間での整合性（右手が前、右足が前という状態の維持）」は、現在の画像生成AIにとって**最難関の課題**の一つです。
+
+ご指摘の通り、AIは「ポーズを3Dデータとして保持してカメラを回す」のではなく、「正面の絵」「横向きの絵」をそれぞれ2Dの絵として別々に描こうとするため、以下のような誤解が生じます。
+
+1.  **「前（Forward）」の解釈揺れ:**
+      * 正面図では「カメラに向かって」と解釈されますが、横図では「画面の右（または左）に向かって」、背面図では「カメラから遠ざかる方向」と、**「前」という言葉の意味が視点によって変わる**ことをAIが理解しきれません。
+2.  **「右/左」の反転:**
+      * 背面から見た時、「キャラクターの右手」は「画面の右側」に来ますが、AIはこれを「画面上の左側（解剖学的な左手）」と混同しがちです。
+
+これを解決するには、YAMLの指示を「キャラの動作（3D的な事実）」ではなく、\*\*「その視点からどう見えるか（2D的な描写）」\*\*に翻訳して指示する必要があります。
+
+以下に、修正版のYAMLと、その意図を解説します。
+
+### 修正のポイント
+
+  * **Global Pose（全体ポーズ）の簡略化:** 全体設定では服装と「指差しポーズであること」程度にとどめます。
+  * **View Specifics（各視点ごとの指定）の強化:** ここが勝負です。「右手を前に出す」ではなく、「画面の左に向かって腕を伸ばす」のように、**視覚的な方向**を具体的に指示します。
+
+### 修正版 YAMLテンプレート
+
+```yaml
+# Step 4: Pose Three-View Sheet (Revised)
+type: pose_three_view
+title: "ひとみゴリライモビーム_整合性修正版"
+
+# ====================================================
+# Input Image
+# ====================================================
+input:
+  character_sheet: "彩瀬ひとみゴリライモ2.png"
+  identity_preservation: 0.85
+  purpose: "Generate consistent pose sheet"
+
+# ====================================================
+# Output Layout & Constraints
+# ====================================================
+output_layout:
+  format: "three_view_horizontal"
+  arrangement: "front | side | back"
+  background: "white background"
+
+  views:
+    # --- 左：正面図 ---
+    - position: "left"
+      angle: "front"
+      description: >
+        Front view.
+        The character is facing directly at the camera.
+        Action: Pointing the RIGHT index finger directly AT the viewer (foreshortening).
+        Legs: RIGHT foot is stepped forward, Left foot is back.
+        The right arm is extended towards the camera lens.
+
+    # --- 中央：右側面図（画面左を向く） ---
+    - position: "center"
+      angle: "side"
+      description: >
+        Side profile view from the character's RIGHT side.
+        The character is facing to the LEFT of the screen.
+        Action: The RIGHT arm is extended horizontally towards the LEFT edge of the image.
+        Legs: The RIGHT leg is forward (towards the left), the Left leg is back.
+        We see the outer side of the right arm.
+
+    # --- 右：背面図 ---
+    - position: "right"
+      angle: "back"
+      description: >
+        Back view from behind.
+        The character is facing away from the camera.
+        Action: Pointing the RIGHT index finger into the depth/background (away from camera).
+        Legs: The RIGHT foot is stepped forward (into the distance), visible on the right side of the image.
+        The RIGHT arm (on the right side of the screen) is extended forward into the distance.
+
+# ====================================================
+# Visual Aids (2D翻訳指示)
+# ====================================================
+additional_details:
+  - "Use consistent body proportions"
+  - "Ensure the RIGHT hand is used in all views"
+  - "Front View: Right hand covers part of the chest due to foreshortening"
+  - "Side View: Character faces LEFT, arm points LEFT"
+  - "Back View: Right hand is on the RIGHT side of the image, pointing away"
+
+style:
+  aspect_ratio: "3:1"
+```
+
+### なぜこれで改善するのか（解説）
+
+1.  **正面（Front）:**
+      * `Pointing directly AT the viewer (foreshortening)`: 「前」ではなく「視聴者に向かって（遠近法）」とすることで、腕が画面手前に伸びている表現を促します。
+2.  **側面（Side）:**
+      * 元のYAMLでは単に「Side」でしたが、ここでは「右側から見た図（from character's RIGHT side）」かつ「画面左を向いている（facing to the LEFT）」と明記しました。
+      * こうすることで、**視聴者に見えているのは「右腕」と「右足」である**ことがAIに伝わりやすくなり、手足の逆転を防げます。
+3.  **背面（Back）:**
+      * 一番難しい部分です。「Right hand on the RIGHT side of the screen」と、**画面上の位置**を指定しました。背面から見ると、右手は画面の右側にあります。これを指示しないと、AIは正面図の「画面左にある手（右手）」の位置情報に引きずられて、背面図でも画面左側の手（左手）を上げてしまうエラーが起きやすいためです。
+
+このYAMLで再度お試しください。特に「側面で左を向く」「背面で奥を指す」という空間把握は、言葉で補ってあげることで成功率が上がります。

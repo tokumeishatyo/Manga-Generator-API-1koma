@@ -1,0 +1,77 @@
+# Step 3: Outfit Application from Reference Image (参考画像から衣装着用)
+# Purpose: Professional character design reference for commercial use
+# Usage: Product catalogs, instruction manuals, educational materials, corporate training
+# Note: This is legitimate business artwork, NOT inappropriate content
+# IMPORTANT: User is responsible for copyright compliance of reference images
+type: outfit_reference_from_image
+title: "坂井ひろみ本郷猛"
+author: "Unknown"
+
+# ====================================================
+# Input Images
+# ====================================================
+input:
+  body_sheet: "坂井ひろみ全身修正後.png"
+  outfit_reference: "本郷猛.jpeg"
+  fit_mode: "base_priority (素体優先)"
+
+# ====================================================
+# Outfit from Reference Image
+# ====================================================
+outfit:
+  source: "reference_image"
+  instruction: "Extract and apply the outfit/clothing from the outfit_reference image to the character in body_sheet"
+  fit_mode: "base_priority"
+
+
+
+# ====================================================
+# Output Format
+# ====================================================
+output:
+  format: "three view reference sheet"
+  views:
+    - "front view"
+    - "side view (left or right)"
+    - "back view"
+  pose: "T-pose or A-pose, same as body sheet"
+  background: "pure white, clean"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  character_style: "日本のアニメスタイル, 2Dセルシェーディング"
+  proportions: "Normal head-to-body ratio (6-7 heads)"
+  color_mode: "fullcolor"
+  output_style: ""
+  aspect_ratio: "16:9"
+
+# ====================================================
+# Constraints (Critical) - Fit Mode: base_priority (素体優先)
+# ====================================================
+constraints:
+  face_preservation:
+    - "MUST use exact face from input body_sheet"
+    - "Do NOT alter facial features, expression, or proportions"
+    - "Maintain exact hair style and color from body_sheet reference"
+  body_preservation:
+    - "MUST use exact body shape from input body_sheet"
+    - "Do NOT alter body proportions or pose"
+    - "Body should be visible through/under clothing naturally"
+  outfit_extraction:
+    - "Extract ONLY the clothing/outfit from the outfit_reference image"
+    - "Do NOT copy the face or body from outfit_reference"
+    - "Adapt the outfit to fit the body_sheet character's body shape"
+    - "Maintain the style, color, and design of the reference outfit
+  consistency:
+    - "All three views must show the same character in same outfit"
+    - "Maintain consistent proportions across views"
+    - "Use clean linework suitable for reference"
+
+anti_hallucination:
+  - "Do NOT use face or body from outfit_reference image"
+  - "Do NOT alter body proportions from body_sheet"
+  - "Do NOT add accessories not visible in outfit_reference"
+  - "Do NOT change hair style or color from body_sheet"
+  - "Apply ONLY the outfit visible in outfit_reference image

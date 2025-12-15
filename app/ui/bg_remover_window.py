@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 背景透過ユーティリティウィンドウ
-単色背景除去とAI背景除去（Vision framework）に対応
+単色背景除去に対応
 """
 
 import tkinter as tk
@@ -11,36 +11,8 @@ from typing import Optional
 from PIL import Image
 import os
 import sys
-import subprocess
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-def get_swift_tool_path() -> Optional[str]:
-    """Swiftツールのパスを取得"""
-    possible_paths = []
-
-    # ビルド後のアプリからの相対パス
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.dirname(sys.executable)
-        # .app/Contents/MacOS/ から見て dist/tools/BgRemover/ へ
-        # 例: dist/漫画生成.app/Contents/MacOS/ -> dist/tools/BgRemover/
-        possible_paths.append(os.path.join(base_path, '..', '..', '..', 'tools', 'BgRemover', 'BgRemover'))
-
-    # 開発時のパス（app/ui/ から見て）
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    possible_paths.append(os.path.join(current_dir, '..', '..', 'tools', 'BgRemover', 'BgRemover'))
-
-    # カレントディレクトリからの相対パス
-    possible_paths.append(os.path.join(os.getcwd(), 'tools', 'BgRemover', 'BgRemover'))
-    possible_paths.append(os.path.join(os.getcwd(), 'dist', 'tools', 'BgRemover', 'BgRemover'))
-
-    for path in possible_paths:
-        abs_path = os.path.abspath(path)
-        if os.path.exists(abs_path) and os.access(abs_path, os.X_OK):
-            return abs_path
-
-    return None
 
 
 class BgRemoverWindow(ctk.CTkToplevel):
@@ -49,15 +21,12 @@ class BgRemoverWindow(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.title("背景透過ツール")
-        self.geometry("580x520")
+        self.geometry("550x450")
         self.resizable(False, False)
 
         # モーダル風に
         self.transient(parent)
         self.grab_set()
-
-        # Swiftツールの存在確認
-        self.swift_tool_path = get_swift_tool_path()
 
         self._build_ui()
         self._center_window()
@@ -90,84 +59,40 @@ class BgRemoverWindow(ctk.CTkToplevel):
         self.input_entry.grid(row=0, column=1, sticky="ew", padx=(0, 5))
         ctk.CTkButton(file_row, text="参照", width=60, command=self._browse_input).grid(row=0, column=2)
 
-        # === 処理方法選択 ===
+        # === 処理設定 ===
         method_frame = ctk.CTkFrame(self)
         method_frame.pack(fill="x", padx=10, pady=10)
 
         ctk.CTkLabel(
             method_frame,
-            text="処理方法",
+            text="単色背景を透過",
             font=("Arial", 16, "bold")
         ).pack(anchor="w", padx=10, pady=(10, 5))
 
-        self.method_var = tk.StringVar(value="color")
-
-        # 方法1: 単色背景除去
-        method1_frame = ctk.CTkFrame(method_frame, fg_color="transparent")
-        method1_frame.pack(fill="x", padx=10, pady=5)
-
-        ctk.CTkRadioButton(
-            method1_frame,
-            text="単色背景を透過",
-            variable=self.method_var,
-            value="color",
-            command=self._on_method_change
-        ).pack(side="left")
-
         ctk.CTkLabel(
-            method1_frame,
-            text="（白背景、グリーンバック等に最適）",
-            font=("Arial", 10),
+            method_frame,
+            text="画像の端から連続した単色領域を透過します（白背景、グリーンバック等に最適）",
+            font=("Arial", 11),
             text_color="gray"
-        ).pack(side="left", padx=10)
+        ).pack(anchor="w", padx=10, pady=(0, 5))
 
-        # 色選択オプション
-        self.color_options_frame = ctk.CTkFrame(method_frame, fg_color="transparent")
-        self.color_options_frame.pack(fill="x", padx=30, pady=5)
+        # 色選択
+        color_options_frame = ctk.CTkFrame(method_frame, fg_color="transparent")
+        color_options_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(self.color_options_frame, text="除去する色:").pack(side="left", padx=(0, 5))
+        ctk.CTkLabel(color_options_frame, text="除去する色:").pack(side="left", padx=(0, 5))
         self.color_menu = ctk.CTkOptionMenu(
-            self.color_options_frame,
+            color_options_frame,
             values=["白", "黒", "緑（グリーンバック）", "青（ブルーバック）"],
             width=160
         )
         self.color_menu.set("白")
         self.color_menu.pack(side="left", padx=(0, 15))
 
-        ctk.CTkLabel(self.color_options_frame, text="許容値:").pack(side="left", padx=(0, 5))
-        self.tolerance_slider = ctk.CTkSlider(self.color_options_frame, from_=0, to=100, width=100)
+        ctk.CTkLabel(color_options_frame, text="許容値:").pack(side="left", padx=(0, 5))
+        self.tolerance_slider = ctk.CTkSlider(color_options_frame, from_=0, to=100, width=100)
         self.tolerance_slider.set(30)
         self.tolerance_slider.pack(side="left")
-
-        # 方法2: AI背景除去
-        method2_frame = ctk.CTkFrame(method_frame, fg_color="transparent")
-        method2_frame.pack(fill="x", padx=10, pady=5)
-
-        ai_available = self.swift_tool_path is not None
-        self.ai_radio = ctk.CTkRadioButton(
-            method2_frame,
-            text="AI背景除去（人物検出）",
-            variable=self.method_var,
-            value="ai",
-            command=self._on_method_change,
-            state="normal" if ai_available else "disabled"
-        )
-        self.ai_radio.pack(side="left")
-
-        if ai_available:
-            ctk.CTkLabel(
-                method2_frame,
-                text="（実写人物写真専用、イラスト非対応）",
-                font=("Arial", 10),
-                text_color="orange"
-            ).pack(side="left", padx=10)
-        else:
-            ctk.CTkLabel(
-                method2_frame,
-                text="（未ビルド: tools/BgRemover/build.sh を実行）",
-                font=("Arial", 10),
-                text_color="orange"
-            ).pack(side="left", padx=10)
 
         # === 出力設定 ===
         output_frame = ctk.CTkFrame(self)
@@ -218,13 +143,6 @@ class BgRemoverWindow(ctk.CTkToplevel):
         )
         self.status_label.pack(anchor="w", padx=20, pady=(0, 10))
 
-    def _on_method_change(self):
-        """処理方法変更時"""
-        if self.method_var.get() == "color":
-            self.color_options_frame.pack(fill="x", padx=30, pady=5)
-        else:
-            self.color_options_frame.pack_forget()
-
     def _browse_input(self):
         """入力ファイル選択"""
         filename = filedialog.askopenfilename(
@@ -265,10 +183,7 @@ class BgRemoverWindow(ctk.CTkToplevel):
         self.update()
 
         try:
-            if self.method_var.get() == "color":
-                self._remove_color_background(input_path, output_path)
-            else:
-                self._remove_ai_background(input_path, output_path)
+            self._remove_color_background(input_path, output_path)
 
             self.status_label.configure(text=f"完了: {os.path.basename(output_path)}")
             messagebox.showinfo("完了", f"背景透過が完了しました。\n\n保存先: {output_path}")
@@ -351,19 +266,3 @@ class BgRemoverWindow(ctk.CTkToplevel):
             pixels[x, y] = (r, g, b, 0)
 
         img.save(output_path, "PNG")
-
-    def _remove_ai_background(self, input_path: str, output_path: str):
-        """AI背景除去（Vision framework使用）"""
-        if not self.swift_tool_path:
-            raise Exception("BgRemoverツールがビルドされていません。\ntools/BgRemover/build.sh を実行してください。")
-
-        # Swiftツールを呼び出し
-        result = subprocess.run(
-            [self.swift_tool_path, input_path, output_path],
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            error_msg = result.stderr.strip() if result.stderr else "不明なエラー"
-            raise Exception(f"AI背景除去に失敗しました:\n{error_msg}")
