@@ -12,18 +12,18 @@ echo "=========================================="
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# 仮想環境をアクティベート
-echo "[1/5] 仮想環境をアクティベート..."
+# 仮想環境を削除して再作成（クリーンビルド）
+echo "[1/5] 仮想環境を作成..."
 if [ -d ".venv" ]; then
-    source .venv/bin/activate
-else
-    echo "エラー: .venvディレクトリが見つかりません"
-    echo "先に python3 -m venv .venv を実行してください"
-    exit 1
+    echo "      既存の.venvを削除中..."
+    rm -rf .venv
 fi
+python3 -m venv .venv
+source .venv/bin/activate
 
 # 依存関係をインストール
 echo "[2/5] 依存関係をインストール..."
+pip install --upgrade pip --quiet
 pip install -r app/requirements.txt --quiet
 
 # PyInstallerがインストールされているか確認
