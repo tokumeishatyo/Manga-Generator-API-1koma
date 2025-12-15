@@ -1498,8 +1498,68 @@ title_overlay:
         """背景生成用YAML生成"""
         settings = self.current_settings
         description = settings.get('description', '')
+        # 背景キャプチャ設定
+        bg_capture_enabled = settings.get('bg_capture_enabled', False)
+        bg_reference_image = settings.get('bg_reference_image', '')
+        remove_people = settings.get('remove_people', True)
+        transform_instruction = settings.get('transform_instruction', '')
 
-        yaml_content = f"""# Background Generation
+        # 背景キャプチャモードの場合
+        if bg_capture_enabled and bg_reference_image:
+            # 変形指示がない場合はアニメ調に変換
+            if not transform_instruction:
+                transform_instruction = "Convert to anime/illustration style, clean lines, vibrant colors"
+
+            # 人物除去の指示
+            people_instruction = ""
+            if remove_people:
+                people_instruction = """
+  remove_people:
+    enabled: true
+    instruction: "Remove all people/humans from the image. Fill the removed areas naturally with background elements."
+"""
+
+            # アスペクト比の処理（グローバル設定を使用）
+            aspect_ratio_value = ASPECT_RATIOS.get(aspect_ratio, '1:1')
+            if aspect_ratio_value == "preserve_original":
+                aspect_ratio_instruction = "Preserve the original aspect ratio of the reference image"
+            else:
+                aspect_ratio_instruction = f"Output aspect ratio: {aspect_ratio_value}"
+
+            yaml_content = f"""# Background Capture (背景キャプチャ)
+title: "{title or 'Background'}"
+author: "{author}"
+
+output_type: "background_capture"
+
+# ====================================================
+# Background Capture Settings
+# ====================================================
+background_capture:
+  enabled: true
+  reference_image: "{os.path.basename(bg_reference_image)}"
+  transform_instruction: "{transform_instruction}"
+  aspect_ratio: "{aspect_ratio_value}"
+  aspect_ratio_instruction: "{aspect_ratio_instruction}"
+{people_instruction}
+# ====================================================
+# CRITICAL CONSTRAINTS
+# ====================================================
+constraints:
+  - "Use the reference image as the base for the background"
+  - "Apply the transformation instruction to modify the style/atmosphere"
+  - "Do NOT include any characters or people in the output"
+  - "Maintain the general composition and layout from the reference"
+  - "{aspect_ratio_instruction}"
+
+style:
+  color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
+  output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
+  aspect_ratio: "{aspect_ratio_value}"
+"""
+        else:
+            # テキスト記述モード（従来通り）
+            yaml_content = f"""# Background Generation
 title: "{title or 'Background'}"
 author: "{author}"
 

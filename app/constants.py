@@ -408,6 +408,7 @@ TEXT_POSITIONS = {
 
 # アスペクト比定義
 ASPECT_RATIOS = {
+    "元画像を保持": "preserve_original",
     "1:1": "1:1",
     "16:9": "16:9",
     "9:16": "9:16",
