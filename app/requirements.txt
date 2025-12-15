@@ -4,3 +4,4 @@ pyperclip
 Pillow
 google-genai
 rembg
+onnxruntime
