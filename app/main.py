@@ -1875,6 +1875,12 @@ message_window:
       position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
       crop_area: "Head and neck only (from top of head to base of neck)"
 
+constraints:
+  - "Generate ONLY the message window UI element"
+  - "Do NOT draw any full-body character in the scene"
+  - "Do NOT include any character outside the message window"
+  - "The reference image is ONLY for the face icon, not for adding a character to the scene"
+
 output:
   background: "{bg_value}"
 
@@ -1903,6 +1909,11 @@ message_window:
       position: "{FACE_ICON_POSITIONS.get(face_position, 'Left Inside')}"
       style: "Standalone"
       crop_area: "Head and neck only (from top of head to base of neck)"
+
+constraints:
+  - "Generate ONLY the face icon element"
+  - "Do NOT draw any full-body character"
+  - "The reference image is ONLY for extracting the face, not for adding a character"
 
 output:
   background: "{bg_value}"
