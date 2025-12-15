@@ -158,6 +158,15 @@ class PoseWindow(BaseSettingsWindow):
         )
         self.pose_ref_browse_btn.grid(row=0, column=2)
 
+        # 著作権注意書き
+        self.pose_ref_warning = ctk.CTkLabel(
+            capture_frame,
+            text="※ 参考画像の著作権はユーザー責任です",
+            font=("Arial", 10),
+            text_color="orange"
+        )
+        self.pose_ref_warning.grid(row=1, column=0, columnspan=3, padx=0, pady=(2, 0), sticky="w")
+
         # プリセットの追加プロンプト保持用
         self.current_additional_prompt = ""
 
