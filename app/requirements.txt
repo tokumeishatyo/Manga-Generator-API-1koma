@@ -3,4 +3,3 @@ PyYAML
 pyperclip
 Pillow
 google-genai
-rembg[cpu]

@@ -56,25 +56,6 @@ try:
 except ImportError:
     pass
 
-# rembg関連（背景除去機能用）
-try:
-    import rembg
-    hiddenimports.extend([
-        'rembg',
-        'rembg.bg',
-        'rembg.session_factory',
-        'onnxruntime',
-        'onnxruntime.capi',
-        'onnxruntime.capi._pybind_state',
-        'cv2',
-        'scipy',
-        'scipy.special',
-        'scipy.ndimage',
-        'pooch',
-    ])
-except ImportError:
-    pass
-
 a = Analysis(
     [os.path.join(base_path, 'app', 'main.py')],
     pathex=[base_path, os.path.join(base_path, 'app')],

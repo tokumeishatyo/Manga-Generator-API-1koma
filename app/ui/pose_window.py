@@ -295,8 +295,8 @@ class PoseWindow(BaseSettingsWindow):
             variable=self.include_effects_var
         ).grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="w")
 
-        # 背景透過
-        self.transparent_bg_var = tk.BooleanVar(value=False)
+        # 背景透過（デフォルトON）
+        self.transparent_bg_var = tk.BooleanVar(value=True)
         ctk.CTkCheckBox(
             visual_frame,
             text="背景を透過にする（合成用）",

@@ -12,13 +12,28 @@ echo "=========================================="
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Python 3.13のパスを検出
+PYTHON313=""
+if [ -x "/opt/homebrew/opt/python@3.13/bin/python3.13" ]; then
+    PYTHON313="/opt/homebrew/opt/python@3.13/bin/python3.13"
+elif [ -x "/usr/local/opt/python@3.13/bin/python3.13" ]; then
+    PYTHON313="/usr/local/opt/python@3.13/bin/python3.13"
+elif command -v python3.13 &> /dev/null; then
+    PYTHON313="python3.13"
+else
+    echo "エラー: Python 3.13が見つかりません"
+    echo "brew install python@3.13 でインストールしてください"
+    exit 1
+fi
+echo "Python 3.13を使用: $PYTHON313"
+
 # 仮想環境を削除して再作成（クリーンビルド）
 echo "[1/5] 仮想環境を作成..."
 if [ -d ".venv" ]; then
     echo "      既存の.venvを削除中..."
     rm -rf .venv
 fi
-python3 -m venv .venv
+$PYTHON313 -m venv .venv
 source .venv/bin/activate
 
 # 依存関係をインストール
@@ -33,15 +48,40 @@ if ! command -v pyinstaller &> /dev/null; then
 fi
 
 # 以前のビルドをクリーンアップ
-echo "[3/5] 以前のビルドをクリーンアップ..."
+echo "[3/6] 以前のビルドをクリーンアップ..."
 rm -rf build dist
 
+# Swiftツールをビルド（オプション）
+echo "[4/6] Swiftツールをビルド..."
+if [ -d "tools/BgRemover" ]; then
+    cd tools/BgRemover
+    if command -v swiftc &> /dev/null; then
+        echo "      BgRemoverをコンパイル中..."
+        swiftc -O -o BgRemover BgRemover.swift \
+            -framework Foundation \
+            -framework AppKit \
+            -framework Vision \
+            -framework CoreImage \
+            2>/dev/null && echo "      BgRemover ビルド完了" || echo "      警告: BgRemoverのビルドをスキップ"
+    else
+        echo "      警告: swiftcが見つかりません。BgRemoverをスキップ。"
+    fi
+    cd "$SCRIPT_DIR"
+else
+    echo "      警告: tools/BgRemoverが見つかりません"
+fi
+
 # ビルド実行
-echo "[4/5] アプリをビルド中..."
+echo "[5/6] アプリをビルド中..."
 pyinstaller manga_generator.spec --noconfirm
 
-# 完了
-echo "[5/5] 完了処理..."
+# Swiftツールをdistにコピー
+echo "[6/6] 完了処理..."
+if [ -f "tools/BgRemover/BgRemover" ]; then
+    mkdir -p dist/tools/BgRemover
+    cp tools/BgRemover/BgRemover dist/tools/BgRemover/
+    echo "      BgRemoverをdistにコピーしました"
+fi
 
 # 完了メッセージ
 echo ""

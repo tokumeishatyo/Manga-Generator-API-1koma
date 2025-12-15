@@ -114,6 +114,7 @@ style:
   lighting: "Flat, Neutral Studio Lighting"   # 影や色被りのないスタジオ照明
   shading_mode: "Albedo / Base Color Only"    # 陰影よりも「固有色」を優先
   output_quality: "Asset Quality"             # 「一枚絵」ではなく「素材」として出力
+  background: "Transparent (Alpha Channel)"   # 背景を透過（合成用素材として）
 
 # ----------------------------------------------------
 # 7. 制約（文脈遮断・幻覚防止）
