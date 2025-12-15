@@ -239,9 +239,10 @@ class BgRemoverWindow(ctk.CTkToplevel):
             messagebox.showerror("エラー", f"処理中にエラーが発生しました。\n\n{str(e)}")
 
     def _remove_color_background(self, input_path: str, output_path: str):
-        """単色背景を透過に変換"""
+        """単色背景を透過に変換（フラッドフィル方式：端から連続した領域のみ）"""
         img = Image.open(input_path).convert("RGBA")
-        data = img.getdata()
+        width, height = img.size
+        pixels = img.load()
 
         # 除去する色を決定
         color_name = self.color_menu.get()
@@ -256,19 +257,60 @@ class BgRemoverWindow(ctk.CTkToplevel):
         else:
             target_color = (255, 255, 255)
 
-        tolerance = int(self.tolerance_slider.get())
+        tolerance = int(self.tolerance_slider.get()) * 3  # RGB各チャンネル分
 
-        new_data = []
-        for item in data:
-            r, g, b, a = item
-            # 色の距離を計算
+        def is_target_color(pixel):
+            """指定色かどうかを判定"""
+            r, g, b = pixel[0], pixel[1], pixel[2]
             distance = abs(r - target_color[0]) + abs(g - target_color[1]) + abs(b - target_color[2])
-            if distance <= tolerance * 3:  # 許容値を3倍（RGB各チャンネル分）
-                new_data.append((r, g, b, 0))  # 透明に
-            else:
-                new_data.append(item)
+            return distance <= tolerance
 
-        img.putdata(new_data)
+        # フラッドフィル用のマスク（透過すべきピクセル）
+        to_remove = set()
+
+        # 4辺の端から開始点を収集
+        start_points = []
+        # 上端と下端
+        for x in range(width):
+            start_points.append((x, 0))
+            start_points.append((x, height - 1))
+        # 左端と右端
+        for y in range(height):
+            start_points.append((0, y))
+            start_points.append((width - 1, y))
+
+        # BFSでフラッドフィル
+        from collections import deque
+        visited = set()
+        queue = deque()
+
+        for point in start_points:
+            if point not in visited:
+                x, y = point
+                pixel = pixels[x, y]
+                if is_target_color(pixel):
+                    queue.append(point)
+                    visited.add(point)
+
+        while queue:
+            x, y = queue.popleft()
+            pixel = pixels[x, y]
+
+            if is_target_color(pixel):
+                to_remove.add((x, y))
+
+                # 4方向の隣接ピクセルをチェック
+                for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < width and 0 <= ny < height and (nx, ny) not in visited:
+                        visited.add((nx, ny))
+                        queue.append((nx, ny))
+
+        # 透過処理を適用
+        for x, y in to_remove:
+            r, g, b, a = pixels[x, y]
+            pixels[x, y] = (r, g, b, 0)
+
         img.save(output_path, "PNG")
 
     def _remove_background_rembg(self, input_path: str, output_path: str):
