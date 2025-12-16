@@ -5,6 +5,7 @@
 """
 
 import os
+import re
 import threading
 import time
 import tkinter as tk
@@ -2294,6 +2295,25 @@ title_overlay:
             self.title_entry.focus_set()
             return
 
+        # メイン画面の設定をYAMLに反映
+        # アスペクト比の上書き
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
+        # 解像度をYAMLに追加
+        resolution = self.resolution_var.get()
+
+        # 既存のaspect_ratioとimage_sizeを置換または追加
+        # aspect_ratioの置換
+        if re.search(r'^aspect_ratio:', yaml_content, re.MULTILINE):
+            yaml_content = re.sub(r'^aspect_ratio:.*$', f'aspect_ratio: "{aspect_ratio}"', yaml_content, flags=re.MULTILINE)
+        else:
+            yaml_content += f'\naspect_ratio: "{aspect_ratio}"'
+
+        # image_sizeの追加（既存があれば置換）
+        if re.search(r'^image_size:', yaml_content, re.MULTILINE):
+            yaml_content = re.sub(r'^image_size:.*$', f'image_size: "{resolution}"', yaml_content, flags=re.MULTILINE)
+        else:
+            yaml_content += f'\nimage_size: "{resolution}"'
+
         # 追加指示を取得してYAMLに付加
         additional_instruction = self.redraw_instruction_entry.get("1.0", tk.END).strip()
         if additional_instruction:
@@ -2303,9 +2323,11 @@ title_overlay:
 additional_refinement_instructions: |
   {additional_instruction}
 """
-            # テキストボックスも更新して、保存時に追加指示が含まれるようにする
-            self.yaml_textbox.delete("1.0", tk.END)
-            self.yaml_textbox.insert("1.0", yaml_content)
+
+        # テキストボックスを更新して、保存時に全ての変更が含まれるようにする
+        self.yaml_textbox.delete("1.0", tk.END)
+        self.yaml_textbox.insert("1.0", yaml_content)
+        self.update()  # GUI同期を強制
 
         # 確認ダイアログ
         instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
@@ -2347,16 +2369,13 @@ additional_refinement_instructions: |
         self._generation_start_time = time.time()
         self._start_progress_timer()
 
-        # 解像度を取得
-        resolution = self.resolution_var.get()
-
         def generate():
             try:
                 result = generate_image_with_api(
                     api_key=api_key,
-                    yaml_prompt=yaml_content,  # 読み込んだYAMLを使用
+                    yaml_prompt=yaml_content,  # 修正済みYAMLを使用
                     char_image_paths=[],
-                    resolution=resolution,
+                    resolution=resolution,  # 上で定義済み
                     ref_image_path=ref_image_path
                 )
 
