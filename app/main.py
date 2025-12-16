@@ -2309,6 +2309,23 @@ additional_refinement_instructions: |
 
         # 確認ダイアログ
         instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
+
+        # YAML保存の確認（追加指示がある場合）
+        if additional_instruction:
+            save_confirm = messagebox.askyesnocancel(
+                "YAML保存確認",
+                "追加指示を含むYAMLを保存しますか？\n\n"
+                "保存しておくと、同じ設定で再生成できます。\n\n"
+                "「はい」→ 保存してから画像生成\n"
+                "「いいえ」→ 保存せず画像生成\n"
+                "「キャンセル」→ 中止"
+            )
+            if save_confirm is None:  # キャンセル
+                return
+            elif save_confirm:  # はい → YAML保存
+                self._save_yaml()
+
+        # 最終確認ダイアログ
         confirm_msg = (
             "【清書モード】高品質再描画を実行します\n\n"
             f"参考画像: {os.path.basename(ref_image_path)}\n"
