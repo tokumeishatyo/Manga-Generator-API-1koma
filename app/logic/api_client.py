@@ -38,13 +38,25 @@ def generate_image_with_api(
     try:
         client = genai.Client(api_key=api_key)
 
+        # 解像度の設定
+        resolution_map = {
+            "1K": "approximately 1024x1024 pixels (1K resolution)",
+            "2K": "approximately 2048x2048 pixels (2K resolution, high quality)",
+            "4K": "approximately 4096x4096 pixels (4K resolution, ultra high quality)"
+        }
+        resolution_instruction = resolution_map.get(resolution, resolution_map["2K"])
+
         # 参考画像清書モードの場合、YAML + 参照画像を両方使用
         if ref_image_path:
             # 清書モード: YAMLの指示に従いつつ、参照画像の構図を再現して高品質化
-            redraw_instruction = """【HIGH-QUALITY REDRAW MODE】
+            redraw_instruction = f"""【HIGH-QUALITY REDRAW MODE】
 
 You are performing a high-quality redraw task.
 Use the YAML instructions below AND the attached reference image together.
+
+## OUTPUT RESOLUTION:
+Generate the image at {resolution_instruction}.
+This is critical - output must be high resolution.
 
 ## CRITICAL RULES:
 1. Follow the YAML prompt instructions for content and style
@@ -67,7 +79,13 @@ YAML Instructions:
 """
             contents = [redraw_instruction + "\n" + yaml_prompt]
         else:
-            contents = [yaml_prompt]
+            # 通常モード: 解像度指示を追加
+            resolution_prefix = f"""## OUTPUT RESOLUTION:
+Generate the image at {resolution_instruction}.
+
+---
+"""
+            contents = [resolution_prefix + yaml_prompt]
 
         # Add reference image first (if in redraw mode)
         if ref_image_path:

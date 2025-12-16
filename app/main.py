@@ -2303,6 +2303,9 @@ title_overlay:
 additional_refinement_instructions: |
   {additional_instruction}
 """
+            # テキストボックスも更新して、保存時に追加指示が含まれるようにする
+            self.yaml_textbox.delete("1.0", tk.END)
+            self.yaml_textbox.insert("1.0", yaml_content)
 
         # 確認ダイアログ
         instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
@@ -2329,8 +2332,6 @@ additional_refinement_instructions: |
 
         # 解像度を取得
         resolution = self.resolution_var.get()
-
-        # YAMLはそのまま保持（読み込んだYAMLを使用するため上書きしない）
 
         def generate():
             try:
