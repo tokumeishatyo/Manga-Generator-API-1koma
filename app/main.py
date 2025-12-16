@@ -442,10 +442,23 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.ref_image_browse.grid(row=0, column=1)
 
+        # 追加指示（清書モード用）
+        self.redraw_instruction_label = ctk.CTkLabel(api_frame, text="追加指示:")
+        self.redraw_instruction_label.grid(row=5, column=0, padx=10, pady=5, sticky="nw")
+        self.redraw_instruction_entry = ctk.CTkTextbox(
+            api_frame,
+            height=60,
+            state="disabled"
+        )
+        self.redraw_instruction_entry.grid(row=5, column=1, padx=10, pady=5, sticky="ew")
+        # 初期は非表示
+        self.redraw_instruction_label.grid_remove()
+        self.redraw_instruction_entry.grid_remove()
+
         # 解像度設定
-        ctk.CTkLabel(api_frame, text="解像度:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        ctk.CTkLabel(api_frame, text="解像度:").grid(row=6, column=0, padx=10, pady=5, sticky="w")
         resolution_frame = ctk.CTkFrame(api_frame, fg_color="transparent")
-        resolution_frame.grid(row=5, column=1, padx=10, pady=5, sticky="w")
+        resolution_frame.grid(row=6, column=1, padx=10, pady=5, sticky="w")
 
         self.resolution_var = tk.StringVar(value="2K")
         self.resolution_1k_radio = ctk.CTkRadioButton(
@@ -689,6 +702,10 @@ class MangaGeneratorApp(ctk.CTk):
                 text="清書モード: YAML読込+参照画像が必要",
                 text_color="blue"
             )
+            # 追加指示フィールドを表示
+            self.redraw_instruction_label.grid()
+            self.redraw_instruction_entry.grid()
+            self.redraw_instruction_entry.configure(state="normal")
         else:
             # 通常モード：詳細設定必要
             self.settings_button.configure(state="normal")
@@ -702,6 +719,10 @@ class MangaGeneratorApp(ctk.CTk):
                     text="設定: 未設定",
                     text_color="gray"
                 )
+            # 追加指示フィールドを非表示
+            self.redraw_instruction_label.grid_remove()
+            self.redraw_instruction_entry.grid_remove()
+            self.redraw_instruction_entry.configure(state="disabled")
 
     def _browse_ref_image(self):
         """参考画像参照"""
@@ -2273,12 +2294,24 @@ title_overlay:
             self.title_entry.focus_set()
             return
 
+        # 追加指示を取得してYAMLに付加
+        additional_instruction = self.redraw_instruction_entry.get("1.0", tk.END).strip()
+        if additional_instruction:
+            yaml_content += f"""
+
+# === 追加指示（清書モード） ===
+additional_refinement_instructions: |
+  {additional_instruction}
+"""
+
         # 確認ダイアログ
+        instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
         confirm_msg = (
             "【清書モード】高品質再描画を実行します\n\n"
             f"参考画像: {os.path.basename(ref_image_path)}\n"
             f"YAML: 読込済み ({len(yaml_content)}文字)\n"
-            f"解像度: {self.resolution_var.get()}\n"
+            f"解像度: {self.resolution_var.get()}"
+            f"{instruction_preview}\n"
             "\n※ YAMLの指示 + 参照画像の構図で再描画します\n"
             "※ API呼び出しには料金がかかります\n\n"
             "実行しますか？"
