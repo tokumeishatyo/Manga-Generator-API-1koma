@@ -310,15 +310,6 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.reset_button.grid(row=0, column=1, padx=(5, 0), sticky="ew")
 
-        # シーンビルダーボタン
-        self.scene_builder_button = ctk.CTkButton(
-            button_frame,
-            text="シーンビルダーを開く",
-            height=35,
-            command=self._open_scene_builder
-        )
-        self.scene_builder_button.pack(fill="x", padx=10, pady=(0, 5))
-
         # 漫画ページコンポーザーボタン
         self.manga_composer_button = ctk.CTkButton(
             button_frame,
@@ -913,12 +904,20 @@ class MangaGeneratorApp(ctk.CTk):
                 yaml_content = self._generate_style_transform_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
+            # === シーン合成 ===
+            elif output_type == "シーンビルダー":
+                # シーンビルダーはコールバックで既にYAMLが設定済み
+                yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
+                if not yaml_content or yaml_content.startswith("# "):
+                    messagebox.showwarning("警告", "シーンビルダーで設定を行ってください")
+                    return
             else:
                 yaml_content = f"# {output_type} - 未実装"
 
-            # YAMLをプレビューに表示
-            self.yaml_textbox.delete("1.0", tk.END)
-            self.yaml_textbox.insert("1.0", yaml_content)
+            # YAMLをプレビューに表示（シーンビルダー以外）
+            if output_type != "シーンビルダー":
+                self.yaml_textbox.delete("1.0", tk.END)
+                self.yaml_textbox.insert("1.0", yaml_content)
 
             # API出力モードの場合は画像生成
             if self.output_mode_var.get() == "api":
@@ -2545,10 +2544,6 @@ title_overlay:
                 messagebox.showinfo("保存完了", f"画像を保存しました:\n{filename}")
 
     # === Scene Builder ===
-
-    def _open_scene_builder(self):
-        """シーンビルダーを開く"""
-        SceneBuilderWindow(self, callback=self._on_scene_builder_yaml)
 
     def _on_scene_builder_yaml(self, yaml_content: str):
         """シーンビルダーからYAMLを受け取る"""
