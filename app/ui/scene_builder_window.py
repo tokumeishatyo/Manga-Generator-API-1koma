@@ -61,7 +61,8 @@ SCREEN_SHAKE = {
 STORY_LAYOUTS = {
     "並んで歩く": "Side by Side (Walking)",
     "向かい合う（テーブル）": "Face to Face (Table)",
-    "中央で話す": "Center & Listener"
+    "中央で話す": "Center & Listener",
+    "カスタム": "custom"
 }
 
 # ストーリー用: 距離感
@@ -179,6 +180,13 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         else:
             self.story_bg_file_frame.pack_forget()
             self.story_bg_prompt_frame.pack(fill="x", padx=10, pady=5)
+
+    def _on_story_layout_change(self, value):
+        """配置パターン変更"""
+        if value == "カスタム":
+            self.story_custom_layout_frame.pack(fill="x", padx=10, pady=5)
+        else:
+            self.story_custom_layout_frame.pack_forget()
 
     def _on_battle_bg_type_change(self):
         """バトル背景タイプ変更"""
@@ -452,7 +460,12 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         layout_row.pack(fill="x", padx=10, pady=5)
 
         ctk.CTkLabel(layout_row, text="配置パターン:").pack(side="left", padx=5)
-        self.story_layout_menu = ctk.CTkOptionMenu(layout_row, values=list(STORY_LAYOUTS.keys()), width=180)
+        self.story_layout_menu = ctk.CTkOptionMenu(
+            layout_row,
+            values=list(STORY_LAYOUTS.keys()),
+            width=180,
+            command=self._on_story_layout_change
+        )
         self.story_layout_menu.set("並んで歩く")
         self.story_layout_menu.pack(side="left", padx=5)
 
@@ -460,6 +473,15 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_distance_menu = ctk.CTkOptionMenu(layout_row, values=list(STORY_DISTANCE.keys()), width=100)
         self.story_distance_menu.set("親しい")
         self.story_distance_menu.pack(side="left", padx=5)
+
+        # カスタム配置パターン入力欄（初期は非表示）
+        self.story_custom_layout_frame = ctk.CTkFrame(layout_frame, fg_color="transparent")
+        self.story_custom_layout_entry = ctk.CTkEntry(
+            self.story_custom_layout_frame,
+            placeholder_text="例: 背中合わせで立つ二人、夕日を見つめる",
+            width=400
+        )
+        self.story_custom_layout_entry.pack(side="left", padx=5, pady=5)
 
         # === キャラクター配置（3人まで対応） ===
         char_frame = ctk.CTkFrame(canvas)
@@ -753,6 +775,14 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             return ""
         return os.path.basename(path)
 
+    def _get_story_layout_value(self) -> str:
+        """配置パターンの値を取得（カスタムの場合はテキストボックスから）"""
+        layout = self.story_layout_menu.get()
+        if layout == "カスタム":
+            custom_value = self.story_custom_layout_entry.get().strip()
+            return custom_value if custom_value else "Custom Layout"
+        return STORY_LAYOUTS.get(layout, "Side by Side (Walking)")
+
     def _generate_text_overlay_yaml(self) -> str:
         """装飾テキストオーバーレイのYAMLセクションを生成（複数対応）"""
         if not self.text_overlay_data:
@@ -942,7 +972,7 @@ type: story_scene_composition
 {bg_section}
 
 scene_interaction:
-  layout_type: "{STORY_LAYOUTS.get(self.story_layout_menu.get(), 'Side by Side (Walking)')}"
+  layout_type: "{self._get_story_layout_value()}"
   distance: "{STORY_DISTANCE.get(self.story_distance_menu.get(), 'Close Friends')}"
 {characters_yaml}
 comic_overlay:
