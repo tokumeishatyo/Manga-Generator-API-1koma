@@ -424,7 +424,16 @@ class MangaGeneratorApp(ctk.CTk):
             value="redraw",
             state="disabled"
         )
-        self.api_redraw_radio.pack(side="left")
+        self.api_redraw_radio.pack(side="left", padx=(0, 10))
+
+        self.api_simple_radio = ctk.CTkRadioButton(
+            api_submode_frame,
+            text="シンプル",
+            variable=self.api_submode_var,
+            value="simple",
+            state="disabled"
+        )
+        self.api_simple_radio.pack(side="left")
 
         # 参考画像
         ctk.CTkLabel(api_frame, text="参考画像:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
@@ -455,6 +464,19 @@ class MangaGeneratorApp(ctk.CTk):
         # 初期は非表示
         self.redraw_instruction_label.grid_remove()
         self.redraw_instruction_entry.grid_remove()
+
+        # テキストプロンプト（シンプルモード用）
+        self.simple_prompt_label = ctk.CTkLabel(api_frame, text="プロンプト:")
+        self.simple_prompt_label.grid(row=5, column=0, padx=10, pady=5, sticky="nw")
+        self.simple_prompt_entry = ctk.CTkTextbox(
+            api_frame,
+            height=80,
+            state="disabled"
+        )
+        self.simple_prompt_entry.grid(row=5, column=1, padx=10, pady=5, sticky="ew")
+        # 初期は非表示
+        self.simple_prompt_label.grid_remove()
+        self.simple_prompt_entry.grid_remove()
 
         # 解像度設定
         ctk.CTkLabel(api_frame, text="解像度:").grid(row=6, column=0, padx=10, pady=5, sticky="w")
@@ -501,6 +523,25 @@ class MangaGeneratorApp(ctk.CTk):
             command=self._api_generate_from_yaml
         )
         self.api_generate_button.grid(row=7, column=0, columnspan=2, padx=10, pady=15, sticky="ew")
+
+        # 参考画像プレビュー
+        ref_preview_frame = ctk.CTkFrame(api_frame)
+        ref_preview_frame.grid(row=8, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="nsew")
+        api_frame.grid_rowconfigure(8, weight=1)
+
+        ctk.CTkLabel(
+            ref_preview_frame,
+            text="参考画像プレビュー",
+            font=("Arial", 12, "bold")
+        ).pack(pady=(5, 5))
+
+        self.ref_preview_label = ctk.CTkLabel(
+            ref_preview_frame,
+            text="画像未読込",
+            font=("Arial", 10),
+            text_color="gray"
+        )
+        self.ref_preview_label.pack(expand=True, fill="both", padx=5, pady=5)
 
     def _build_right_column(self):
         """右列を構築（YAML/画像プレビュー）"""
@@ -577,14 +618,31 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.preview_label.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
+        # ボタンフレーム（保存・加工ボタンを横に並べる）
+        preview_btn_frame = ctk.CTkFrame(preview_frame, fg_color="transparent")
+        preview_btn_frame.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+        preview_btn_frame.grid_columnconfigure(0, weight=1)
+        preview_btn_frame.grid_columnconfigure(1, weight=1)
+
         # 画像保存ボタン
         self.save_image_button = ctk.CTkButton(
-            preview_frame,
+            preview_btn_frame,
             text="画像を保存",
             state="disabled",
             command=self._save_image
         )
-        self.save_image_button.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+        self.save_image_button.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
+        # 画像加工ボタン
+        self.refine_image_button = ctk.CTkButton(
+            preview_btn_frame,
+            text="画像を加工",
+            state="disabled",
+            fg_color="#7B1FA2",
+            hover_color="#4A148C",
+            command=self._open_refine_dialog
+        )
+        self.refine_image_button.grid(row=0, column=1, padx=(5, 0), sticky="ew")
 
         # Generated image storage
         self.generated_image = None
@@ -628,6 +686,8 @@ class MangaGeneratorApp(ctk.CTk):
         self.ref_image_entry.delete(0, tk.END)
         self.ref_image_entry.configure(state="disabled")
         self.resolution_var.set("2K")
+        # 参考画像プレビューをクリア
+        self.ref_preview_label.configure(text="画像未読込", image=None)
 
         # 詳細設定をクリア
         self.current_settings = {}
@@ -636,11 +696,17 @@ class MangaGeneratorApp(ctk.CTk):
         # YAMLプレビューをクリア
         self.yaml_textbox.delete("1.0", tk.END)
 
+        # シンプルモードのプロンプトをクリア
+        self.simple_prompt_entry.configure(state="normal")
+        self.simple_prompt_entry.delete("1.0", tk.END)
+        self.simple_prompt_entry.configure(state="disabled")
+
         # 画像プレビューをクリア
         self.generated_image = None
         self._image_generated_by_api = False
         self.preview_label.configure(text="画像生成後に表示されます", image=None)
         self.save_image_button.configure(state="disabled")
+        self.refine_image_button.configure(state="disabled")
 
         # ファイルパスをクリア
         self.last_saved_yaml_path = None
@@ -672,6 +738,7 @@ class MangaGeneratorApp(ctk.CTk):
             self.api_key_clear_btn.configure(state="normal")
             self.api_normal_radio.configure(state="normal")
             self.api_redraw_radio.configure(state="normal")
+            self.api_simple_radio.configure(state="normal")
             self.ref_image_entry.configure(state="normal")
             self.ref_image_browse.configure(state="normal")
             self.resolution_1k_radio.configure(state="normal")
@@ -687,6 +754,7 @@ class MangaGeneratorApp(ctk.CTk):
             self.api_key_clear_btn.configure(state="disabled")
             self.api_normal_radio.configure(state="disabled")
             self.api_redraw_radio.configure(state="disabled")
+            self.api_simple_radio.configure(state="disabled")
             self.ref_image_entry.configure(state="disabled")
             self.ref_image_browse.configure(state="disabled")
             self.resolution_1k_radio.configure(state="disabled")
@@ -706,11 +774,20 @@ class MangaGeneratorApp(ctk.CTk):
         self.api_key_entry.delete(0, tk.END)
 
     def _on_api_submode_change(self, *args):
-        """APIサブモード変更時（通常/清書切替）"""
+        """APIサブモード変更時（通常/清書/シンプル切替）"""
         if self.output_mode_var.get() != "api":
             return
 
         submode = self.api_submode_var.get()
+
+        # 全てのモード固有UIを一旦非表示
+        self.redraw_instruction_label.grid_remove()
+        self.redraw_instruction_entry.grid_remove()
+        self.redraw_instruction_entry.configure(state="disabled")
+        self.simple_prompt_label.grid_remove()
+        self.simple_prompt_entry.grid_remove()
+        self.simple_prompt_entry.configure(state="disabled")
+
         if submode == "redraw":
             # 清書モード：詳細設定不要だが、YAML読込が必要
             self.settings_button.configure(state="disabled")
@@ -722,6 +799,23 @@ class MangaGeneratorApp(ctk.CTk):
             self.redraw_instruction_label.grid()
             self.redraw_instruction_entry.grid()
             self.redraw_instruction_entry.configure(state="normal")
+            # 画像生成ボタンはYAML生成後に活性化
+            self.api_generate_button.configure(state="disabled")
+
+        elif submode == "simple":
+            # シンプルモード：YAML不要、画像+テキストのみ
+            self.settings_button.configure(state="disabled")
+            self.settings_status_label.configure(
+                text="シンプルモード: 画像+プロンプトのみ",
+                text_color="purple"
+            )
+            # プロンプト入力フィールドを表示
+            self.simple_prompt_label.grid()
+            self.simple_prompt_entry.grid()
+            self.simple_prompt_entry.configure(state="normal")
+            # シンプルモードでは画像生成ボタンを直接有効化
+            self.api_generate_button.configure(state="normal")
+
         else:
             # 通常モード：詳細設定必要
             self.settings_button.configure(state="normal")
@@ -735,10 +829,8 @@ class MangaGeneratorApp(ctk.CTk):
                     text="設定: 未設定",
                     text_color="gray"
                 )
-            # 追加指示フィールドを非表示
-            self.redraw_instruction_label.grid_remove()
-            self.redraw_instruction_entry.grid_remove()
-            self.redraw_instruction_entry.configure(state="disabled")
+            # 画像生成ボタンはYAML生成後に活性化
+            self.api_generate_button.configure(state="disabled")
 
     def _browse_ref_image(self):
         """参考画像参照"""
@@ -749,6 +841,28 @@ class MangaGeneratorApp(ctk.CTk):
             self.ref_image_entry.configure(state="normal")
             self.ref_image_entry.delete(0, tk.END)
             self.ref_image_entry.insert(0, filename)
+            # プレビュー更新
+            self._update_ref_preview(filename)
+
+    def _update_ref_preview(self, image_path: str):
+        """参考画像プレビューを更新"""
+        try:
+            if not image_path or not os.path.exists(image_path):
+                self.ref_preview_label.configure(text="画像未読込", image=None)
+                return
+
+            # 画像を読み込んでサムネイル化
+            img = Image.open(image_path)
+            # プレビューサイズ（中列に収まるサイズ）
+            preview_size = (200, 150)
+            img.thumbnail(preview_size, Image.Resampling.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+
+            self.ref_preview_label.configure(image=photo, text="")
+            self.ref_preview_label.image = photo  # 参照を保持
+        except Exception as e:
+            self.ref_preview_label.configure(text=f"読込エラー", image=None)
+            print(f"Reference image preview error: {e}")
 
     # === Settings Window ===
 
@@ -2445,7 +2559,8 @@ additional_refinement_instructions: |
                     char_image_paths=[],
                     resolution=resolution,
                     ref_image_path=ref_image_path,
-                    aspect_ratio=aspect_ratio
+                    aspect_ratio=aspect_ratio,
+                    mode="redraw"
                 )
 
                 if result['success'] and result['image']:
@@ -2500,7 +2615,85 @@ additional_refinement_instructions: |
                     char_image_paths=[],
                     resolution=resolution,
                     ref_image_path=None,
-                    aspect_ratio=aspect_ratio
+                    aspect_ratio=aspect_ratio,
+                    mode="normal"
+                )
+
+                if result['success'] and result['image']:
+                    img = result['image']
+                    self.after(0, lambda img=img: self._on_image_generated(img))
+                else:
+                    error_msg = result.get('error', '不明なエラー')
+                    self.after(0, lambda msg=error_msg: self._on_image_error(msg))
+            except Exception as e:
+                error_str = str(e)
+                self.after(0, lambda msg=error_str: self._on_image_error(msg))
+
+        thread = threading.Thread(target=generate, daemon=True)
+        thread.start()
+
+    def _generate_simple_image(self):
+        """シンプルモード：画像+テキストプロンプトのみでAPI生成"""
+        # APIキーチェック
+        api_key = self.api_key_entry.get().strip()
+        if not api_key:
+            messagebox.showwarning("警告", "API Keyを入力してください")
+            return
+
+        # プロンプトチェック
+        prompt_text = self.simple_prompt_entry.get("1.0", tk.END).strip()
+        if not prompt_text:
+            messagebox.showwarning("警告", "プロンプトを入力してください")
+            return
+
+        # 参考画像チェック（任意）
+        ref_image_path = self.ref_image_entry.get().strip()
+        has_ref_image = ref_image_path and os.path.exists(ref_image_path)
+
+        # タイトル必須チェック
+        title = self.title_entry.get().strip()
+        if not title:
+            messagebox.showwarning("警告", "タイトルを入力してください（ファイル名に使用します）")
+            return
+
+        # 解像度とアスペクト比を取得
+        resolution = self.resolution_var.get()
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
+
+        # 確認ダイアログ
+        ref_info = f"参考画像: {os.path.basename(ref_image_path)}\n" if has_ref_image else "参考画像: なし\n"
+        confirm_msg = (
+            "【シンプルモード】画像生成を実行します\n\n"
+            f"{ref_info}"
+            f"プロンプト: {prompt_text[:50]}{'...' if len(prompt_text) > 50 else ''}\n"
+            f"解像度: {resolution}\n"
+            f"アスペクト比: {aspect_ratio}\n"
+            "\n※ API呼び出しには料金がかかります\n\n"
+            "実行しますか？"
+        )
+        if not messagebox.askyesno("生成確認", confirm_msg):
+            return
+
+        # 生成中表示
+        self.api_generate_button.configure(state="disabled", text="生成中...")
+        self.preview_label.configure(text="シンプルモードで生成中...\n経過時間: 0秒", image=None)
+
+        # 経過時間タイマー開始
+        self._generation_start_time = time.time()
+        self._start_progress_timer()
+
+        def generate():
+            try:
+                # APIクライアントを呼び出し
+                # シンプルモードではプロンプトをそのまま渡す
+                result = generate_image_with_api(
+                    api_key=api_key,
+                    yaml_prompt=prompt_text,
+                    char_image_paths=[],
+                    resolution=resolution,
+                    ref_image_path=ref_image_path if has_ref_image else None,
+                    aspect_ratio=aspect_ratio,
+                    mode="simple"
                 )
 
                 if result['success'] and result['image']:
@@ -2518,18 +2711,235 @@ additional_refinement_instructions: |
 
     def _api_generate_from_yaml(self):
         """YAMLテキストボックスの内容からAPI画像生成を実行"""
-        # YAMLコンテンツを取得
+        submode = self.api_submode_var.get()
+
+        # シンプルモードの場合はYAML不要なので先に分岐
+        if submode == "simple":
+            self._generate_simple_image()
+            return
+
+        # YAMLコンテンツを取得（通常モード・清書モード）
         yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
         if not yaml_content:
             messagebox.showwarning("警告", "YAMLが空です。先にYAML生成を行ってください。")
             return
 
-        # 清書モードの場合は専用処理
-        if self.api_submode_var.get() == "redraw":
+        # サブモードに応じた処理（シンプルモードは上で処理済み）
+        if submode == "redraw":
+            # 清書モード
             self._generate_redraw_image()
         else:
             # 通常モード
             self._generate_image_with_api(yaml_content)
+
+    def _open_refine_dialog(self):
+        """画像加工ダイアログを開く"""
+        if self.generated_image is None:
+            messagebox.showwarning("警告", "加工する画像がありません")
+            return
+
+        # ダイアログウィンドウを作成
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("画像を加工")
+        dialog.geometry("450x350")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # ダイアログを中央に配置
+        dialog.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() - 450) // 2
+        y = self.winfo_y() + (self.winfo_height() - 350) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        # メインフレーム
+        main_frame = ctk.CTkFrame(dialog)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # 説明ラベル
+        ctk.CTkLabel(
+            main_frame,
+            text="プレビュー画像をベースに加工します",
+            font=("Arial", 14, "bold")
+        ).pack(pady=(0, 15))
+
+        # 加工モード選択
+        mode_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        mode_frame.pack(fill="x", pady=(0, 10))
+
+        ctk.CTkLabel(mode_frame, text="加工モード:").pack(anchor="w")
+
+        refine_mode_var = ctk.StringVar(value="improve")
+
+        ctk.CTkRadioButton(
+            mode_frame,
+            text="全体改善（構図を維持しつつ全体的に改善）",
+            variable=refine_mode_var,
+            value="improve"
+        ).pack(anchor="w", pady=2)
+
+        ctk.CTkRadioButton(
+            mode_frame,
+            text="部分修正（特定部分のみ変更、他は維持）",
+            variable=refine_mode_var,
+            value="partial"
+        ).pack(anchor="w", pady=2)
+
+        # 指示入力
+        ctk.CTkLabel(main_frame, text="指示:").pack(anchor="w", pady=(10, 5))
+
+        instruction_entry = ctk.CTkTextbox(main_frame, height=80)
+        instruction_entry.pack(fill="x", pady=(0, 5))
+        instruction_entry.insert("1.0", "例: ドラマーの目を開けて")
+
+        # プレースホルダーのクリア
+        def clear_placeholder(event):
+            if instruction_entry.get("1.0", tk.END).strip() == "例: ドラマーの目を開けて":
+                instruction_entry.delete("1.0", tk.END)
+        instruction_entry.bind("<FocusIn>", clear_placeholder)
+
+        # ボタンフレーム
+        btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        btn_frame.pack(fill="x", pady=(15, 0))
+
+        def on_generate():
+            instruction = instruction_entry.get("1.0", tk.END).strip()
+            if not instruction or instruction == "例: ドラマーの目を開けて":
+                messagebox.showwarning("警告", "指示を入力してください", parent=dialog)
+                return
+            mode = refine_mode_var.get()
+            dialog.destroy()
+            self._execute_refine(instruction, mode)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="生成",
+            fg_color="#7B1FA2",
+            hover_color="#4A148C",
+            command=on_generate
+        ).pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+        ctk.CTkButton(
+            btn_frame,
+            text="キャンセル",
+            fg_color="gray",
+            command=dialog.destroy
+        ).pack(side="left", expand=True, fill="x", padx=(5, 0))
+
+    def _execute_refine(self, instruction: str, mode: str):
+        """画像加工を実行"""
+        # APIキーチェック
+        api_key = self.api_key_entry.get().strip()
+        if not api_key:
+            messagebox.showwarning("警告", "API Keyを入力してください")
+            return
+
+        # 現在の画像を一時ファイルに保存
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        temp_image_path = os.path.join(temp_dir, "refine_source.png")
+        self.generated_image.save(temp_image_path)
+
+        # 解像度とアスペクト比を取得
+        resolution = self.resolution_var.get()
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
+
+        # モードに応じたプロンプト生成
+        if mode == "improve":
+            refine_prompt = f"""この画像を全体的に改善してください。
+
+指示: {instruction}
+
+重要:
+- 元画像の構図、キャラクター配置、全体的なレイアウトを維持
+- 指示に従って品質や表現を向上させる
+- 大きく変更しすぎない"""
+        else:  # partial
+            refine_prompt = f"""この画像の特定部分のみを修正してください。
+
+修正指示: {instruction}
+
+重要:
+- 指示された部分のみを変更する
+- それ以外の部分はできるだけそのまま維持する
+- 構図やレイアウトは変更しない"""
+
+        # 確認ダイアログ
+        mode_text = "全体改善" if mode == "improve" else "部分修正"
+        confirm_msg = (
+            f"【{mode_text}モード】画像加工を実行します\n\n"
+            f"指示: {instruction[:50]}{'...' if len(instruction) > 50 else ''}\n"
+            f"解像度: {resolution}\n"
+            "\n※ API呼び出しには料金がかかります\n\n"
+            "実行しますか？"
+        )
+        if not messagebox.askyesno("加工確認", confirm_msg):
+            return
+
+        # 生成中表示
+        self.refine_image_button.configure(state="disabled", text="加工中...")
+        self.api_generate_button.configure(state="disabled")
+        self.preview_label.configure(text=f"{mode_text}中...\n経過時間: 0秒", image=None)
+
+        # 経過時間タイマー開始
+        self._generation_start_time = time.time()
+        self._start_progress_timer()
+
+        def generate():
+            try:
+                result = generate_image_with_api(
+                    api_key=api_key,
+                    yaml_prompt=refine_prompt,
+                    char_image_paths=[],
+                    resolution=resolution,
+                    ref_image_path=temp_image_path,
+                    aspect_ratio=aspect_ratio,
+                    mode="refine"
+                )
+
+                if result['success'] and result['image']:
+                    img = result['image']
+                    self.after(0, lambda img=img: self._on_refine_completed(img))
+                else:
+                    error_msg = result.get('error', '不明なエラー')
+                    self.after(0, lambda msg=error_msg: self._on_refine_error(msg))
+            except Exception as e:
+                error_str = str(e)
+                self.after(0, lambda msg=error_str: self._on_refine_error(msg))
+
+        thread = threading.Thread(target=generate, daemon=True)
+        thread.start()
+
+    def _on_refine_completed(self, image: Image.Image):
+        """画像加工完了"""
+        self._stop_progress_timer()
+
+        self.generated_image = image
+        self._image_generated_by_api = True
+
+        # ボタンをリセット
+        self.refine_image_button.configure(state="normal", text="画像を加工")
+        self.api_generate_button.configure(state="normal", text="画像生成（API）")
+        self.save_image_button.configure(state="normal")
+
+        # プレビュー表示
+        preview_image = image.copy()
+        preview_size = (400, 400)
+        preview_image.thumbnail(preview_size, Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(preview_image)
+        self.preview_label.configure(image=photo, text="")
+        self.preview_label.image = photo
+
+        messagebox.showinfo("完了", "画像加工が完了しました")
+
+    def _on_refine_error(self, error_msg: str):
+        """画像加工エラー"""
+        self._stop_progress_timer()
+
+        # ボタンをリセット
+        self.refine_image_button.configure(state="normal", text="画像を加工")
+        self.api_generate_button.configure(state="normal", text="画像生成（API）")
+        self.preview_label.configure(text=f"エラー: {error_msg}", image=None)
+        messagebox.showerror("エラー", f"画像加工に失敗しました:\n{error_msg}")
 
     def _start_progress_timer(self):
         """経過時間表示タイマーを開始"""
@@ -2578,6 +2988,7 @@ additional_refinement_instructions: |
         self.generate_button.configure(state="normal", text="YAML生成")
         self.api_generate_button.configure(state="normal", text="画像生成（API）")
         self.save_image_button.configure(state="normal")
+        self.refine_image_button.configure(state="normal")
 
         # プレビュー表示（元画像をコピーしてサムネイル化）
         preview_image = image.copy()

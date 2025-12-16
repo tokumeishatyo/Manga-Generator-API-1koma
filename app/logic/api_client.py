@@ -16,18 +16,20 @@ def generate_image_with_api(
     char_image_paths: list,
     resolution: str = "2K",
     ref_image_path: str = None,
-    aspect_ratio: str = "1:1"
+    aspect_ratio: str = "1:1",
+    mode: str = "normal"
 ) -> dict:
     """
     Gemini APIを使用して画像を生成
 
     Args:
         api_key: Google AI API Key
-        yaml_prompt: YAMLプロンプト文字列
+        yaml_prompt: YAMLプロンプト文字列（シンプルモードではテキストプロンプト）
         char_image_paths: キャラクター参照画像のパスリスト
         resolution: 解像度 ("1K", "2K", "4K")
-        ref_image_path: 参考画像（清書モード用）のパス
+        ref_image_path: 参考画像のパス
         aspect_ratio: アスペクト比 ("1:1", "16:9", "9:16", etc.)
+        mode: 生成モード ("normal", "redraw", "simple")
 
     Returns:
         結果を含む辞書:
@@ -48,8 +50,41 @@ def generate_image_with_api(
         }
         resolution_instruction = resolution_map.get(resolution, resolution_map["2K"])
 
-        # 参考画像清書モードの場合、YAML + 参照画像を両方使用
-        if ref_image_path:
+        # モードに応じたコンテンツ生成
+        if mode == "simple":
+            # シンプルモード: テキストプロンプト + 参考画像（任意）
+            if ref_image_path:
+                # 参考画像を参照しながら生成
+                simple_instruction = f"""## IMAGE GENERATION REQUEST
+
+Generate an image based on the following instructions.
+
+## OUTPUT SPECIFICATIONS:
+- Resolution: {resolution_instruction}
+- Aspect Ratio: {aspect_ratio}
+
+## REFERENCE IMAGE:
+The attached image is a reference. Use it as inspiration for style, composition, or elements as appropriate to the prompt below.
+
+## PROMPT:
+{yaml_prompt}
+"""
+            else:
+                # テキストプロンプトのみ
+                simple_instruction = f"""## IMAGE GENERATION REQUEST
+
+Generate an image based on the following instructions.
+
+## OUTPUT SPECIFICATIONS:
+- Resolution: {resolution_instruction}
+- Aspect Ratio: {aspect_ratio}
+
+## PROMPT:
+{yaml_prompt}
+"""
+            contents = [simple_instruction]
+
+        elif mode == "redraw" and ref_image_path:
             # 清書モード: YAMLの指示に従いつつ、参照画像の構図を再現して高品質化
             redraw_instruction = f"""【HIGH-QUALITY REDRAW MODE】
 
@@ -80,6 +115,31 @@ This is critical - output must be high resolution.
 YAML Instructions:
 """
             contents = [redraw_instruction + "\n" + yaml_prompt]
+
+        elif mode == "refine" and ref_image_path:
+            # 加工モード: 元画像をベースに指示に従って修正
+            refine_instruction = f"""【IMAGE REFINEMENT MODE】
+
+You are refining/editing an existing image based on specific instructions.
+
+## OUTPUT SPECIFICATIONS:
+- Resolution: {resolution_instruction}
+- Aspect Ratio: {aspect_ratio}
+
+## ATTACHED IMAGE:
+The attached image is the source image to be refined/edited.
+
+## INSTRUCTIONS:
+{yaml_prompt}
+
+## CRITICAL RULES:
+- Follow the instructions carefully
+- Maintain the overall composition and style of the source image unless instructed otherwise
+- Make only the changes specified in the instructions
+- Preserve details that are not mentioned in the instructions
+"""
+            contents = [refine_instruction]
+
         else:
             # 通常モード: 解像度指示を追加
             resolution_prefix = f"""## OUTPUT RESOLUTION:
@@ -89,7 +149,7 @@ Generate the image at {resolution_instruction}.
 """
             contents = [resolution_prefix + yaml_prompt]
 
-        # Add reference image first (if in redraw mode)
+        # Add reference image (for redraw mode and simple mode with reference)
         if ref_image_path:
             try:
                 ref_img = Image.open(ref_image_path)
@@ -107,7 +167,7 @@ Generate the image at {resolution_instruction}.
 
         # Call API with image_config for aspect ratio and resolution
         response = client.models.generate_content(
-            model="gemini-2.0-flash-preview-image-generation",  # 画像生成対応モデル
+            model="gemini-3-pro-image-preview",  # 画像生成対応モデル
             contents=contents,
             config=types.GenerateContentConfig(
                 response_modalities=['TEXT', 'IMAGE'],
