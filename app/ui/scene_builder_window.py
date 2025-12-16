@@ -196,6 +196,89 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         else:
             self.story_custom_mood_frame.pack_forget()
 
+    def _on_story_char_count_change(self, value):
+        """キャラクター人数変更"""
+        count = int(value.replace("人", ""))
+        self._rebuild_story_char_entries(count)
+        self._rebuild_story_speech_entries(count)
+
+    def _rebuild_story_char_entries(self, count: int):
+        """キャラクター入力欄を再構築"""
+        # 既存のウィジェットを削除
+        for widget in self.story_char_container.winfo_children():
+            widget.destroy()
+        self.story_char_entries = []
+
+        # グリッドレイアウト設定（5人まで横並び）
+        char_row = ctk.CTkFrame(self.story_char_container, fg_color="transparent")
+        char_row.pack(fill="x")
+        for i in range(count):
+            char_row.grid_columnconfigure(i, weight=1)
+
+        for i in range(count):
+            char_frame = ctk.CTkFrame(char_row)
+            char_frame.grid(row=0, column=i, padx=2, sticky="nsew")
+
+            # ラベル（位置情報付き）
+            if count == 1:
+                label_text = "キャラ1"
+            elif i == 0:
+                label_text = f"キャラ{i+1}（左端）"
+            else:
+                label_text = f"キャラ{i+1}（{i}の右隣）"
+
+            ctk.CTkLabel(char_frame, text=label_text, font=("Arial", 10, "bold")).pack(anchor="w", padx=5, pady=2)
+
+            # 画像入力
+            img_row = ctk.CTkFrame(char_frame, fg_color="transparent")
+            img_row.pack(fill="x", padx=5, pady=1)
+            img_entry = ctk.CTkEntry(img_row, placeholder_text="画像", width=100)
+            img_entry.pack(side="left", padx=(0, 2))
+            ctk.CTkButton(img_row, text="参照", width=35,
+                          command=lambda e=img_entry: self._browse_image(e)).pack(side="left")
+
+            # 表情入力
+            expr_row = ctk.CTkFrame(char_frame, fg_color="transparent")
+            expr_row.pack(fill="x", padx=5, pady=1)
+            ctk.CTkLabel(expr_row, text="表情:", width=35).pack(side="left")
+            expr_entry = ctk.CTkEntry(expr_row, placeholder_text="笑顔", width=70)
+            expr_entry.pack(side="left", padx=2)
+
+            # 特徴入力
+            traits_row = ctk.CTkFrame(char_frame, fg_color="transparent")
+            traits_row.pack(fill="x", padx=5, pady=1)
+            ctk.CTkLabel(traits_row, text="特徴:", width=35).pack(side="left")
+            traits_entry = ctk.CTkEntry(traits_row, placeholder_text="黒髪ロング", width=100)
+            traits_entry.pack(side="left", padx=2)
+
+            # エントリを保存
+            self.story_char_entries.append({
+                'image': img_entry,
+                'expression': expr_entry,
+                'traits': traits_entry
+            })
+
+    def _rebuild_story_speech_entries(self, count: int):
+        """セリフ入力欄を再構築"""
+        # 既存のウィジェットを削除
+        for widget in self.story_speech_container.winfo_children():
+            widget.destroy()
+        self.story_speech_entries = []
+
+        # グリッドレイアウト
+        speech_row = ctk.CTkFrame(self.story_speech_container, fg_color="transparent")
+        speech_row.pack(fill="x")
+        for i in range(count):
+            speech_row.grid_columnconfigure(i, weight=1)
+
+        for i in range(count):
+            speech_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
+            speech_frame.grid(row=0, column=i, padx=2, sticky="ew")
+            ctk.CTkLabel(speech_frame, text=f"キャラ{i+1}:").pack(side="left")
+            speech_entry = ctk.CTkEntry(speech_frame, placeholder_text="セリフ", width=90)
+            speech_entry.pack(side="left", padx=2)
+            self.story_speech_entries.append(speech_entry)
+
     def _on_battle_bg_type_change(self):
         """バトル背景タイプ変更"""
         bg_type = self.battle_bg_type_var.get()
@@ -505,87 +588,35 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         )
         self.story_custom_layout_entry.pack(side="left", padx=5, pady=5)
 
-        # === キャラクター配置（3人まで対応） ===
+        # === キャラクター配置（最大5人） ===
         char_frame = ctk.CTkFrame(canvas)
         char_frame.pack(fill="x", padx=5, pady=5)
 
-        ctk.CTkLabel(char_frame, text="キャラクター配置（最大3人）", font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=5)
+        # タイトルと人数選択
+        char_header = ctk.CTkFrame(char_frame, fg_color="transparent")
+        char_header.pack(fill="x", padx=10, pady=5)
 
-        # 3人のキャラを横並びに
-        char_row = ctk.CTkFrame(char_frame, fg_color="transparent")
-        char_row.pack(fill="x", padx=10, pady=5)
-        char_row.grid_columnconfigure(0, weight=1)
-        char_row.grid_columnconfigure(1, weight=1)
-        char_row.grid_columnconfigure(2, weight=1)
+        ctk.CTkLabel(char_header, text="キャラクター配置", font=("Arial", 14, "bold")).pack(side="left")
 
-        # 左キャラ
-        left_char = ctk.CTkFrame(char_row)
-        left_char.grid(row=0, column=0, padx=2, sticky="nsew")
+        ctk.CTkLabel(char_header, text="人数:").pack(side="left", padx=(20, 5))
+        self.story_char_count_menu = ctk.CTkOptionMenu(
+            char_header,
+            values=["1人", "2人", "3人", "4人", "5人"],
+            width=80,
+            command=self._on_story_char_count_change
+        )
+        self.story_char_count_menu.set("2人")
+        self.story_char_count_menu.pack(side="left")
 
-        ctk.CTkLabel(left_char, text="キャラ1（左）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
-        left_img_row = ctk.CTkFrame(left_char, fg_color="transparent")
-        left_img_row.pack(fill="x", padx=5, pady=2)
-        self.story_left_char_entry = ctk.CTkEntry(left_img_row, placeholder_text="画像", width=120)
-        self.story_left_char_entry.pack(side="left", padx=(0, 3))
-        ctk.CTkButton(left_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_left_char_entry)).pack(side="left")
+        # キャラクター入力欄のコンテナ
+        self.story_char_container = ctk.CTkFrame(char_frame, fg_color="transparent")
+        self.story_char_container.pack(fill="x", padx=10, pady=5)
 
-        left_expr_row = ctk.CTkFrame(left_char, fg_color="transparent")
-        left_expr_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(left_expr_row, text="表情:").pack(side="left")
-        self.story_left_expr_entry = ctk.CTkEntry(left_expr_row, placeholder_text="笑顔", width=80)
-        self.story_left_expr_entry.pack(side="left", padx=3)
+        # キャラクターデータを格納するリスト
+        self.story_char_entries = []
 
-        left_traits_row = ctk.CTkFrame(left_char, fg_color="transparent")
-        left_traits_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(left_traits_row, text="特徴:").pack(side="left")
-        self.story_left_traits_entry = ctk.CTkEntry(left_traits_row, placeholder_text="長い黒髪、身長高め", width=130)
-        self.story_left_traits_entry.pack(side="left", padx=3)
-
-        # 中央キャラ（任意）
-        center_char = ctk.CTkFrame(char_row)
-        center_char.grid(row=0, column=1, padx=2, sticky="nsew")
-
-        ctk.CTkLabel(center_char, text="キャラ2（中央・任意）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
-        center_img_row = ctk.CTkFrame(center_char, fg_color="transparent")
-        center_img_row.pack(fill="x", padx=5, pady=2)
-        self.story_center_char_entry = ctk.CTkEntry(center_img_row, placeholder_text="画像", width=120)
-        self.story_center_char_entry.pack(side="left", padx=(0, 3))
-        ctk.CTkButton(center_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_center_char_entry)).pack(side="left")
-
-        center_expr_row = ctk.CTkFrame(center_char, fg_color="transparent")
-        center_expr_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(center_expr_row, text="表情:").pack(side="left")
-        self.story_center_expr_entry = ctk.CTkEntry(center_expr_row, placeholder_text="笑顔", width=80)
-        self.story_center_expr_entry.pack(side="left", padx=3)
-
-        center_traits_row = ctk.CTkFrame(center_char, fg_color="transparent")
-        center_traits_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(center_traits_row, text="特徴:").pack(side="left")
-        self.story_center_traits_entry = ctk.CTkEntry(center_traits_row, placeholder_text="セミロング茶髪", width=130)
-        self.story_center_traits_entry.pack(side="left", padx=3)
-
-        # 右キャラ
-        right_char = ctk.CTkFrame(char_row)
-        right_char.grid(row=0, column=2, padx=2, sticky="nsew")
-
-        ctk.CTkLabel(right_char, text="キャラ3（右）", font=("Arial", 11, "bold")).pack(anchor="w", padx=5, pady=2)
-        right_img_row = ctk.CTkFrame(right_char, fg_color="transparent")
-        right_img_row.pack(fill="x", padx=5, pady=2)
-        self.story_right_char_entry = ctk.CTkEntry(right_img_row, placeholder_text="画像", width=120)
-        self.story_right_char_entry.pack(side="left", padx=(0, 3))
-        ctk.CTkButton(right_img_row, text="参照", width=40, command=lambda: self._browse_image(self.story_right_char_entry)).pack(side="left")
-
-        right_expr_row = ctk.CTkFrame(right_char, fg_color="transparent")
-        right_expr_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(right_expr_row, text="表情:").pack(side="left")
-        self.story_right_expr_entry = ctk.CTkEntry(right_expr_row, placeholder_text="笑顔", width=80)
-        self.story_right_expr_entry.pack(side="left", padx=5)
-
-        right_traits_row = ctk.CTkFrame(right_char, fg_color="transparent")
-        right_traits_row.pack(fill="x", padx=5, pady=2)
-        ctk.CTkLabel(right_traits_row, text="特徴:").pack(side="left")
-        self.story_right_traits_entry = ctk.CTkEntry(right_traits_row, placeholder_text="ショート、小柄", width=130)
-        self.story_right_traits_entry.pack(side="left", padx=3)
+        # 初期表示（2人）
+        self._rebuild_story_char_entries(2)
 
         # === ダイアログ設定 ===
         dialog_frame = ctk.CTkFrame(canvas)
@@ -600,33 +631,15 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_narration_entry = ctk.CTkEntry(narr_row, placeholder_text="今日から新学期が始まる", width=300)
         self.story_narration_entry.pack(side="left", fill="x", expand=True)
 
-        # セリフ（3人分）
-        speech_row = ctk.CTkFrame(dialog_frame, fg_color="transparent")
-        speech_row.pack(fill="x", padx=10, pady=2)
-        speech_row.grid_columnconfigure(0, weight=1)
-        speech_row.grid_columnconfigure(1, weight=1)
-        speech_row.grid_columnconfigure(2, weight=1)
+        # セリフ入力欄のコンテナ
+        self.story_speech_container = ctk.CTkFrame(dialog_frame, fg_color="transparent")
+        self.story_speech_container.pack(fill="x", padx=10, pady=2)
 
-        # キャラ1セリフ
-        speech1_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
-        speech1_frame.grid(row=0, column=0, padx=2, sticky="ew")
-        ctk.CTkLabel(speech1_frame, text="キャラ1:").pack(side="left")
-        self.story_left_speech_entry = ctk.CTkEntry(speech1_frame, placeholder_text="おはよう！", width=100)
-        self.story_left_speech_entry.pack(side="left", padx=2)
+        # セリフデータを格納するリスト
+        self.story_speech_entries = []
 
-        # キャラ2セリフ
-        speech2_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
-        speech2_frame.grid(row=0, column=1, padx=2, sticky="ew")
-        ctk.CTkLabel(speech2_frame, text="キャラ2:").pack(side="left")
-        self.story_center_speech_entry = ctk.CTkEntry(speech2_frame, placeholder_text="（任意）", width=100)
-        self.story_center_speech_entry.pack(side="left", padx=2)
-
-        # キャラ3セリフ
-        speech3_frame = ctk.CTkFrame(speech_row, fg_color="transparent")
-        speech3_frame.grid(row=0, column=2, padx=2, sticky="ew")
-        ctk.CTkLabel(speech3_frame, text="キャラ3:").pack(side="left")
-        self.story_right_speech_entry = ctk.CTkEntry(speech3_frame, placeholder_text="おはよう", width=100)
-        self.story_right_speech_entry.pack(side="left", padx=2)
+        # 初期表示（2人分）
+        self._rebuild_story_speech_entries(2)
 
     # ========== ボスレイド設定 ==========
 
@@ -932,68 +945,51 @@ scene_settings:
   blur_amount: {int(self.story_blur_slider.get())}
   lighting_mood: "{self._get_story_mood_value()}\""""
 
-        # キャラクターセクション（3人対応）
+        # キャラクターセクション（動的生成・最大5人）
         characters_yaml = ""
+        char_count = len(self.story_char_entries)
 
-        # キャラ1（左）
-        left_img = self.story_left_char_entry.get().strip()
-        if left_img:
-            left_traits = self.story_left_traits_entry.get().strip()
-            left_traits_line = f'\n  physical_traits: "{left_traits}"' if left_traits else ""
+        for i, char_data in enumerate(self.story_char_entries):
+            img = char_data['image'].get().strip()
+            if not img:
+                continue
+
+            expr = char_data['expression'].get().strip() or "Smiling"
+            traits = char_data['traits'].get().strip()
+            traits_line = f'\n  physical_traits: "{traits}"' if traits else ""
+
+            # 相対位置の生成
+            if char_count == 1:
+                position = "Center"
+            elif i == 0:
+                position = "Leftmost"
+            else:
+                position = f"Right of Character {i}"
+
             characters_yaml += f"""
-character_1:
-  source_image: "{self._get_filename(left_img)}"
-  position: "Left"
+character_{i+1}:
+  source_image: "{self._get_filename(img)}"
+  position: "{position}"
   scale: 1.0
-  expression_override: "{self.story_left_expr_entry.get().strip() or 'Smiling'}"{left_traits_line}
+  expression_override: "{expr}"{traits_line}
 """
 
-        # キャラ2（中央）- 任意
-        center_img = self.story_center_char_entry.get().strip()
-        if center_img:
-            center_traits = self.story_center_traits_entry.get().strip()
-            center_traits_line = f'\n  physical_traits: "{center_traits}"' if center_traits else ""
-            characters_yaml += f"""
-character_2:
-  source_image: "{self._get_filename(center_img)}"
-  position: "Center"
-  scale: 1.0
-  expression_override: "{self.story_center_expr_entry.get().strip() or 'Smiling'}"{center_traits_line}
-"""
-
-        # キャラ3（右）
-        right_img = self.story_right_char_entry.get().strip()
-        if right_img:
-            right_traits = self.story_right_traits_entry.get().strip()
-            right_traits_line = f'\n  physical_traits: "{right_traits}"' if right_traits else ""
-            characters_yaml += f"""
-character_3:
-  source_image: "{self._get_filename(right_img)}"
-  position: "Right"
-  scale: 1.0
-  expression_override: "{self.story_right_expr_entry.get().strip() or 'Smiling'}"{right_traits_line}
-"""
-
-        # ダイアログセクション（3人対応）
+        # ダイアログセクション（動的生成）
         dialogues_yaml = ""
-        left_speech = self.story_left_speech_entry.get().strip()
-        center_speech = self.story_center_speech_entry.get().strip()
-        right_speech = self.story_right_speech_entry.get().strip()
+        for i, speech_entry in enumerate(self.story_speech_entries):
+            speech = speech_entry.get().strip()
+            if speech:
+                # 位置ラベル
+                if char_count == 1:
+                    pos_label = ""
+                elif i == 0:
+                    pos_label = " (Leftmost)"
+                else:
+                    pos_label = f" (Right of {i})"
 
-        if left_speech:
-            dialogues_yaml += f"""
-    - speaker: "Character 1 (Left)"
-      text: "{left_speech}"
-      shape: "Round (Normal)\""""
-        if center_speech:
-            dialogues_yaml += f"""
-    - speaker: "Character 2 (Center)"
-      text: "{center_speech}"
-      shape: "Round (Normal)\""""
-        if right_speech:
-            dialogues_yaml += f"""
-    - speaker: "Character 3 (Right)"
-      text: "{right_speech}"
+                dialogues_yaml += f"""
+    - speaker: "Character {i+1}{pos_label}"
+      text: "{speech}"
       shape: "Round (Normal)\""""
 
         return f"""# Story Scene Composition (story_scene_composite.yaml準拠)
