@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 定数定義モジュール
-1コマ漫画生成アプリで使用する定数を定義
+AI創作工房で使用する定数を定義
 """
 
 # 基本設定
@@ -73,11 +73,11 @@ DUOTONE_COLORS = {
 # Step 7以降: 最終合成フェーズ / 特化プリセット
 OUTPUT_TYPES = {
     # === キャラクター生成フェーズ ===
-    "Step1: 顔三面図": "step1_face",
-    "Step2: 素体三面図": "step2_body",
-    "Step3: 衣装着用": "step3_outfit",
+    "顔三面図": "step1_face",
+    "素体三面図": "step2_body",
+    "衣装着用": "step3_outfit",
     # === ポーズ生成フェーズ ===
-    "Step4: ポーズ": "step4_pose",
+    "ポーズ": "step4_pose",
     # === シーン合成 ===
     "シーンビルダー": "scene_builder",
     # === その他 ===
@@ -98,10 +98,10 @@ STEP_ORDER = [
 
 # ステップの表示名
 STEP_LABELS = {
-    "step1_face": "Step1: 顔三面図",
-    "step2_body": "Step2: 素体三面図",
-    "step3_outfit": "Step3: 衣装着用",
-    "step4_pose": "Step4: ポーズ",
+    "step1_face": "顔三面図",
+    "step2_body": "素体三面図",
+    "step3_outfit": "衣装着用",
+    "step4_pose": "ポーズ",
 }
 
 # 各ステップの必須入力（前ステップの出力）
@@ -152,7 +152,7 @@ CHARACTER_STYLES = {
     }
 }
 
-# 体型プリセット（Step2: 素体三面図用）
+# 体型プリセット（素体三面図用）
 BODY_TYPE_PRESETS = {
     "標準体型（女性）": {
         "description": "average female body, slim build, normal proportions",

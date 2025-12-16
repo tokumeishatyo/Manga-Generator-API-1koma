@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-1コマ漫画生成アプリ
+AI創作工房
 メインUIモジュール（簡素化版）
 """
 
@@ -16,7 +16,7 @@ from PIL import Image, ImageTk
 # Import constants
 from constants import (
     COLOR_MODES, DUOTONE_COLORS, OUTPUT_TYPES, OUTPUT_STYLES, ASPECT_RATIOS,
-    STEP_ORDER, STEP_LABELS, STEP_REQUIREMENTS, AGE_EXPRESSION_CONVERSIONS
+    AGE_EXPRESSION_CONVERSIONS
 )
 
 
@@ -37,6 +37,7 @@ from logic.file_manager import (
     add_to_recent_files, save_yaml_file, load_yaml_file,
     update_yaml_metadata, add_title_to_image
 )
+from logic.usage_tracker import get_tracker
 
 # Import UI windows
 from ui.scene_builder_window import SceneBuilderWindow
@@ -63,12 +64,12 @@ class MangaGeneratorApp(ctk.CTk):
         super().__init__()
 
         # Window configuration
-        self.title("1コマ漫画生成アプリ")
-        self.geometry("1500x800")
+        self.title("AI創作工房")
+        self.geometry("1800x800")
 
         # Layout configuration - Three column layout
-        self.grid_columnconfigure(0, weight=1, minsize=320)  # Left column (settings)
-        self.grid_columnconfigure(1, weight=1, minsize=280)  # Middle column (API)
+        self.grid_columnconfigure(0, weight=1, minsize=420)  # Left column (settings)
+        self.grid_columnconfigure(1, weight=1, minsize=480)  # Middle column (API)
         self.grid_columnconfigure(2, weight=2, minsize=500)  # Right column (preview)
         self.grid_rowconfigure(0, weight=1)
 
@@ -82,12 +83,6 @@ class MangaGeneratorApp(ctk.CTk):
 
         # Current settings data (from settings windows)
         self.current_settings = {}
-
-        # 進捗トラッカー: 各ステップの完了状態と生成画像パス
-        self.step_progress = {
-            step: {"completed": False, "image_path": None}
-            for step in STEP_ORDER
-        }
 
         # Build UI
         self._build_left_column()
@@ -130,7 +125,7 @@ class MangaGeneratorApp(ctk.CTk):
             width=200,
             command=self._on_output_type_change
         )
-        self.output_type_menu.set("Step1: 顔三面図")
+        self.output_type_menu.set("顔三面図")
         self.output_type_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
 
         self.settings_button = ctk.CTkButton(
@@ -149,43 +144,6 @@ class MangaGeneratorApp(ctk.CTk):
             text_color="gray"
         )
         self.settings_status_label.grid(row=2, column=0, columnspan=3, padx=10, pady=(0, 10), sticky="w")
-
-        # === 進捗トラッカー ===
-        progress_frame = ctk.CTkFrame(self.left_scroll)
-        progress_frame.grid(row=row, column=0, padx=5, pady=5, sticky="ew")
-        progress_frame.grid_columnconfigure(0, weight=1)
-        row += 1
-
-        ctk.CTkLabel(
-            progress_frame,
-            text="ワークフロー進捗",
-            font=("Arial", 16, "bold")
-        ).grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
-
-        # 進捗表示用のラベルを格納
-        self.progress_labels = {}
-        for i, step_key in enumerate(STEP_ORDER):
-            step_label = STEP_LABELS.get(step_key, step_key)
-            label = ctk.CTkLabel(
-                progress_frame,
-                text=f"⬜ {step_label}",
-                font=("Arial", 11),
-                text_color="gray"
-            )
-            label.grid(row=i + 1, column=0, padx=15, pady=1, sticky="w")
-            self.progress_labels[step_key] = label
-
-        # 進捗リセットボタン
-        self.progress_reset_btn = ctk.CTkButton(
-            progress_frame,
-            text="進捗リセット",
-            width=100,
-            height=25,
-            fg_color="gray",
-            hover_color="darkgray",
-            command=self._reset_progress
-        )
-        self.progress_reset_btn.grid(row=len(STEP_ORDER) + 1, column=0, padx=10, pady=(5, 10), sticky="w")
 
         # === スタイル設定 ===
         style_frame = ctk.CTkFrame(self.left_scroll)
@@ -543,6 +501,28 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.ref_preview_label.pack(expand=True, fill="both", padx=5, pady=5)
 
+        # API使用状況ステータスバー
+        usage_frame = ctk.CTkFrame(api_frame, fg_color="#1a1a2e")
+        usage_frame.grid(row=9, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="ew")
+
+        self.usage_status_label = ctk.CTkLabel(
+            usage_frame,
+            text=self._get_usage_status_text(),
+            font=("Arial", 11),
+            text_color="#88ccff",
+            cursor="hand2"
+        )
+        self.usage_status_label.pack(pady=5, padx=10)
+        self.usage_status_label.bind("<Button-1>", lambda e: self._show_usage_details())
+
+        # ツールチップ的な説明
+        ctk.CTkLabel(
+            usage_frame,
+            text="クリックで詳細表示",
+            font=("Arial", 9),
+            text_color="gray"
+        ).pack(pady=(0, 3))
+
     def _build_right_column(self):
         """右列を構築（YAML/画像プレビュー）"""
         self.right_column = ctk.CTkFrame(self)
@@ -651,6 +631,10 @@ class MangaGeneratorApp(ctk.CTk):
         # 進捗表示用タイマー
         self._generation_start_time = None
         self._progress_timer_id = None
+
+        # API使用量トラッキング用（現在の生成情報）
+        self._current_gen_mode = None
+        self._current_gen_resolution = None
 
         # 最後に保存したYAMLファイルのパス（メタデータ連携用）
         self.last_saved_yaml_path = None
@@ -871,25 +855,25 @@ class MangaGeneratorApp(ctk.CTk):
         output_type = self.output_type_menu.get()
 
         # === キャラクター生成フェーズ ===
-        if output_type == "Step1: 顔三面図":
+        if output_type == "顔三面図":
             CharacterSheetWindow(
                 self,
                 sheet_type="face",
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
-        elif output_type == "Step2: 素体三面図":
+        elif output_type == "素体三面図":
             # Step1の出力画像を取得
-            face_sheet_path = self._get_previous_step_image("step2_body")
+            face_sheet_path = None  # 手動で参照画像を選択
             BodySheetWindow(
                 self,
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings,
                 face_sheet_path=face_sheet_path
             )
-        elif output_type == "Step3: 衣装着用":
+        elif output_type == "衣装着用":
             # Step2の出力画像を取得
-            body_sheet_path = self._get_previous_step_image("step3_outfit")
+            body_sheet_path = None  # 手動で参照画像を選択
             OutfitWindow(
                 self,
                 callback=self._on_settings_complete,
@@ -897,8 +881,8 @@ class MangaGeneratorApp(ctk.CTk):
                 body_sheet_path=body_sheet_path
             )
         # === ポーズ生成フェーズ ===
-        elif output_type == "Step4: ポーズ":
-            outfit_sheet_path = self._get_previous_step_image("step3_outfit")
+        elif output_type == "ポーズ":
+            outfit_sheet_path = None  # 手動で参照画像を選択
             PoseWindow(
                 self,
                 callback=self._on_settings_complete,
@@ -944,49 +928,6 @@ class MangaGeneratorApp(ctk.CTk):
         self.current_settings = data
         self.settings_status_label.configure(text="設定: 設定済み ✓", text_color="green")
 
-    # === 進捗トラッカー ===
-
-    def _reset_progress(self):
-        """進捗をリセット"""
-        if messagebox.askyesno("確認", "すべての進捗をリセットしますか？"):
-            self.step_progress = {
-                step: {"completed": False, "image_path": None}
-                for step in STEP_ORDER
-            }
-            self._update_progress_display()
-
-    def _update_progress_display(self):
-        """進捗表示を更新"""
-        for step_key, label in self.progress_labels.items():
-            step_label = STEP_LABELS.get(step_key, step_key)
-            progress = self.step_progress.get(step_key, {})
-
-            if progress.get("completed"):
-                label.configure(text=f"✅ {step_label}", text_color="green")
-            else:
-                # 前のステップが完了しているか確認
-                req_step = STEP_REQUIREMENTS.get(step_key)
-                if req_step is None or self.step_progress.get(req_step, {}).get("completed"):
-                    # このステップは実行可能
-                    label.configure(text=f"🔄 {step_label}", text_color="orange")
-                else:
-                    # 前のステップが未完了
-                    label.configure(text=f"⬜ {step_label}", text_color="gray")
-
-    def _mark_step_complete(self, step_key: str, image_path: str = None):
-        """ステップを完了としてマーク"""
-        if step_key in self.step_progress:
-            self.step_progress[step_key]["completed"] = True
-            self.step_progress[step_key]["image_path"] = image_path
-            self._update_progress_display()
-
-    def _get_previous_step_image(self, step_key: str) -> str:
-        """前のステップの画像パスを取得"""
-        req_step = STEP_REQUIREMENTS.get(step_key)
-        if req_step and self.step_progress.get(req_step, {}).get("completed"):
-            return self.step_progress[req_step].get("image_path")
-        return None
-
     # === YAML Generation ===
 
     def _generate_yaml(self):
@@ -1021,20 +962,20 @@ class MangaGeneratorApp(ctk.CTk):
 
         try:
             # === キャラクター生成フェーズ ===
-            if output_type == "Step1: 顔三面図":
+            if output_type == "顔三面図":
                 yaml_content = self._generate_character_sheet_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "Step2: 素体三面図":
+            elif output_type == "素体三面図":
                 yaml_content = self._generate_body_sheet_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
-            elif output_type == "Step3: 衣装着用":
+            elif output_type == "衣装着用":
                 yaml_content = self._generate_outfit_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
             # === ポーズ生成フェーズ ===
-            elif output_type == "Step4: ポーズ":
+            elif output_type == "ポーズ":
                 yaml_content = self._generate_pose_yaml(
                     color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
                 )
@@ -2547,6 +2488,10 @@ additional_refinement_instructions: |
         self.api_generate_button.configure(state="disabled", text="生成中...")
         self.preview_label.configure(text="高品質再描画中...\n経過時間: 0秒", image=None)
 
+        # 使用量トラッキング用に現在の生成情報を保存
+        self._current_gen_mode = "redraw"
+        self._current_gen_resolution = resolution
+
         # 経過時間タイマー開始
         self._generation_start_time = time.time()
         self._start_progress_timer()
@@ -2597,13 +2542,17 @@ additional_refinement_instructions: |
         self.api_generate_button.configure(state="disabled", text="生成中...")
         self.preview_label.configure(text="画像生成中...\n経過時間: 0秒", image=None)
 
-        # 経過時間タイマー開始
-        self._generation_start_time = time.time()
-        self._start_progress_timer()
-
         # 解像度とアスペクト比を取得
         resolution = self.resolution_var.get()
         aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
+
+        # 使用量トラッキング用に現在の生成情報を保存
+        self._current_gen_mode = "normal"
+        self._current_gen_resolution = resolution
+
+        # 経過時間タイマー開始
+        self._generation_start_time = time.time()
+        self._start_progress_timer()
 
         def generate():
             try:
@@ -2677,6 +2626,10 @@ additional_refinement_instructions: |
         # 生成中表示
         self.api_generate_button.configure(state="disabled", text="生成中...")
         self.preview_label.configure(text="シンプルモードで生成中...\n経過時間: 0秒", image=None)
+
+        # 使用量トラッキング用に現在の生成情報を保存
+        self._current_gen_mode = "simple"
+        self._current_gen_resolution = resolution
 
         # 経過時間タイマー開始
         self._generation_start_time = time.time()
@@ -2880,6 +2833,10 @@ additional_refinement_instructions: |
         self.api_generate_button.configure(state="disabled")
         self.preview_label.configure(text=f"{mode_text}中...\n経過時間: 0秒", image=None)
 
+        # 使用量トラッキング用に現在の生成情報を保存
+        self._current_gen_mode = "refine"
+        self._current_gen_resolution = resolution
+
         # 経過時間タイマー開始
         self._generation_start_time = time.time()
         self._start_progress_timer()
@@ -2913,6 +2870,10 @@ additional_refinement_instructions: |
         """画像加工完了"""
         self._stop_progress_timer()
 
+        # 使用量を記録（成功）
+        if self._current_gen_mode and self._current_gen_resolution:
+            self._record_api_usage(self._current_gen_mode, self._current_gen_resolution, True)
+
         self.generated_image = image
         self._image_generated_by_api = True
 
@@ -2935,11 +2896,176 @@ additional_refinement_instructions: |
         """画像加工エラー"""
         self._stop_progress_timer()
 
+        # 使用量を記録（失敗）
+        if self._current_gen_mode and self._current_gen_resolution:
+            self._record_api_usage(self._current_gen_mode, self._current_gen_resolution, False)
+
         # ボタンをリセット
         self.refine_image_button.configure(state="normal", text="画像を加工")
         self.api_generate_button.configure(state="normal", text="画像生成（API）")
         self.preview_label.configure(text=f"エラー: {error_msg}", image=None)
         messagebox.showerror("エラー", f"画像加工に失敗しました:\n{error_msg}")
+
+    # === API使用量トラッキング ===
+
+    def _get_usage_status_text(self) -> str:
+        """ステータスバー用のテキストを生成"""
+        tracker = get_tracker()
+        today = tracker.get_today_count()
+        month = tracker.get_month_count()
+        return f"API使用: 本日 {today}回 / 今月 {month}回"
+
+    def _update_usage_status(self):
+        """ステータスバーを更新"""
+        self.usage_status_label.configure(text=self._get_usage_status_text())
+
+    def _record_api_usage(self, mode: str, resolution: str, success: bool):
+        """API使用を記録してステータスを更新"""
+        tracker = get_tracker()
+        tracker.record_usage(mode, resolution, success)
+        self._update_usage_status()
+
+    def _show_usage_details(self):
+        """API使用量の詳細ダイアログを表示"""
+        tracker = get_tracker()
+        stats = tracker.get_statistics()
+
+        # ダイアログウィンドウを作成
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("API使用状況")
+        dialog.geometry("400x450")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # ダイアログを中央に配置
+        dialog.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() - 400) // 2
+        y = self.winfo_y() + (self.winfo_height() - 450) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        # メインフレーム
+        main_frame = ctk.CTkFrame(dialog)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # タイトル
+        ctk.CTkLabel(
+            main_frame,
+            text="API使用状況",
+            font=("Arial", 18, "bold")
+        ).pack(pady=(0, 15))
+
+        # 概要セクション
+        summary_frame = ctk.CTkFrame(main_frame, fg_color="#1a1a2e")
+        summary_frame.pack(fill="x", pady=(0, 15))
+
+        ctk.CTkLabel(
+            summary_frame,
+            text=f"本日: {stats['today']}回",
+            font=("Arial", 14),
+            text_color="#88ccff"
+        ).pack(pady=(10, 2))
+
+        ctk.CTkLabel(
+            summary_frame,
+            text=f"今月: {stats['month']}回",
+            font=("Arial", 14),
+            text_color="#88ccff"
+        ).pack(pady=2)
+
+        ctk.CTkLabel(
+            summary_frame,
+            text=f"累計: {stats['total']}回",
+            font=("Arial", 14),
+            text_color="#88ccff"
+        ).pack(pady=(2, 10))
+
+        # 成功率
+        if stats['today_success_rate'] is not None:
+            ctk.CTkLabel(
+                summary_frame,
+                text=f"本日成功率: {stats['today_success_rate']:.1f}%",
+                font=("Arial", 11),
+                text_color="gray"
+            ).pack(pady=(0, 10))
+
+        # モード別セクション
+        mode_frame = ctk.CTkFrame(main_frame)
+        mode_frame.pack(fill="x", pady=(0, 10))
+
+        ctk.CTkLabel(
+            mode_frame,
+            text="モード別",
+            font=("Arial", 12, "bold")
+        ).pack(anchor="w", padx=10, pady=(10, 5))
+
+        mode_names = {
+            "normal": "通常",
+            "redraw": "清書",
+            "simple": "シンプル",
+            "refine": "加工"
+        }
+        mode_counts = stats['mode_counts']
+        for mode_key, mode_name in mode_names.items():
+            count = mode_counts.get(mode_key, 0)
+            ctk.CTkLabel(
+                mode_frame,
+                text=f"  {mode_name}: {count}回",
+                font=("Arial", 11)
+            ).pack(anchor="w", padx=20, pady=1)
+
+        # 解像度別セクション
+        res_frame = ctk.CTkFrame(main_frame)
+        res_frame.pack(fill="x", pady=(0, 10))
+
+        ctk.CTkLabel(
+            res_frame,
+            text="解像度別",
+            font=("Arial", 12, "bold")
+        ).pack(anchor="w", padx=10, pady=(10, 5))
+
+        res_counts = stats['resolution_counts']
+        for res in ["1K", "2K", "4K"]:
+            count = res_counts.get(res, 0)
+            ctk.CTkLabel(
+                res_frame,
+                text=f"  {res}: {count}回",
+                font=("Arial", 11)
+            ).pack(anchor="w", padx=20, pady=1)
+
+        # 最近の記録
+        recent_frame = ctk.CTkFrame(main_frame)
+        recent_frame.pack(fill="x", pady=(0, 10))
+
+        ctk.CTkLabel(
+            recent_frame,
+            text="本日の最近の記録",
+            font=("Arial", 12, "bold")
+        ).pack(anchor="w", padx=10, pady=(10, 5))
+
+        recent = tracker.get_recent_records(5)
+        if recent:
+            for record in recent:
+                status = "✓" if record['success'] else "✗"
+                mode_jp = mode_names.get(record['mode'], record['mode'])
+                ctk.CTkLabel(
+                    recent_frame,
+                    text=f"  {record['time']} {mode_jp} {record['resolution']} {status}",
+                    font=("Arial", 10)
+                ).pack(anchor="w", padx=20, pady=1)
+        else:
+            ctk.CTkLabel(
+                recent_frame,
+                text="  記録なし",
+                font=("Arial", 10),
+                text_color="gray"
+            ).pack(anchor="w", padx=20, pady=1)
+
+        # 閉じるボタン
+        ctk.CTkButton(
+            main_frame,
+            text="閉じる",
+            command=dialog.destroy
+        ).pack(pady=(10, 0))
 
     def _start_progress_timer(self):
         """経過時間表示タイマーを開始"""
@@ -2975,6 +3101,10 @@ additional_refinement_instructions: |
         # タイマー停止
         self._stop_progress_timer()
 
+        # 使用量を記録（成功）
+        if self._current_gen_mode and self._current_gen_resolution:
+            self._record_api_usage(self._current_gen_mode, self._current_gen_resolution, True)
+
         # タイトル合成（チェックボックスがオンの場合）
         if self.include_title_var.get():
             title = self.title_entry.get().strip()
@@ -3002,6 +3132,10 @@ additional_refinement_instructions: |
         """画像生成エラー"""
         # タイマー停止
         self._stop_progress_timer()
+
+        # 使用量を記録（失敗）
+        if self._current_gen_mode and self._current_gen_resolution:
+            self._record_api_usage(self._current_gen_mode, self._current_gen_resolution, False)
 
         # ボタンをリセット
         self.generate_button.configure(state="normal", text="YAML生成")

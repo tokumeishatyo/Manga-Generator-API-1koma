@@ -66,6 +66,9 @@ Generate an image based on the following instructions.
 ## REFERENCE IMAGE:
 The attached image is a reference. Use it as inspiration for style, composition, or elements as appropriate to the prompt below.
 
+## IMPORTANT - WATERMARK REMOVAL:
+If the reference image contains any watermarks, logos, or signatures (such as "Gemini" watermark in the corner), DO NOT reproduce them in the output. The output image must be clean without any watermarks.
+
 ## PROMPT:
 {yaml_prompt}
 """
@@ -106,6 +109,9 @@ This is critical - output must be high resolution.
 4. Improve: line art clarity, shading details, background details, facial features
 5. Maintain the same scene but with professional-level quality
 
+## IMPORTANT - WATERMARK REMOVAL:
+If the reference image contains any watermarks, logos, or signatures (such as "Gemini" watermark in the corner), DO NOT reproduce them in the output. The output image must be clean without any watermarks.
+
 ## IMPORTANT:
 - The reference image shows the desired composition - MATCH IT
 - The YAML provides detailed instructions - FOLLOW THEM
@@ -132,11 +138,15 @@ The attached image is the source image to be refined/edited.
 ## INSTRUCTIONS:
 {yaml_prompt}
 
+## IMPORTANT - WATERMARK REMOVAL:
+If the source image contains any watermarks, logos, or signatures (such as "Gemini" watermark in the corner), DO NOT reproduce them in the output. The output image must be clean without any watermarks.
+
 ## CRITICAL RULES:
 - Follow the instructions carefully
 - Maintain the overall composition and style of the source image unless instructed otherwise
 - Make only the changes specified in the instructions
 - Preserve details that are not mentioned in the instructions
+- Remove any watermarks from the original image
 """
             contents = [refine_instruction]
 

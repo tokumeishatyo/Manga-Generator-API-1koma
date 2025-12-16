@@ -38,7 +38,7 @@ class BodySheetWindow(BaseSettingsWindow):
         self.face_sheet_path = face_sheet_path
         super().__init__(
             parent,
-            title="Step2: 素体三面図設定",
+            title="素体三面図設定",
             width=700,
             height=550,
             callback=callback

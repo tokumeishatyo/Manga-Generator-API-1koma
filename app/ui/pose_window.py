@@ -88,7 +88,7 @@ class PoseWindow(BaseSettingsWindow):
         self.outfit_sheet_path = outfit_sheet_path
         super().__init__(
             parent,
-            title="Step4: ポーズ",
+            title="ポーズ設定",
             width=700,
             height=550,
             callback=callback

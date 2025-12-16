@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec file for 漫画生成アプリ（1コマ・4コマ対応）
+PyInstaller spec file for AI創作工房
 """
 
 import os
@@ -106,12 +106,12 @@ coll = COLLECT(
 # macOS用 .app バンドル
 app = BUNDLE(
     coll,
-    name='漫画生成.app',
+    name='AI創作工房.app',
     icon=None,  # アイコンがある場合はここにパスを指定
-    bundle_identifier='com.nanobananapro.mangagenerator',
+    bundle_identifier='com.nanobananapro.aicreatestudio',
     info_plist={
-        'CFBundleName': '漫画生成',
-        'CFBundleDisplayName': '漫画生成',
+        'CFBundleName': 'AI創作工房',
+        'CFBundleDisplayName': 'AI創作工房',
         'CFBundleVersion': '2.0.0',
         'CFBundleShortVersionString': '2.0.0',
         'NSHighResolutionCapable': True,

@@ -40,7 +40,7 @@ class OutfitWindow(BaseSettingsWindow):
         self.body_sheet_path = body_sheet_path
         super().__init__(
             parent,
-            title="Step3: 衣装着用設定",
+            title="衣装着用設定",
             width=780,
             height=750,
             callback=callback
