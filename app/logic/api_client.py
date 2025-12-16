@@ -15,7 +15,8 @@ def generate_image_with_api(
     yaml_prompt: str,
     char_image_paths: list,
     resolution: str = "2K",
-    ref_image_path: str = None
+    ref_image_path: str = None,
+    aspect_ratio: str = "1:1"
 ) -> dict:
     """
     Gemini APIを使用して画像を生成
@@ -26,6 +27,7 @@ def generate_image_with_api(
         char_image_paths: キャラクター参照画像のパスリスト
         resolution: 解像度 ("1K", "2K", "4K")
         ref_image_path: 参考画像（清書モード用）のパス
+        aspect_ratio: アスペクト比 ("1:1", "16:9", "9:16", etc.)
 
     Returns:
         結果を含む辞書:
@@ -38,7 +40,7 @@ def generate_image_with_api(
     try:
         client = genai.Client(api_key=api_key)
 
-        # 解像度の設定
+        # 解像度の設定（プロンプト用の説明）
         resolution_map = {
             "1K": "approximately 1024x1024 pixels (1K resolution)",
             "2K": "approximately 2048x2048 pixels (2K resolution, high quality)",
@@ -103,12 +105,16 @@ Generate the image at {resolution_instruction}.
             except Exception as e:
                 print(f"Error loading image {img_path}: {e}")
 
-        # Call API
+        # Call API with image_config for aspect ratio and resolution
         response = client.models.generate_content(
-            model="gemini-3-pro-image-preview",
+            model="gemini-2.0-flash-preview-image-generation",  # 画像生成対応モデル
             contents=contents,
             config=types.GenerateContentConfig(
-                response_modalities=['TEXT', 'IMAGE']
+                response_modalities=['TEXT', 'IMAGE'],
+                image_config=types.ImageConfig(
+                    aspect_ratio=aspect_ratio,
+                    image_size=resolution
+                )
             )
         )
 

@@ -2398,8 +2398,9 @@ additional_refinement_instructions: |
             messagebox.showwarning("警告", "タイトルを入力してください（ファイル名に使用します）")
             return
 
-        # 解像度を取得
+        # 解像度とアスペクト比を取得
         resolution = self.resolution_var.get()
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
 
         # YAML保存の確認
         save_confirm = messagebox.askyesnocancel(
@@ -2440,10 +2441,11 @@ additional_refinement_instructions: |
             try:
                 result = generate_image_with_api(
                     api_key=api_key,
-                    yaml_prompt=yaml_content,  # 修正済みYAMLを使用
+                    yaml_prompt=yaml_content,
                     char_image_paths=[],
-                    resolution=resolution,  # 上で定義済み
-                    ref_image_path=ref_image_path
+                    resolution=resolution,
+                    ref_image_path=ref_image_path,
+                    aspect_ratio=aspect_ratio
                 )
 
                 if result['success'] and result['image']:
@@ -2484,8 +2486,9 @@ additional_refinement_instructions: |
         self._generation_start_time = time.time()
         self._start_progress_timer()
 
-        # 解像度を取得
+        # 解像度とアスペクト比を取得
         resolution = self.resolution_var.get()
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
 
         def generate():
             try:
@@ -2496,7 +2499,8 @@ additional_refinement_instructions: |
                     yaml_prompt=yaml_content,
                     char_image_paths=[],
                     resolution=resolution,
-                    ref_image_path=None  # 通常モードでは参考画像なし
+                    ref_image_path=None,
+                    aspect_ratio=aspect_ratio
                 )
 
                 if result['success'] and result['image']:
