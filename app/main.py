@@ -788,6 +788,12 @@ class MangaGeneratorApp(ctk.CTk):
                 callback=self._on_settings_complete,
                 initial_data=self.current_settings
             )
+        # === シーン合成 ===
+        elif output_type == "シーンビルダー":
+            SceneBuilderWindow(
+                self,
+                callback=self._on_scene_builder_yaml
+            )
         else:
             messagebox.showinfo("情報", f"'{output_type}'の設定ウィンドウは未実装です")
 
@@ -2546,8 +2552,16 @@ title_overlay:
 
     def _on_scene_builder_yaml(self, yaml_content: str):
         """シーンビルダーからYAMLを受け取る"""
+        # アスペクト比をYAMLに追加
+        aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
+        yaml_content += f"\naspect_ratio: \"{aspect_ratio}\"\n"
+
         self.yaml_textbox.delete("1.0", tk.END)
         self.yaml_textbox.insert("1.0", yaml_content)
+
+        # 設定完了状態にする
+        self.current_settings = {"scene_builder": True}
+        self.settings_status_label.configure(text="設定: 設定済み ✓", text_color="green")
 
     # === Manga Composer ===
 

@@ -78,6 +78,8 @@ OUTPUT_TYPES = {
     "Step3: 衣装着用": "step3_outfit",
     # === ポーズ生成フェーズ ===
     "Step4: ポーズ": "step4_pose",
+    # === シーン合成 ===
+    "シーンビルダー": "scene_builder",
     # === その他 ===
     "背景生成": "background",
     "装飾テキスト": "decorative_text",
