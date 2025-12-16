@@ -489,6 +489,19 @@ class MangaGeneratorApp(ctk.CTk):
         )
         self.resolution_4k_radio.pack(side="left")
 
+        # 画像生成ボタン（API用）
+        self.api_generate_button = ctk.CTkButton(
+            api_frame,
+            text="画像生成（API）",
+            font=("Arial", 14, "bold"),
+            height=40,
+            fg_color="#2E7D32",
+            hover_color="#1B5E20",
+            state="disabled",
+            command=self._api_generate_from_yaml
+        )
+        self.api_generate_button.grid(row=7, column=0, columnspan=2, padx=10, pady=15, sticky="ew")
+
     def _build_right_column(self):
         """右列を構築（YAML/画像プレビュー）"""
         self.right_column = ctk.CTkFrame(self)
@@ -634,6 +647,7 @@ class MangaGeneratorApp(ctk.CTk):
 
         # ボタンをデフォルトに
         self.generate_button.configure(text="YAML生成", state="normal")
+        self.api_generate_button.configure(text="画像生成（API）", state="disabled")
 
     def _on_output_type_change(self, value):
         """出力タイプ変更時"""
@@ -663,7 +677,8 @@ class MangaGeneratorApp(ctk.CTk):
             self.resolution_1k_radio.configure(state="normal")
             self.resolution_2k_radio.configure(state="normal")
             self.resolution_4k_radio.configure(state="normal")
-            self.generate_button.configure(text="画像生成")
+            # 画像生成ボタンはYAML生成後に活性化（ここでは無効のまま）
+            self.api_generate_button.configure(state="disabled")
             # APIサブモードに応じて詳細設定ボタンの状態を更新
             self._on_api_submode_change()
         else:
@@ -677,7 +692,7 @@ class MangaGeneratorApp(ctk.CTk):
             self.resolution_1k_radio.configure(state="disabled")
             self.resolution_2k_radio.configure(state="disabled")
             self.resolution_4k_radio.configure(state="disabled")
-            self.generate_button.configure(text="YAML生成")
+            self.api_generate_button.configure(state="disabled")
             # YAML出力モードでは詳細設定ボタンを有効化
             self.settings_button.configure(state="normal")
             # 設定状態ラベルを更新
@@ -862,10 +877,10 @@ class MangaGeneratorApp(ctk.CTk):
 
     def _generate_yaml(self):
         """YAML生成"""
-        # 清書モードの場合は専用処理
+        # 清書モードの場合はYAML準備処理
         if (self.output_mode_var.get() == "api" and
             self.api_submode_var.get() == "redraw"):
-            self._generate_redraw_image()
+            self._prepare_redraw_yaml()
             return
 
         output_type = self.output_type_menu.get()
@@ -941,9 +956,15 @@ class MangaGeneratorApp(ctk.CTk):
                 self.yaml_textbox.delete("1.0", tk.END)
                 self.yaml_textbox.insert("1.0", yaml_content)
 
-            # API出力モードの場合は画像生成
+            # API出力モードの場合は画像生成ボタンを活性化
             if self.output_mode_var.get() == "api":
-                self._generate_image_with_api(yaml_content)
+                self.api_generate_button.configure(state="normal")
+                messagebox.showinfo(
+                    "YAML生成完了",
+                    "YAMLを生成しました。\n\n"
+                    "内容を確認後、「画像生成（API）」ボタンで\n"
+                    "画像を生成してください。"
+                )
 
         except Exception as e:
             messagebox.showerror("エラー", f"YAML生成中にエラーが発生しました:\n{str(e)}")
@@ -2259,14 +2280,8 @@ title_overlay:
 
     # === API Image Generation ===
 
-    def _generate_redraw_image(self):
-        """清書モード専用：YAML + 参照画像で高品質再描画"""
-        # APIキーチェック
-        api_key = self.api_key_entry.get().strip()
-        if not api_key:
-            messagebox.showwarning("警告", "API Keyを入力してください")
-            return
-
+    def _prepare_redraw_yaml(self):
+        """清書モード用：YAMLに追加指示・設定を反映してボタンを活性化"""
         # YAML必須チェック（清書モードでは読込が必要）
         yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
         if not yaml_content:
@@ -2296,64 +2311,116 @@ title_overlay:
             return
 
         # メイン画面の設定をYAMLに反映
-        # アスペクト比の上書き
         aspect_ratio = ASPECT_RATIOS.get(self.aspect_ratio_menu.get(), '1:1')
-        # 解像度をYAMLに追加
         resolution = self.resolution_var.get()
 
-        # 既存のaspect_ratioとimage_sizeを置換または追加
-        # aspect_ratioの置換
-        if re.search(r'^aspect_ratio:', yaml_content, re.MULTILINE):
-            yaml_content = re.sub(r'^aspect_ratio:.*$', f'aspect_ratio: "{aspect_ratio}"', yaml_content, flags=re.MULTILINE)
-        else:
-            yaml_content += f'\naspect_ratio: "{aspect_ratio}"'
+        # scene_descriptionにアスペクト比・解像度を追記（念押し）
+        spec_note = f"【出力仕様: アスペクト比{aspect_ratio}, {resolution}相当の解像度で出力】"
+        # 既存のspec_noteを削除
+        yaml_content = re.sub(r'【出力仕様:.*?】', '', yaml_content)
+        # scene_descriptionを探して追記
+        scene_desc_match = re.search(r'(scene_description:\s*["\'])([^"\']*)', yaml_content)
+        if scene_desc_match:
+            original_desc = scene_desc_match.group(2)
+            new_desc = f"{original_desc} {spec_note}"
+            yaml_content = yaml_content[:scene_desc_match.start(2)] + new_desc + yaml_content[scene_desc_match.end(2):]
 
-        # image_sizeの追加（既存があれば置換）
-        if re.search(r'^image_size:', yaml_content, re.MULTILINE):
-            yaml_content = re.sub(r'^image_size:.*$', f'image_size: "{resolution}"', yaml_content, flags=re.MULTILINE)
-        else:
-            yaml_content += f'\nimage_size: "{resolution}"'
+        # output_specセクションを追加/更新
+        output_spec = f"""
+# === 出力仕様 ===
+output_spec:
+  aspect_ratio: "{aspect_ratio}"
+  resolution: "{resolution}"
+"""
+        # 既存のoutput_specを削除
+        yaml_content = re.sub(r'\n# === 出力仕様 ===\noutput_spec:[\s\S]*?(?=\n# ===|\n[a-z_]+:|\Z)', '', yaml_content)
+        # 既存のaspect_ratio行を削除
+        yaml_content = re.sub(r'^aspect_ratio:.*\n?', '', yaml_content, flags=re.MULTILINE)
+        # 既存のimage_size行を削除
+        yaml_content = re.sub(r'^image_size:.*\n?', '', yaml_content, flags=re.MULTILINE)
+        # output_specを追加
+        yaml_content = yaml_content.rstrip() + output_spec
 
         # 追加指示を取得してYAMLに付加
         additional_instruction = self.redraw_instruction_entry.get("1.0", tk.END).strip()
         if additional_instruction:
+            # 既存の追加指示セクションを削除
+            yaml_content = re.sub(r'\n# === 追加指示（清書モード） ===[\s\S]*', '', yaml_content)
             yaml_content += f"""
-
 # === 追加指示（清書モード） ===
 additional_refinement_instructions: |
   {additional_instruction}
 """
 
-        # テキストボックスを更新して、保存時に全ての変更が含まれるようにする
+        # テキストボックスを更新
         self.yaml_textbox.delete("1.0", tk.END)
         self.yaml_textbox.insert("1.0", yaml_content)
         self.update()  # GUI同期を強制
 
-        # 確認ダイアログ
-        instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
+        # 画像生成ボタンを活性化
+        self.api_generate_button.configure(state="normal")
 
-        # YAML保存の確認（追加指示がある場合）
-        if additional_instruction:
-            save_confirm = messagebox.askyesnocancel(
-                "YAML保存確認",
-                "追加指示を含むYAMLを保存しますか？\n\n"
-                "保存しておくと、同じ設定で再生成できます。\n\n"
-                "「はい」→ 保存してから画像生成\n"
-                "「いいえ」→ 保存せず画像生成\n"
-                "「キャンセル」→ 中止"
-            )
-            if save_confirm is None:  # キャンセル
-                return
-            elif save_confirm:  # はい → YAML保存
-                self._save_yaml()
+        # 完了メッセージ
+        instruction_preview = f"\n追加指示: {additional_instruction[:50]}..." if additional_instruction else ""
+        messagebox.showinfo(
+            "YAML準備完了",
+            f"YAMLを準備しました。\n\n"
+            f"アスペクト比: {aspect_ratio}\n"
+            f"解像度: {resolution}"
+            f"{instruction_preview}\n\n"
+            "内容を確認後、「画像生成（API）」ボタンで\n"
+            "画像を生成してください。"
+        )
+
+    def _generate_redraw_image(self):
+        """清書モード専用：YAML + 参照画像で高品質再描画"""
+        # APIキーチェック
+        api_key = self.api_key_entry.get().strip()
+        if not api_key:
+            messagebox.showwarning("警告", "API Keyを入力してください")
+            return
+
+        # YAML必須チェック
+        yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
+        if not yaml_content:
+            messagebox.showwarning("警告", "YAMLが空です。先にYAML生成を行ってください。")
+            return
+
+        # 参考画像チェック
+        ref_image_path = self.ref_image_entry.get().strip()
+        if not ref_image_path or not os.path.exists(ref_image_path):
+            messagebox.showwarning("警告", "参考画像を選択してください。")
+            return
+
+        # タイトル必須チェック
+        title = self.title_entry.get().strip()
+        if not title:
+            messagebox.showwarning("警告", "タイトルを入力してください（ファイル名に使用します）")
+            return
+
+        # 解像度を取得
+        resolution = self.resolution_var.get()
+
+        # YAML保存の確認
+        save_confirm = messagebox.askyesnocancel(
+            "YAML保存確認",
+            "YAMLを保存しますか？\n\n"
+            "保存しておくと、同じ設定で再生成できます。\n\n"
+            "「はい」→ 保存してから画像生成\n"
+            "「いいえ」→ 保存せず画像生成\n"
+            "「キャンセル」→ 中止"
+        )
+        if save_confirm is None:  # キャンセル
+            return
+        elif save_confirm:  # はい → YAML保存
+            self._save_yaml()
 
         # 最終確認ダイアログ
         confirm_msg = (
             "【清書モード】高品質再描画を実行します\n\n"
             f"参考画像: {os.path.basename(ref_image_path)}\n"
             f"YAML: 読込済み ({len(yaml_content)}文字)\n"
-            f"解像度: {self.resolution_var.get()}"
-            f"{instruction_preview}\n"
+            f"解像度: {resolution}\n"
             "\n※ YAMLの指示 + 参照画像の構図で再描画します\n"
             "※ API呼び出しには料金がかかります\n\n"
             "実行しますか？"
@@ -2362,7 +2429,7 @@ additional_refinement_instructions: |
             return
 
         # 生成中表示
-        self.generate_button.configure(state="disabled", text="清書中...")
+        self.api_generate_button.configure(state="disabled", text="生成中...")
         self.preview_label.configure(text="高品質再描画中...\n経過時間: 0秒", image=None)
 
         # 経過時間タイマー開始
@@ -2410,7 +2477,7 @@ additional_refinement_instructions: |
             return
 
         # 生成中表示
-        self.generate_button.configure(state="disabled", text="生成中...")
+        self.api_generate_button.configure(state="disabled", text="生成中...")
         self.preview_label.configure(text="画像生成中...\n経過時間: 0秒", image=None)
 
         # 経過時間タイマー開始
@@ -2444,6 +2511,21 @@ additional_refinement_instructions: |
 
         thread = threading.Thread(target=generate, daemon=True)
         thread.start()
+
+    def _api_generate_from_yaml(self):
+        """YAMLテキストボックスの内容からAPI画像生成を実行"""
+        # YAMLコンテンツを取得
+        yaml_content = self.yaml_textbox.get("1.0", tk.END).strip()
+        if not yaml_content:
+            messagebox.showwarning("警告", "YAMLが空です。先にYAML生成を行ってください。")
+            return
+
+        # 清書モードの場合は専用処理
+        if self.api_submode_var.get() == "redraw":
+            self._generate_redraw_image()
+        else:
+            # 通常モード
+            self._generate_image_with_api(yaml_content)
 
     def _start_progress_timer(self):
         """経過時間表示タイマーを開始"""
@@ -2488,11 +2570,9 @@ additional_refinement_instructions: |
         self.generated_image = image
         self._image_generated_by_api = True  # API生成フラグを設定
 
-        # ボタンのテキストを現在のモードに応じて設定
-        if self.output_mode_var.get() == "api":
-            self.generate_button.configure(state="normal", text="画像生成")
-        else:
-            self.generate_button.configure(state="normal", text="YAML生成")
+        # ボタンをリセット
+        self.generate_button.configure(state="normal", text="YAML生成")
+        self.api_generate_button.configure(state="normal", text="画像生成（API）")
         self.save_image_button.configure(state="normal")
 
         # プレビュー表示（元画像をコピーしてサムネイル化）
@@ -2508,11 +2588,9 @@ additional_refinement_instructions: |
         # タイマー停止
         self._stop_progress_timer()
 
-        # ボタンのテキストを現在のモードに応じて設定
-        if self.output_mode_var.get() == "api":
-            self.generate_button.configure(state="normal", text="画像生成")
-        else:
-            self.generate_button.configure(state="normal", text="YAML生成")
+        # ボタンをリセット
+        self.generate_button.configure(state="normal", text="YAML生成")
+        self.api_generate_button.configure(state="normal", text="画像生成（API）")
         self.preview_label.configure(text=f"エラー: {error_msg}", image=None)
         messagebox.showerror("エラー", f"画像生成に失敗しました:\n{error_msg}")
 
