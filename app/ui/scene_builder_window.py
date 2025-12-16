@@ -77,7 +77,8 @@ LIGHTING_MOODS = {
     "朝の光": "Morning Sunlight",
     "夕焼け": "Sunset",
     "夏の正午": "Summer Noon",
-    "夜": "Night"
+    "夜": "Night",
+    "カスタム": "custom"
 }
 
 # 共通: 合成モード
@@ -187,6 +188,13 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             self.story_custom_layout_frame.pack(fill="x", padx=10, pady=5)
         else:
             self.story_custom_layout_frame.pack_forget()
+
+    def _on_story_mood_change(self, value):
+        """雰囲気変更"""
+        if value == "カスタム":
+            self.story_custom_mood_frame.pack(fill="x", padx=10, pady=5)
+        else:
+            self.story_custom_mood_frame.pack_forget()
 
     def _on_battle_bg_type_change(self):
         """バトル背景タイプ変更"""
@@ -446,9 +454,23 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         self.story_blur_slider.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         ctk.CTkLabel(bg_common_row, text="雰囲気:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.story_mood_menu = ctk.CTkOptionMenu(bg_common_row, values=list(LIGHTING_MOODS.keys()), width=150)
+        self.story_mood_menu = ctk.CTkOptionMenu(
+            bg_common_row,
+            values=list(LIGHTING_MOODS.keys()),
+            width=150,
+            command=self._on_story_mood_change
+        )
         self.story_mood_menu.set("朝の光")
         self.story_mood_menu.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+
+        # カスタム雰囲気入力欄（初期は非表示）
+        self.story_custom_mood_frame = ctk.CTkFrame(bg_frame, fg_color="transparent")
+        self.story_custom_mood_entry = ctk.CTkEntry(
+            self.story_custom_mood_frame,
+            placeholder_text="例: 雨上がりの午後、虹がかかる空",
+            width=400
+        )
+        self.story_custom_mood_entry.pack(side="left", padx=5, pady=5)
 
         # === 配置設定 ===
         layout_frame = ctk.CTkFrame(canvas)
@@ -783,6 +805,14 @@ class SceneBuilderWindow(ctk.CTkToplevel):
             return custom_value if custom_value else "Custom Layout"
         return STORY_LAYOUTS.get(layout, "Side by Side (Walking)")
 
+    def _get_story_mood_value(self) -> str:
+        """雰囲気の値を取得（カスタムの場合はテキストボックスから）"""
+        mood = self.story_mood_menu.get()
+        if mood == "カスタム":
+            custom_value = self.story_custom_mood_entry.get().strip()
+            return custom_value if custom_value else "Custom Mood"
+        return LIGHTING_MOODS.get(mood, "Morning Sunlight")
+
     def _generate_text_overlay_yaml(self) -> str:
         """装飾テキストオーバーレイのYAMLセクションを生成（複数対応）"""
         if not self.text_overlay_data:
@@ -893,14 +923,14 @@ scene_settings:
             bg_section = f"""background:
   source_image: "{self._get_filename(self.story_bg_entry.get().strip())}"
   blur_amount: {int(self.story_blur_slider.get())}
-  lighting_mood: "{LIGHTING_MOODS.get(self.story_mood_menu.get(), 'Morning Sunlight')}\""""
+  lighting_mood: "{self._get_story_mood_value()}\""""
         else:
             bg_prompt = self.story_bg_prompt_entry.get("1.0", "end-1c").strip()
             bg_section = f"""background:
   generate_from_prompt: true
   scene_description: "{bg_prompt}"
   blur_amount: {int(self.story_blur_slider.get())}
-  lighting_mood: "{LIGHTING_MOODS.get(self.story_mood_menu.get(), 'Morning Sunlight')}\""""
+  lighting_mood: "{self._get_story_mood_value()}\""""
 
         # キャラクターセクション（3人対応）
         characters_yaml = ""
