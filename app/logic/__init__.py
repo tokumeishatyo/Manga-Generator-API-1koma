@@ -21,6 +21,7 @@ from .file_manager import (
     save_recent_files,
     load_template
 )
+from .reference_collector import collect_reference_image_paths
 
 __all__ = [
     'generate_outfit_prompt',
@@ -36,5 +37,6 @@ __all__ = [
     'save_yaml_file',
     'load_recent_files',
     'save_recent_files',
-    'load_template'
+    'load_template',
+    'collect_reference_image_paths'
 ]
