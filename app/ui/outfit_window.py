@@ -216,7 +216,6 @@ class OutfitWindow(BaseSettingsWindow):
 
         self.reference_desc_textbox = ctk.CTkTextbox(self.reference_frame, height=50, wrap="word")
         self.reference_desc_textbox.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-        self.reference_desc_textbox.insert("1.0", "（任意）参考画像の衣装について補足説明")
 
         # === 衣装フィットモード ===
         ctk.CTkLabel(
@@ -325,7 +324,6 @@ class OutfitWindow(BaseSettingsWindow):
         ctk.CTkLabel(detail_frame, text="詳細:").grid(row=1, column=0, padx=10, pady=5, sticky="nw")
         self.description_textbox = ctk.CTkTextbox(detail_frame, height=50, wrap="word")
         self.description_textbox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        self.description_textbox.insert("1.0", "（任意）衣装の追加詳細を記述")
 
         # === 制約事項表示 ===
         constraint_frame = ctk.CTkFrame(self.content_frame)

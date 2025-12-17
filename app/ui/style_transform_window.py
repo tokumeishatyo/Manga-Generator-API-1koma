@@ -286,7 +286,6 @@ class StyleTransformWindow(BaseSettingsWindow):
         ctk.CTkLabel(detail_frame, text="詳細:").grid(row=1, column=0, padx=10, pady=5, sticky="nw")
         self.description_textbox = ctk.CTkTextbox(detail_frame, height=60, wrap="word")
         self.description_textbox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        self.description_textbox.insert("1.0", "（任意）変換時の追加指示")
 
         # === 説明 ===
         info_frame = ctk.CTkFrame(self.content_frame)

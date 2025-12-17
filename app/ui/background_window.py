@@ -75,7 +75,6 @@ class BackgroundWindow(BaseSettingsWindow):
 
         self.description_textbox = ctk.CTkTextbox(desc_frame, height=150, wrap="word")
         self.description_textbox.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
-        self.description_textbox.insert("1.0", "例：夜の学校の教室、月明かりが窓から差し込む、静かで少し不気味な雰囲気")
 
         # === プリセット ===
         preset_frame = ctk.CTkFrame(self.content_frame)

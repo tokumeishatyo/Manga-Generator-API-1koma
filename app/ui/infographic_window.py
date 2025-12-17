@@ -108,11 +108,11 @@ class InfographicWindow(BaseSettingsWindow):
         ).grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 5), sticky="w")
 
         ctk.CTkLabel(title_frame, text="タイトル:").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.main_title_entry = ctk.CTkEntry(title_frame, placeholder_text="例: けいすけ解体新書（必須）", width=400)
+        self.main_title_entry = ctk.CTkEntry(title_frame, placeholder_text="例: こよみのすべて（必須）", width=400)
         self.main_title_entry.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
 
         ctk.CTkLabel(title_frame, text="副題:").grid(row=2, column=0, padx=10, pady=5, sticky="w")
-        self.subtitle_entry = ctk.CTkEntry(title_frame, placeholder_text="例: KEISUKE ANATOMY（任意）", width=400)
+        self.subtitle_entry = ctk.CTkEntry(title_frame, placeholder_text="例: ABOUT KOYOMI（任意）", width=400)
         self.subtitle_entry.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
 
         # === キャラクター画像 ===
@@ -255,7 +255,7 @@ class InfographicWindow(BaseSettingsWindow):
         ctk.CTkLabel(frame, text="説明:").grid(row=2, column=0, padx=10, pady=2, sticky="nw")
         desc_textbox = ctk.CTkTextbox(frame, height=60, width=400)
         desc_textbox.grid(row=2, column=1, columnspan=3, padx=5, pady=2, sticky="ew")
-        desc_textbox.insert("1.0", "AIマンガ家\n教材クリエイター")
+        # プレースホルダーは使用せず空欄（CTkTextboxはplaceholder非対応）
 
         # フレーム情報を保存
         frame.title_entry = title_entry

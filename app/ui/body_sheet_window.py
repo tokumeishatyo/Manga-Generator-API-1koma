@@ -167,7 +167,6 @@ class BodySheetWindow(BaseSettingsWindow):
         ctk.CTkLabel(detail_frame, text="追加説明:").grid(row=1, column=0, padx=10, pady=5, sticky="nw")
         self.description_textbox = ctk.CTkTextbox(detail_frame, height=80, wrap="word")
         self.description_textbox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        self.description_textbox.insert("1.0", "（任意）体型の追加詳細を記述")
 
         # === 制約事項表示 ===
         constraint_frame = ctk.CTkFrame(self.content_frame)

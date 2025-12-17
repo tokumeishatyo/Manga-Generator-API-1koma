@@ -333,7 +333,6 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         ctk.CTkLabel(self.battle_bg_prompt_frame, text="情景説明:").grid(row=0, column=0, padx=5, pady=5, sticky="nw")
         self.battle_bg_prompt_entry = ctk.CTkTextbox(self.battle_bg_prompt_frame, height=60)
         self.battle_bg_prompt_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        self.battle_bg_prompt_entry.insert("1.0", "荒廃した都市の廃墟、炎が燃え盛る背景")
 
         # 共通設定（暗さ）
         bg_common_row = ctk.CTkFrame(bg_frame, fg_color="transparent")
@@ -524,7 +523,6 @@ class SceneBuilderWindow(ctk.CTkToplevel):
         ctk.CTkLabel(self.story_bg_prompt_frame, text="情景説明:").grid(row=0, column=0, padx=5, pady=5, sticky="nw")
         self.story_bg_prompt_entry = ctk.CTkTextbox(self.story_bg_prompt_frame, height=60)
         self.story_bg_prompt_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        self.story_bg_prompt_entry.insert("1.0", "ゴージャスなパーティ会場、シャンデリアが輝く広いホール")
 
         # 共通設定（ぼかし・雰囲気）
         bg_common_row = ctk.CTkFrame(bg_frame, fg_color="transparent")

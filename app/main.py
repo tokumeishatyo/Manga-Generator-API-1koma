@@ -3002,13 +3002,14 @@ additional_refinement_instructions: |
 
         instruction_entry = ctk.CTkTextbox(main_frame, height=80)
         instruction_entry.pack(fill="x", pady=(0, 5))
-        instruction_entry.insert("1.0", "例: ドラマーの目を開けて")
 
-        # プレースホルダーのクリア
-        def clear_placeholder(event):
-            if instruction_entry.get("1.0", tk.END).strip() == "例: ドラマーの目を開けて":
-                instruction_entry.delete("1.0", tk.END)
-        instruction_entry.bind("<FocusIn>", clear_placeholder)
+        # 入力例をヒントとして表示（ラベル）
+        ctk.CTkLabel(
+            main_frame,
+            text="例: ドラマーの目を開けて、背景をぼかす、など",
+            font=("Arial", 10),
+            text_color="gray"
+        ).pack(anchor="w", pady=(0, 5))
 
         # ボタンフレーム
         btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -3016,7 +3017,7 @@ additional_refinement_instructions: |
 
         def on_generate():
             instruction = instruction_entry.get("1.0", tk.END).strip()
-            if not instruction or instruction == "例: ドラマーの目を開けて":
+            if not instruction:
                 messagebox.showwarning("警告", "指示を入力してください", parent=dialog)
                 return
             mode = refine_mode_var.get()
