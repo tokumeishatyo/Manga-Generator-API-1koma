@@ -85,7 +85,9 @@ OUTPUT_TYPES = {
     "装飾テキスト": "decorative_text",
     "4コマ漫画": "four_panel_manga",
     # === スタイル変換 ===
-    "スタイル変換": "style_transform"
+    "スタイル変換": "style_transform",
+    # === インフォグラフィック ===
+    "インフォグラフィック": "infographic"
 }
 
 # ステップの順序定義（進捗トラッカー用）
@@ -589,3 +591,61 @@ SCENE_PLACEHOLDERS = [
 
 # キャラクター説明プレースホルダー
 CHARACTER_DESCRIPTION_PLACEHOLDER = "顔、髪型を記述"
+
+# ====================================================
+# インフォグラフィック関連定数
+# ====================================================
+
+# インフォグラフィックスタイル
+INFOGRAPHIC_STYLES = {
+    "グラレコ風": {
+        "key": "graphic_recording",
+        "prompt": "graphic recording style, colorful hand-drawn infographic, visual note-taking, sketchy illustrations with text, vibrant colors, casual artistic style",
+        "description": "カラフルな手描き風図解"
+    },
+    "ノート風": {
+        "key": "notebook",
+        "prompt": "notebook style, written on lined paper, handwritten notes, spiral notebook aesthetic, pen sketches, organized notes layout",
+        "description": "ノートに書いたような風合い"
+    },
+    "ポンチ絵": {
+        "key": "sketch_diagram",
+        "prompt": "simple sketch diagram, explanatory illustration, rough sketch style, concept drawing, whiteboard marker style, simple lines",
+        "description": "シンプルな説明図・概念図"
+    },
+    "マインドマップ風": {
+        "key": "mindmap",
+        "prompt": "mind map style, radial diagram, central topic with branching ideas, organic flowing connections, colorful branches",
+        "description": "中央から放射状に広がる構造"
+    },
+    "ホワイトボード風": {
+        "key": "whiteboard",
+        "prompt": "whiteboard style, marker drawings, meeting room whiteboard aesthetic, clean simple diagrams, dry erase marker look",
+        "description": "会議室のホワイトボードに書いた風"
+    }
+}
+
+# インフォグラフィック項目の配置位置
+INFOGRAPHIC_POSITIONS = {
+    "おまかせ": "auto",
+    "1（上左）": "1",
+    "2（上中央）": "2",
+    "3（上右）": "3",
+    "4（左）": "4",
+    "5（右）": "5",
+    "6（下左）": "6",
+    "7（下中央）": "7",
+    "8（下右）": "8"
+}
+
+# 出力言語
+INFOGRAPHIC_LANGUAGES = {
+    "日本語": "Japanese",
+    "English": "English",
+    "中文（简体）": "Simplified Chinese",
+    "中文（繁體）": "Traditional Chinese",
+    "한국어": "Korean",
+    "Español": "Spanish",
+    "Français": "French",
+    "Deutsch": "German"
+}

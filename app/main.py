@@ -51,6 +51,7 @@ from ui.four_panel_window import FourPanelWindow
 from ui.manga_composer_window import MangaComposerWindow
 from ui.style_transform_window import StyleTransformWindow
 from ui.bg_remover_window import BgRemoverWindow
+from ui.infographic_window import InfographicWindow
 
 # Set appearance mode and default color theme
 ctk.set_appearance_mode("System")
@@ -707,6 +708,10 @@ class MangaGeneratorApp(ctk.CTk):
         # 進捗表示を更新
         self._update_progress_display()
 
+        # インフォグラフィック選択時はアスペクト比を16:9に設定
+        if value == "インフォグラフィック":
+            self.aspect_ratio_menu.set("16:9")
+
     def _on_color_mode_change(self, value):
         """カラーモード変更時"""
         if value == "2色刷り":
@@ -920,6 +925,12 @@ class MangaGeneratorApp(ctk.CTk):
                 self,
                 callback=self._on_scene_builder_yaml
             )
+        elif output_type == "インフォグラフィック":
+            InfographicWindow(
+                self,
+                callback=self._on_settings_complete,
+                initial_data=self.current_settings
+            )
         else:
             messagebox.showinfo("情報", f"'{output_type}'の設定ウィンドウは未実装です")
 
@@ -1003,6 +1014,11 @@ class MangaGeneratorApp(ctk.CTk):
                 if not yaml_content or yaml_content.startswith("# "):
                     messagebox.showwarning("警告", "シーンビルダーで設定を行ってください")
                     return
+            # === インフォグラフィック ===
+            elif output_type == "インフォグラフィック":
+                yaml_content = self._generate_infographic_yaml(
+                    color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image
+                )
             else:
                 yaml_content = f"# {output_type} - 未実装"
 
@@ -1156,6 +1172,18 @@ anti_hallucination:
   - "Do NOT add any decorative elements"
   - "Output ONLY the character views on white background"
 
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add pattern samples, fabric swatches, or design elements"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the character illustration on white background"
+
 style:
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
   output_style: "{OUTPUT_STYLES.get(output_style, '')}"
@@ -1291,6 +1319,18 @@ anti_hallucination:
   - "Do NOT add any text or labels to the image"
   - "Do NOT use T-pose or A-pose - use attention pose only"
   - "Do NOT change the view order - ALWAYS front/side/back from left to right"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add pattern samples, fabric swatches, or design elements"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the three-view character illustration on white background"
 """
 
         if include_title_in_image:
@@ -1500,6 +1540,18 @@ constraints:
 anti_hallucination:
 {anti_hallucination_rules}
   - "Do NOT change the view order - ALWAYS front/side/back from left to right"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add pattern samples, fabric swatches, or design elements"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the three-view character illustration on white background"
 """
         else:
             # プリセットモードの場合（従来のロジック）
@@ -1597,6 +1649,18 @@ anti_hallucination:
   - "Do NOT change hair style or color"
   - "Apply ONLY the specified outfit"
   - "Do NOT change the view order - ALWAYS front/side/back from left to right"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add pattern samples, fabric swatches, or design elements"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the three-view character illustration on white background"
 """
 
         if include_title_in_image:
@@ -1671,6 +1735,17 @@ style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{aspect_ratio_value}"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the background illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes or color samples"
+  - "Do NOT add location markers, arrows, or explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the background scene"
 """
         else:
             # テキスト記述モード（従来通り）
@@ -1687,6 +1762,17 @@ style:
   color_mode: "{COLOR_MODES.get(color_mode, 'full_color')}"
   output_style: "{OUTPUT_STYLES.get(output_style, 'anime')}"
   aspect_ratio: "{ASPECT_RATIOS.get(aspect_ratio, '1:1')}"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the background illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes or color samples"
+  - "Do NOT add location markers, arrows, or explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the background scene"
 """
 
         # タイトルオーバーレイ（有効な場合のみ出力）
@@ -1812,6 +1898,18 @@ constraints:
 anti_hallucination:
   - "Do NOT alter character design from input"
   - "Do NOT add extra figures"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add pattern samples, fabric swatches, or design elements"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the single character on the specified background"
 
 style:
   color_mode: "{COLOR_MODES.get(color_mode, ('fullcolor', ''))[0]}"
@@ -2244,6 +2342,18 @@ anti_hallucination:
   - "Do NOT add new accessories not in source"
   - "Do NOT change outfit design significantly"
   - "MAINTAIN chibi proportions consistently"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the chibi character illustration - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add size comparison charts or reference guides"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the chibi character on the specified background"
 """
         else:
             # ドットキャラ化
@@ -2321,6 +2431,18 @@ anti_hallucination:
   - "Do NOT blur or anti-alias the pixels"
   - "MAINTAIN consistent pixel grid"
   - "Do NOT change character's recognizable features"
+
+# ====================================================
+# Output Cleanliness (CRITICAL)
+# ====================================================
+output_cleanliness:
+  - "Output ONLY the pixel art character sprite - nothing else"
+  - "Do NOT add any text, titles, labels, or annotations"
+  - "Do NOT add color palettes, color swatches, or color samples"
+  - "Do NOT add size comparison charts or pixel grid guides"
+  - "Do NOT add arrows, lines, or any explanatory graphics"
+  - "Do NOT add watermarks, signatures, or logos"
+  - "The output must contain ONLY the pixel art sprite on the specified background"
 """
 
         # タイトルオーバーレイ
@@ -2331,6 +2453,131 @@ title_overlay:
   text: "{title}"
   position: "bottom-center"
 """
+        return yaml_content
+
+    def _generate_infographic_yaml(self, color_mode, duotone_color, output_style, aspect_ratio, title, author, include_title_in_image):
+        """インフォグラフィック用YAML生成"""
+        settings = self.current_settings
+        from constants import INFOGRAPHIC_STYLES, INFOGRAPHIC_POSITIONS, INFOGRAPHIC_LANGUAGES
+
+        style_name = settings.get('style', 'グラレコ風')
+        style_info = settings.get('style_info', INFOGRAPHIC_STYLES.get(style_name, {}))
+        infographic_aspect = settings.get('aspect_ratio', '16:9')
+        language = settings.get('language', '日本語')
+        language_value = settings.get('language_value', 'Japanese')
+
+        main_title = settings.get('main_title', title)
+        subtitle = settings.get('subtitle', '')
+        main_image_path = settings.get('main_image_path', '')
+        bonus_image_path = settings.get('bonus_image_path', '')
+        sections = settings.get('sections', [])
+
+        # 項目のプロンプト生成
+        sections_text = ""
+        for idx, section in enumerate(sections, 1):
+            sec_title = section.get('title', '')
+            sec_desc = section.get('description', '').replace('\n', ', ')
+            sec_pos = section.get('position_value', 'auto')
+            position_note = f" (position: {sec_pos})" if sec_pos != 'auto' else ""
+            sections_text += f"""
+  - section_{idx}:
+      title: "{sec_title}"
+      content: "{sec_desc}"{position_note}"""
+
+        # おまけ画像セクション
+        bonus_section = ""
+        if bonus_image_path:
+            bonus_section = f"""
+# ====================================================
+# Bonus Character Image
+# ====================================================
+bonus_character:
+  enabled: true
+  image: "{os.path.basename(bonus_image_path)}"
+  placement: "AI decides optimal placement"
+  instruction: "Place this bonus character (e.g., chibi version) somewhere in the infographic as a decorative element"
+"""
+
+        yaml_content = f"""# Infographic Generation (インフォグラフィック)
+# Style: {style_name}
+type: infographic
+title: "{main_title}"
+author: "{author}"
+
+# ====================================================
+# Style Settings
+# ====================================================
+style:
+  type: "{style_info.get('key', 'graphic_recording')}"
+  style_prompt: "{style_info.get('prompt', '')}"
+  aspect_ratio: "{infographic_aspect}"
+  output_language: "{language_value}"
+
+# ====================================================
+# Title Configuration
+# ====================================================
+titles:
+  main_title: "{main_title}"
+  subtitle: "{subtitle if subtitle else ''}"
+
+# ====================================================
+# Main Character Image
+# ====================================================
+main_character:
+  image: "{os.path.basename(main_image_path) if main_image_path else 'REQUIRED'}"
+  position: "center"
+  instruction: "Place this character image at the center of the infographic"
+{bonus_section}
+# ====================================================
+# Information Sections
+# ====================================================
+# Layout reference:
+#   [1] [2] [3]
+#   [4] CHAR [5]
+#   [6] [7] [8]
+sections:{sections_text}
+
+# ====================================================
+# Generation Instructions
+# ====================================================
+prompt: |
+  Create a detailed infographic about this person/character in {style_info.get('key', 'graphic recording')} style.
+  Use the attached character image as the central figure.
+  Include extremely detailed information - small text is acceptable if it adds more detail.
+
+  Style: {style_info.get('prompt', '')}
+
+  Main title: "{main_title}"
+  {"Subtitle: " + subtitle if subtitle else ""}
+
+  Include these sections around the character:
+{chr(10).join(['  - ' + s.get('title', '') + ': ' + s.get('description', '').replace(chr(10), ', ') for s in sections])}
+
+  Output language: {language_value}
+
+  IMPORTANT:
+  - Create related icons and decorations automatically based on the content
+  - Use the {style_info.get('key', 'graphic recording')} visual style consistently
+  - Make it visually engaging with colors, icons, and artistic elements
+  - Include as much detail as possible in small organized sections
+
+# ====================================================
+# Constraints
+# ====================================================
+constraints:
+  - "Use the provided character image as the main central figure"
+  - "Arrange information sections around the character"
+  - "Create appropriate icons and decorations based on content (AI decides)"
+  - "Output all text in {language_value}"
+  - "Maintain {style_info.get('key', 'graphic recording')} style throughout"
+  - "Aspect ratio: {infographic_aspect}"
+
+anti_hallucination:
+  - "Do NOT change the character's appearance from the provided image"
+  - "Do NOT omit any of the specified sections"
+  - "Do NOT add unrelated information not in the sections"
+"""
+
         return yaml_content
 
     # === API Image Generation ===
@@ -2521,6 +2768,61 @@ additional_refinement_instructions: |
         thread = threading.Thread(target=generate, daemon=True)
         thread.start()
 
+    def _collect_reference_image_paths(self) -> list:
+        """current_settingsから参照画像のパスを収集"""
+        paths = []
+        settings = self.current_settings
+        if not settings:
+            return paths
+
+        # 各出力タイプに応じた参照画像パスを収集
+        step_type = settings.get('step_type', '')
+
+        # Step2: 素体三面図 - 顔三面図を参照
+        if step_type == 'step2_body':
+            face_path = settings.get('face_sheet_path', '')
+            if face_path and os.path.exists(face_path):
+                paths.append(face_path)
+
+        # Step3: 衣装着用 - 素体三面図を参照（+ 参考衣装画像）
+        elif step_type == 'step3_outfit':
+            body_path = settings.get('body_sheet_path', '')
+            if body_path and os.path.exists(body_path):
+                paths.append(body_path)
+            # 参考画像モードの場合、参考衣装画像も追加
+            if settings.get('outfit_source') == 'reference':
+                ref_path = settings.get('reference_image_path', '')
+                if ref_path and os.path.exists(ref_path):
+                    paths.append(ref_path)
+
+        # Step4: ポーズ - キャラクター画像を参照（+ ポーズ参考画像）
+        elif 'image_path' in settings:  # pose_window
+            img_path = settings.get('image_path', '')
+            if img_path and os.path.exists(img_path):
+                paths.append(img_path)
+            # ポーズキャプチャモードの場合、ポーズ参考画像も追加
+            if settings.get('pose_capture_enabled'):
+                pose_ref = settings.get('pose_reference_image', '')
+                if pose_ref and os.path.exists(pose_ref):
+                    paths.append(pose_ref)
+
+        # スタイル変換 - 変換元画像を参照
+        elif step_type == 'style_transform':
+            source_path = settings.get('source_image_path', '')
+            if source_path and os.path.exists(source_path):
+                paths.append(source_path)
+
+        # インフォグラフィック - メイン画像とおまけ画像を参照
+        elif step_type == 'infographic':
+            main_path = settings.get('main_image_path', '')
+            if main_path and os.path.exists(main_path):
+                paths.append(main_path)
+            bonus_path = settings.get('bonus_image_path', '')
+            if bonus_path and os.path.exists(bonus_path):
+                paths.append(bonus_path)
+
+        return paths
+
     def _generate_image_with_api(self, yaml_content: str):
         """APIで画像生成（通常モード）"""
         api_key = self.api_key_entry.get().strip()
@@ -2528,9 +2830,18 @@ additional_refinement_instructions: |
             messagebox.showwarning("警告", "API Keyを入力してください")
             return
 
+        # 参照画像パスを収集
+        char_image_paths = self._collect_reference_image_paths()
+
         # 確認ダイアログ
+        ref_info = ""
+        if char_image_paths:
+            ref_info = f"参照画像: {len(char_image_paths)}枚\n"
+            for p in char_image_paths:
+                ref_info += f"  - {os.path.basename(p)}\n"
         confirm_msg = (
             "【通常モード】画像生成を実行します\n\n"
+            f"{ref_info}"
             "⚠ 注意事項:\n"
             "・API呼び出しには料金がかかります\n\n"
             "実行しますか？"
@@ -2557,11 +2868,10 @@ additional_refinement_instructions: |
         def generate():
             try:
                 # APIクライアントを呼び出し（戻り値はdict）
-                # 通常モードでは参考画像は使用しない
                 result = generate_image_with_api(
                     api_key=api_key,
                     yaml_prompt=yaml_content,
-                    char_image_paths=[],
+                    char_image_paths=char_image_paths,
                     resolution=resolution,
                     ref_image_path=None,
                     aspect_ratio=aspect_ratio,
